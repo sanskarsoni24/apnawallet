@@ -2,7 +2,7 @@
 import React from "react";
 import { Calendar, FileText } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
-import Badge from "../ui/Badge";
+import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
 
 interface DocumentCardProps {
@@ -40,7 +40,7 @@ const DocumentCard = ({
     >
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-1">
-          <Badge size="sm" variant="outline">
+          <Badge variant="outline">
             {type}
           </Badge>
           <h3 className="text-base font-medium mt-2">{title}</h3>

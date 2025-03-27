@@ -1,7 +1,7 @@
 
 import React from "react";
 import BlurContainer from "../ui/BlurContainer";
-import Badge from "../ui/Badge";
+import { Badge } from "../ui/badge";
 
 interface TimelineItemProps {
   title: string;
@@ -28,7 +28,7 @@ const TimelineItem = ({ title, type, date, daysRemaining }: TimelineItemProps) =
         <BlurContainer className="p-4 rounded-xl">
           <div className="flex items-start justify-between">
             <div>
-              <Badge size="sm" variant="outline">{type}</Badge>
+              <Badge variant="outline">{type}</Badge>
               <h4 className="text-sm font-medium mt-1">{title}</h4>
             </div>
             <Badge variant={getStatusColor()}>

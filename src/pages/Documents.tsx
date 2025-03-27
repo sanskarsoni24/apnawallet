@@ -5,7 +5,7 @@ import Container from "@/components/layout/Container";
 import BlurContainer from "@/components/ui/BlurContainer";
 import DocumentCard from "@/components/documents/DocumentCard";
 import DocumentUpload from "@/components/documents/DocumentUpload";
-import Badge from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/badge";
 
 const documents = [
   {

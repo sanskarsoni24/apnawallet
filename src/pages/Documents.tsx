@@ -6,66 +6,19 @@ import BlurContainer from "@/components/ui/BlurContainer";
 import DocumentCard from "@/components/documents/DocumentCard";
 import DocumentUpload from "@/components/documents/DocumentUpload";
 import { Badge } from "@/components/ui/badge";
-
-const documents = [
-  {
-    title: "Car Insurance",
-    type: "Invoice",
-    dueDate: "May 15, 2023",
-    daysRemaining: 3,
-  },
-  {
-    title: "Smartphone Warranty",
-    type: "Warranty",
-    dueDate: "May 20, 2023",
-    daysRemaining: 8,
-  },
-  {
-    title: "Netflix Subscription",
-    type: "Subscription",
-    dueDate: "May 25, 2023",
-    daysRemaining: 13,
-  },
-  {
-    title: "United Airlines Flight",
-    type: "Boarding Pass",
-    dueDate: "June 1, 2023",
-    daysRemaining: 20,
-  },
-  {
-    title: "Internet Bill",
-    type: "Invoice",
-    dueDate: "May 10, 2023",
-    daysRemaining: -2,
-  },
-  {
-    title: "Water Bill",
-    type: "Invoice",
-    dueDate: "May 28, 2023",
-    daysRemaining: 16,
-  },
-  {
-    title: "Laptop Extended Warranty",
-    type: "Warranty",
-    dueDate: "June 15, 2023",
-    daysRemaining: 34,
-  },
-  {
-    title: "Spotify Premium",
-    type: "Subscription",
-    dueDate: "June 10, 2023",
-    daysRemaining: 29,
-  },
-];
+import { useDocuments } from "@/contexts/DocumentContext";
 
 const documentTypes = ["All", "Invoice", "Warranty", "Subscription", "Boarding Pass"];
 
 const Documents = () => {
   const [activeFilter, setActiveFilter] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
+  const { documents, filteredDocuments } = useDocuments();
   
-  const filteredDocuments = activeFilter === "All" 
-    ? documents 
-    : documents.filter(doc => doc.type === activeFilter);
+  // Filter documents based on active filter and search term
+  const displayedDocuments = filteredDocuments(activeFilter).filter(doc => 
+    doc.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   
   return (
     <Container>
@@ -106,6 +59,8 @@ const Documents = () => {
                   type="text"
                   placeholder="Search documents..."
                   className="h-10 w-full rounded-lg border border-input bg-background pl-9 pr-4 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-input hover:bg-secondary transition-colors">
@@ -113,11 +68,26 @@ const Documents = () => {
               </button>
             </div>
             
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-              {filteredDocuments.map((doc, i) => (
-                <DocumentCard key={i} {...doc} />
-              ))}
-            </div>
+            {displayedDocuments.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                {displayedDocuments.map((doc) => (
+                  <DocumentCard key={doc.id} {...doc} />
+                ))}
+              </div>
+            ) : (
+              <BlurContainer className="p-8 text-center">
+                <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-medium">No documents found</h3>
+                <p className="text-muted-foreground mt-2">
+                  {searchTerm 
+                    ? `No documents matching "${searchTerm}" in ${activeFilter === "All" ? "any category" : activeFilter}`
+                    : `You don't have any ${activeFilter === "All" ? "" : activeFilter} documents yet.`
+                  }
+                </p>
+              </BlurContainer>
+            )}
           </div>
           
           <div className="space-y-6 animate-fade-in" style={{ animationDelay: "0.2s" }}>
@@ -126,7 +96,7 @@ const Documents = () => {
             <BlurContainer className="p-5">
               <h3 className="text-base font-medium mb-4">Document Types</h3>
               <div className="space-y-3">
-                {["Invoice", "Warranty", "Subscription", "Boarding Pass"].map((type) => {
+                {documentTypes.filter(type => type !== "All").map((type) => {
                   const count = documents.filter(doc => doc.type === type).length;
                   return (
                     <div key={type} className="flex items-center justify-between">

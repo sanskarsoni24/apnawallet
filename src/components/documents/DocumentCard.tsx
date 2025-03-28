@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Calendar, FileText, Trash2 } from "lucide-react";
+import { Calendar, FileText, Trash2, Download, ExternalLink } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ import { Button } from "../ui/button";
 import { useDocuments, Document } from "@/contexts/DocumentContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 
 interface DocumentCardProps extends Document {
   className?: string;
@@ -23,6 +24,7 @@ const DocumentCard = ({
   className,
 }: DocumentCardProps) => {
   const [showPreview, setShowPreview] = React.useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const { deleteDocument } = useDocuments();
   
   const getStatusVariant = () => {
@@ -38,9 +40,9 @@ const DocumentCard = ({
     return `${daysRemaining} days left`;
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDelete = () => {
     deleteDocument(id);
+    setShowDeleteConfirm(false);
     toast({
       title: "Document deleted",
       description: `${title} has been removed.`,
@@ -49,6 +51,15 @@ const DocumentCard = ({
 
   const handleCardClick = () => {
     setShowPreview(true);
+  };
+
+  const isPdfFile = fileURL?.toLowerCase().includes('.pdf');
+  const isImageFile = fileURL?.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/);
+  
+  const openFileInNewTab = () => {
+    if (fileURL) {
+      window.open(fileURL, '_blank');
+    }
   };
 
   return (
@@ -85,7 +96,10 @@ const DocumentCard = ({
             variant="ghost" 
             size="sm" 
             className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={handleDelete}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteConfirm(true);
+            }}
           >
             <Trash2 className="h-4 w-4" />
             <span className="sr-only">Delete</span>
@@ -93,48 +107,88 @@ const DocumentCard = ({
         </div>
       </BlurContainer>
 
+      {/* Document Preview Dialog */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-4">
             {fileURL ? (
-              <div className="max-h-[60vh] overflow-auto border rounded-md">
-                {fileURL.includes("pdf") ? (
+              <div className="w-full max-h-[60vh] overflow-auto border rounded-md">
+                {isPdfFile ? (
                   <div className="p-8 text-center">
-                    <FileText className="h-10 w-10 mx-auto text-muted-foreground" />
-                    <p className="mt-2">PDF preview not available</p>
-                    <a 
-                      href={fileURL} 
-                      target="_blank" 
-                      rel="noreferrer" 
-                      className="text-primary hover:underline mt-2 block"
-                    >
-                      Open PDF
-                    </a>
+                    <FileText className="h-16 w-16 mx-auto text-muted-foreground" />
+                    <p className="mt-3 font-medium">PDF Document</p>
+                    <p className="mt-1 text-sm text-muted-foreground">PDF preview is not available directly</p>
+                    <div className="flex justify-center gap-2 mt-4">
+                      <Button 
+                        variant="outline" 
+                        className="flex items-center gap-2"
+                        onClick={openFileInNewTab}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Open PDF
+                      </Button>
+                      <Button 
+                        variant="default" 
+                        className="flex items-center gap-2"
+                        onClick={() => {
+                          if (fileURL) {
+                            const link = document.createElement('a');
+                            link.href = fileURL;
+                            link.download = title || 'document.pdf';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }
+                        }}
+                      >
+                        <Download className="h-4 w-4" />
+                        Download
+                      </Button>
+                    </div>
                   </div>
-                ) : (
+                ) : isImageFile ? (
                   <img 
                     src={fileURL} 
                     alt={title} 
-                    className="max-w-full object-contain"
+                    className="w-full object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://placehold.co/600x400?text=Image+Preview+Failed';
+                    }}
                   />
+                ) : (
+                  <div className="p-8 text-center">
+                    <FileText className="h-16 w-16 mx-auto text-muted-foreground" />
+                    <p className="mt-3 font-medium">Document Preview</p>
+                    <p className="mt-1 text-sm text-muted-foreground">This file type cannot be previewed</p>
+                    <div className="flex justify-center gap-2 mt-4">
+                      <Button 
+                        variant="outline" 
+                        className="flex items-center gap-2"
+                        onClick={openFileInNewTab}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Open File
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (
               <div className="p-8 text-center border rounded-md w-full">
-                <FileText className="h-10 w-10 mx-auto text-muted-foreground" />
-                <p className="mt-2">No document preview available</p>
-                <p className="text-sm text-muted-foreground mt-1">Document details:</p>
-                <div className="mt-2 text-left px-4">
+                <FileText className="h-16 w-16 mx-auto text-muted-foreground" />
+                <p className="mt-3 font-medium">No document attached</p>
+                <div className="mt-4 text-left px-4 py-2 bg-muted/30 rounded-md">
+                  <p className="mb-2"><strong>Document details:</strong></p>
                   <p><strong>Type:</strong> {type}</p>
                   <p><strong>Due Date:</strong> {dueDate}</p>
                   <p><strong>Status:</strong> {getStatusText()}</p>
                 </div>
               </div>
             )}
-            <div className="flex justify-end gap-2 w-full">
+            <div className="flex justify-end gap-2 w-full mt-2">
               <Button 
                 variant="outline" 
                 onClick={() => setShowPreview(false)}
@@ -145,6 +199,24 @@ const DocumentCard = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the document "{title}". This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

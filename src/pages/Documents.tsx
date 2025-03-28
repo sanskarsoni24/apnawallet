@@ -7,25 +7,40 @@ import DocumentCard from "@/components/documents/DocumentCard";
 import DocumentUpload from "@/components/documents/DocumentUpload";
 import { Badge } from "@/components/ui/badge";
 import { useDocuments } from "@/contexts/DocumentContext";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 const documentTypes = ["All", "Invoice", "Warranty", "Subscription", "Boarding Pass"];
 
 const Documents = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const filterParam = queryParams.get('filter');
   
   const [activeFilter, setActiveFilter] = useState(filterParam || "All");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const { documents, filteredDocuments } = useDocuments();
-  
+
   useEffect(() => {
     // Update the active filter when the URL parameter changes
     if (filterParam) {
       setActiveFilter(filterParam);
     }
   }, [filterParam]);
+  
+  const handleFilterChange = (filter) => {
+    setActiveFilter(filter);
+    // Update URL with the new filter
+    navigate(`/documents?filter=${filter}`);
+  };
   
   // Filter documents based on active filter and search term
   const getFilteredDocs = () => {
@@ -73,7 +88,7 @@ const Documents = () => {
                         ? "bg-primary text-primary-foreground" 
                         : "hover:bg-secondary"
                     }`}
-                    onClick={() => setActiveFilter(type)}
+                    onClick={() => handleFilterChange(type)}
                   >
                     {type}
                   </button>
@@ -84,7 +99,7 @@ const Documents = () => {
                       ? "bg-primary text-primary-foreground" 
                       : "hover:bg-secondary"
                   }`}
-                  onClick={() => setActiveFilter("upcoming")}
+                  onClick={() => handleFilterChange("upcoming")}
                 >
                   Upcoming
                 </button>
@@ -102,9 +117,40 @@ const Documents = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-input hover:bg-secondary transition-colors">
-                <SlidersHorizontal className="h-4 w-4" />
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-input hover:bg-secondary transition-colors">
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[200px]">
+                  <DropdownMenuItem onClick={() => {
+                    toast({
+                      title: "Sort by Date",
+                      description: "Documents sorted by due date"
+                    });
+                  }}>
+                    Sort by Date
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                    toast({
+                      title: "Sort by Name",
+                      description: "Documents sorted alphabetically"
+                    });
+                  }}>
+                    Sort by Name
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                    toast({
+                      title: "Show All Documents",
+                      description: "All documents are now visible"
+                    });
+                    handleFilterChange("All");
+                  }}>
+                    Show All Documents
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             {displayedDocuments.length > 0 ? (
@@ -138,7 +184,11 @@ const Documents = () => {
                 {documentTypes.filter(type => type !== "All").map((type) => {
                   const count = documents.filter(doc => doc.type === type).length;
                   return (
-                    <div key={type} className="flex items-center justify-between">
+                    <div 
+                      key={type} 
+                      className="flex items-center justify-between cursor-pointer hover:bg-secondary/50 p-2 rounded-md transition-colors"
+                      onClick={() => handleFilterChange(type)}
+                    >
                       <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                           <FileText className="h-4 w-4 text-primary" />

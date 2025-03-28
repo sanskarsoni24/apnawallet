@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Calendar, FileText, Trash2, Download, ExternalLink } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { Badge } from "@/components/ui/badge";
@@ -23,8 +23,8 @@ const DocumentCard = ({
   fileURL,
   className,
 }: DocumentCardProps) => {
-  const [showPreview, setShowPreview] = React.useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { deleteDocument } = useDocuments();
   
   const getStatusVariant = () => {
@@ -65,7 +65,7 @@ const DocumentCard = ({
   return (
     <>
       <BlurContainer 
-        className={cn("document-card document-card-hover cursor-pointer", className)}
+        className={cn("document-card document-card-hover cursor-pointer p-4", className)}
         hover
         onClick={handleCardClick}
       >

@@ -4,10 +4,12 @@ import { Bell, Moon, Sun, User } from "lucide-react";
 import Container from "@/components/layout/Container";
 import BlurContainer from "@/components/ui/BlurContainer";
 import { toast } from "@/hooks/use-toast";
+import { useUser } from "@/contexts/UserContext";
 
 const Settings = () => {
-  const [displayName, setDisplayName] = useState("");
-  const [email, setEmail] = useState("");
+  const { displayName, email, updateProfile } = useUser();
+  const [localDisplayName, setLocalDisplayName] = useState(displayName);
+  const [localEmail, setLocalEmail] = useState(email);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
   const [reminderFrequency, setReminderFrequency] = useState("1 day before");
@@ -19,8 +21,8 @@ const Settings = () => {
     if (savedSettings) {
       try {
         const settings = JSON.parse(savedSettings);
-        setDisplayName(settings.displayName || "");
-        setEmail(settings.email || "");
+        setLocalDisplayName(settings.displayName || displayName);
+        setLocalEmail(settings.email || email);
         setEmailNotifications(settings.emailNotifications !== false);
         setPushNotifications(settings.pushNotifications || false);
         setReminderFrequency(settings.reminderFrequency || "1 day before");
@@ -29,20 +31,19 @@ const Settings = () => {
         console.error("Failed to parse saved settings:", e);
       }
     }
-  }, []);
+  }, [displayName, email]);
 
   // Save account settings
   const saveAccountSettings = () => {
-    const settings = {
-      displayName,
-      email
-    };
+    // Update context state
+    updateProfile(localDisplayName, localEmail);
     
     // Save to localStorage
     const existingSettings = JSON.parse(localStorage.getItem("userSettings") || "{}");
     localStorage.setItem("userSettings", JSON.stringify({
       ...existingSettings,
-      ...settings
+      displayName: localDisplayName,
+      email: localEmail
     }));
     
     toast({
@@ -116,8 +117,8 @@ const Settings = () => {
                   type="text"
                   placeholder="John Doe"
                   className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
+                  value={localDisplayName}
+                  onChange={(e) => setLocalDisplayName(e.target.value)}
                 />
               </div>
               
@@ -127,8 +128,8 @@ const Settings = () => {
                   type="email"
                   placeholder="john@example.com"
                   className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={localEmail}
+                  onChange={(e) => setLocalEmail(e.target.value)}
                 />
               </div>
               

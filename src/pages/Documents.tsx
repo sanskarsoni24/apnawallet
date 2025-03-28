@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { FileText, Filter, Search, SlidersHorizontal } from "lucide-react";
+import { FileText, Filter, Search, SlidersHorizontal, ArrowDown, ArrowUp } from "lucide-react";
 import Container from "@/components/layout/Container";
 import BlurContainer from "@/components/ui/BlurContainer";
 import DocumentCard from "@/components/documents/DocumentCard";
@@ -26,7 +26,8 @@ const Documents = () => {
   
   const [activeFilter, setActiveFilter] = useState(filterParam || "All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<"date" | "name" | "">("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const { documents, filteredDocuments } = useDocuments();
 
   useEffect(() => {
@@ -40,6 +41,22 @@ const Documents = () => {
     setActiveFilter(filter);
     // Update URL with the new filter
     navigate(`/documents?filter=${filter}`);
+  };
+  
+  const handleSort = (type: "date" | "name") => {
+    if (sortBy === type) {
+      // Toggle direction if clicking the same sort type
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // Set new sort type with default asc direction
+      setSortBy(type);
+      setSortDirection("asc");
+    }
+    
+    toast({
+      title: `Sort by ${type === "date" ? "Due Date" : "Name"}`,
+      description: `Documents sorted ${sortDirection === "asc" ? "ascending" : "descending"}`
+    });
   };
   
   // Filter documents based on active filter and search term
@@ -57,9 +74,25 @@ const Documents = () => {
     }
     
     // Apply search term filter
-    return filtered.filter(doc => 
+    filtered = filtered.filter(doc => 
       doc.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    
+    // Apply sorting if set
+    if (sortBy) {
+      filtered.sort((a, b) => {
+        if (sortBy === "name") {
+          const comparison = a.title.localeCompare(b.title);
+          return sortDirection === "asc" ? comparison : -comparison;
+        } else if (sortBy === "date") {
+          const comparison = a.daysRemaining - b.daysRemaining;
+          return sortDirection === "asc" ? comparison : -comparison;
+        }
+        return 0;
+      });
+    }
+    
+    return filtered;
   };
   
   const displayedDocuments = getFilteredDocs();
@@ -119,39 +152,59 @@ const Documents = () => {
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-input hover:bg-secondary transition-colors">
+                  <button className="h-10 w-10 flex items-center justify-center rounded-lg border border-input hover:bg-secondary transition-colors relative">
                     <SlidersHorizontal className="h-4 w-4" />
+                    {sortBy && (
+                      <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary"></span>
+                    )}
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-[200px]">
-                  <DropdownMenuItem onClick={() => {
-                    toast({
-                      title: "Sort by Date",
-                      description: "Documents sorted by due date"
-                    });
-                  }}>
-                    Sort by Date
+                  <DropdownMenuItem onClick={() => handleSort("date")} className="cursor-pointer">
+                    <div className="flex items-center justify-between w-full">
+                      <span>Sort by Date</span>
+                      {sortBy === "date" && (
+                        sortDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSort("name")} className="cursor-pointer">
+                    <div className="flex items-center justify-between w-full">
+                      <span>Sort by Name</span>
+                      {sortBy === "name" && (
+                        sortDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      )}
+                    </div>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => {
-                    toast({
-                      title: "Sort by Name",
-                      description: "Documents sorted alphabetically"
-                    });
-                  }}>
-                    Sort by Name
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => {
+                    setSortBy("");
                     toast({
                       title: "Show All Documents",
                       description: "All documents are now visible"
                     });
                     handleFilterChange("All");
-                  }}>
+                  }} className="cursor-pointer">
                     Show All Documents
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+            
+            {sortBy && (
+              <div className="px-2 py-1 bg-muted rounded-md text-sm flex items-center">
+                <span className="mr-1">Sorted by:</span>
+                <Badge variant="outline" className="flex items-center gap-1">
+                  {sortBy === "date" ? "Due Date" : "Name"}
+                  {sortDirection === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                </Badge>
+                <button 
+                  className="ml-auto text-sm text-muted-foreground hover:text-foreground"
+                  onClick={() => setSortBy("")}
+                >
+                  Clear
+                </button>
+              </div>
+            )}
             
             {displayedDocuments.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">

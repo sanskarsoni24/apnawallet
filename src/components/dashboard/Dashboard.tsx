@@ -6,11 +6,12 @@ import DocumentCard from "../documents/DocumentCard";
 import DocumentUpload from "../documents/DocumentUpload";
 import DocumentTimeline from "../documents/DocumentTimeline";
 import { useDocuments } from "@/contexts/DocumentContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 
 const Dashboard = () => {
   const { documents } = useDocuments();
+  const navigate = useNavigate();
   
   // Calculate upcoming deadlines (docs with due date in next 7 days)
   const upcomingDeadlines = documents.filter(doc => 
@@ -25,6 +26,14 @@ const Dashboard = () => {
     })
     .slice(0, 4);
   
+  const handleTotalDocumentsClick = () => {
+    navigate('/documents?filter=All');
+  };
+
+  const handleUpcomingDeadlinesClick = () => {
+    navigate('/documents?filter=upcoming');
+  };
+
   return (
     <div className="grid gap-6">
       <div className="flex items-center justify-between animate-fade-in">
@@ -37,7 +46,7 @@ const Dashboard = () => {
       </div>
       
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-        <BlurContainer className="p-6" hover>
+        <BlurContainer className="p-6 cursor-pointer" hover onClick={handleTotalDocumentsClick}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
@@ -54,7 +63,7 @@ const Dashboard = () => {
           </p>
         </BlurContainer>
         
-        <BlurContainer className="p-6" hover>
+        <BlurContainer className="p-6 cursor-pointer" hover onClick={handleUpcomingDeadlinesClick}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">

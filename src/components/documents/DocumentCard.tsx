@@ -2,7 +2,7 @@
 import React from "react";
 import { Calendar, FileText, Trash2 } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
-import { Badge } from "../ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { useDocuments, Document } from "@/contexts/DocumentContext";
@@ -38,7 +38,8 @@ const DocumentCard = ({
     return `${daysRemaining} days left`;
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
     deleteDocument(id);
     toast({
       title: "Document deleted",
@@ -46,12 +47,16 @@ const DocumentCard = ({
     });
   };
 
+  const handleCardClick = () => {
+    setShowPreview(true);
+  };
+
   return (
     <>
       <BlurContainer 
         className={cn("document-card document-card-hover cursor-pointer", className)}
         hover
-        onClick={() => fileURL && setShowPreview(true)}
+        onClick={handleCardClick}
       >
         <div className="flex items-start justify-between">
           <div className="flex flex-col gap-1">
@@ -80,10 +85,7 @@ const DocumentCard = ({
             variant="ghost" 
             size="sm" 
             className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete();
-            }}
+            onClick={handleDelete}
           >
             <Trash2 className="h-4 w-4" />
             <span className="sr-only">Delete</span>
@@ -91,13 +93,13 @@ const DocumentCard = ({
         </div>
       </BlurContainer>
 
-      {fileURL && (
-        <Dialog open={showPreview} onOpenChange={setShowPreview}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>{title}</DialogTitle>
-            </DialogHeader>
-            <div className="flex flex-col items-center gap-2">
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-2">
+            {fileURL ? (
               <div className="max-h-[60vh] overflow-auto border rounded-md">
                 {fileURL.includes("pdf") ? (
                   <div className="p-8 text-center">
@@ -120,18 +122,29 @@ const DocumentCard = ({
                   />
                 )}
               </div>
-              <div className="flex justify-end gap-2 w-full">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowPreview(false)}
-                >
-                  Close
-                </Button>
+            ) : (
+              <div className="p-8 text-center border rounded-md w-full">
+                <FileText className="h-10 w-10 mx-auto text-muted-foreground" />
+                <p className="mt-2">No document preview available</p>
+                <p className="text-sm text-muted-foreground mt-1">Document details:</p>
+                <div className="mt-2 text-left px-4">
+                  <p><strong>Type:</strong> {type}</p>
+                  <p><strong>Due Date:</strong> {dueDate}</p>
+                  <p><strong>Status:</strong> {getStatusText()}</p>
+                </div>
               </div>
+            )}
+            <div className="flex justify-end gap-2 w-full">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowPreview(false)}
+              >
+                Close
+              </Button>
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FileText, Filter, Search, SlidersHorizontal } from "lucide-react";
 import Container from "@/components/layout/Container";
 import BlurContainer from "@/components/ui/BlurContainer";
@@ -7,18 +7,47 @@ import DocumentCard from "@/components/documents/DocumentCard";
 import DocumentUpload from "@/components/documents/DocumentUpload";
 import { Badge } from "@/components/ui/badge";
 import { useDocuments } from "@/contexts/DocumentContext";
+import { useLocation } from "react-router-dom";
 
 const documentTypes = ["All", "Invoice", "Warranty", "Subscription", "Boarding Pass"];
 
 const Documents = () => {
-  const [activeFilter, setActiveFilter] = useState("All");
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const filterParam = queryParams.get('filter');
+  
+  const [activeFilter, setActiveFilter] = useState(filterParam || "All");
   const [searchTerm, setSearchTerm] = useState("");
   const { documents, filteredDocuments } = useDocuments();
   
+  useEffect(() => {
+    // Update the active filter when the URL parameter changes
+    if (filterParam) {
+      setActiveFilter(filterParam);
+    }
+  }, [filterParam]);
+  
   // Filter documents based on active filter and search term
-  const displayedDocuments = filteredDocuments(activeFilter).filter(doc => 
-    doc.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getFilteredDocs = () => {
+    let filtered = [];
+    
+    if (activeFilter === "upcoming") {
+      // Filter for upcoming deadlines (docs with due date in next 7 days)
+      filtered = documents.filter(doc => 
+        doc.daysRemaining >= 0 && doc.daysRemaining <= 7
+      );
+    } else {
+      // Use the regular filter by document type
+      filtered = filteredDocuments(activeFilter);
+    }
+    
+    // Apply search term filter
+    return filtered.filter(doc => 
+      doc.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+  
+  const displayedDocuments = getFilteredDocs();
   
   return (
     <Container>
@@ -49,6 +78,16 @@ const Documents = () => {
                     {type}
                   </button>
                 ))}
+                <button
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    activeFilter === "upcoming" 
+                      ? "bg-primary text-primary-foreground" 
+                      : "hover:bg-secondary"
+                  }`}
+                  onClick={() => setActiveFilter("upcoming")}
+                >
+                  Upcoming
+                </button>
               </div>
             </BlurContainer>
             

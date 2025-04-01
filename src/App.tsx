@@ -3,16 +3,19 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import Index from "./pages/Index";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
 import { DocumentProvider, useDocuments } from "./contexts/DocumentContext";
 import { UserProvider, useUser } from "./contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
 import { checkForDueDocuments } from "./services/NotificationService";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -20,7 +23,7 @@ const queryClient = new QueryClient();
 // This is a separate component to use the hooks inside the providers
 const NotificationCheck = () => {
   const { documents } = useDocuments();
-  const { email } = useUser();
+  const { email, userSettings } = useUser();
 
   useEffect(() => {
     const firstVisit = localStorage.getItem("firstVisit") !== "false";
@@ -37,23 +40,16 @@ const NotificationCheck = () => {
 
     // Check user notification preferences
     const checkNotificationPreferences = () => {
-      const userSettings = localStorage.getItem("userSettings");
-      if (userSettings) {
-        try {
-          const settings = JSON.parse(userSettings);
-          const preferences = {
-            emailNotifications: settings.emailNotifications !== false,
-            pushNotifications: settings.pushNotifications || false,
-            voiceReminders: settings.voiceReminders || false,
-            reminderDays: settings.reminderDays || 3
-          };
-          
-          // Check for documents due soon and send notifications
-          checkForDueDocuments(documents, email, preferences);
-        } catch (e) {
-          console.error("Failed to parse user settings:", e);
-        }
-      }
+      // Get preferences from user settings
+      const preferences = {
+        emailNotifications: userSettings.emailNotifications !== false,
+        pushNotifications: userSettings.pushNotifications || false,
+        voiceReminders: userSettings.voiceReminders || false,
+        reminderDays: userSettings.reminderDays || 3
+      };
+      
+      // Check for documents due soon and send notifications
+      checkForDueDocuments(documents, email, preferences);
     };
 
     // Check for notifications after a delay
@@ -65,7 +61,7 @@ const NotificationCheck = () => {
     }, 24 * 60 * 60 * 1000); // Once every 24 hours
     
     return () => clearInterval(intervalId);
-  }, [documents, email]);
+  }, [documents, email, userSettings]);
 
   return null;
 };
@@ -82,8 +78,24 @@ const App = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/documents" element={<Documents />} />
-                <Route path="/settings" element={<Settings />} />
+                <Route path="/sign-in" element={<SignIn />} />
+                <Route path="/sign-up" element={<SignUp />} />
+                <Route 
+                  path="/documents" 
+                  element={
+                    <ProtectedRoute>
+                      <Documents />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/settings" 
+                  element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

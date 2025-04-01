@@ -1,8 +1,8 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Bell, Files, Settings, LogOut, User, FileText, MessageSquare, Filter } from "lucide-react";
+import { Bell, Files, Settings, LogOut, User, FileText, MessageSquare, Filter, LogIn, UserPlus } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { 
   DropdownMenu, 
@@ -26,15 +26,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/contexts/UserContext";
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [unreadNotifications, setUnreadNotifications] = useState(3);
-  const [showUserDialog, setShowUserDialog] = useState(false);
-  const [displayName, setDisplayName] = useState(() => localStorage.getItem("userSettings") ? JSON.parse(localStorage.getItem("userSettings") || "{}").displayName || "John Doe" : "John Doe");
-  const [userEmail, setUserEmail] = useState(() => localStorage.getItem("userSettings") ? JSON.parse(localStorage.getItem("userSettings") || "{}").email || "john@example.com" : "john@example.com");
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [unreadNotifications, setUnreadNotifications] = React.useState(3);
+  const [showUserDialog, setShowUserDialog] = React.useState(false);
+  
+  // Get user data from context
+  const { isLoggedIn, displayName, email, logout } = useUser();
   
   const navigation = [
     { name: "Dashboard", href: "/", icon: Files },
@@ -57,20 +58,7 @@ const Header = () => {
   };
 
   const handleSignOut = () => {
-    setIsLoggedIn(false);
-    localStorage.setItem("isLoggedIn", "false");
-    toast({
-      title: "Signed out",
-      description: "You have been signed out of your account"
-    });
-    
-    // Clear user settings if needed or just update login status
-    const userSettings = JSON.parse(localStorage.getItem("userSettings") || "{}");
-    localStorage.setItem("userSettings", JSON.stringify({
-      ...userSettings,
-      isLoggedIn: false
-    }));
-    
+    logout();
     navigate("/");
   };
 
@@ -80,6 +68,16 @@ const Header = () => {
       title: `Filtered by ${filter}`,
       description: `Showing ${filter.toLowerCase()} documents`
     });
+  };
+  
+  const getInitials = () => {
+    if (!displayName) return "?";
+    return displayName
+      .split(' ')
+      .map(name => name[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
@@ -113,129 +111,150 @@ const Header = () => {
         </nav>
         
         <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="relative p-2 rounded-full hover:bg-secondary transition-colors">
-                <Filter className="h-5 w-5 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter Documents</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleFilterClick("All")}>
-                All Documents
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleFilterClick("Invoice")}>
-                Invoices
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleFilterClick("Warranty")}>
-                Warranties
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleFilterClick("Subscription")}>
-                Subscriptions
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleFilterClick("upcoming")}>
-                Upcoming Deadlines
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="relative p-2 rounded-full hover:bg-secondary transition-colors">
-                <Bell className="h-5 w-5 text-muted-foreground" />
-                {unreadNotifications > 0 && (
-                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
-                )}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="end">
-              <div className="p-3 border-b">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-medium">Notifications</h4>
-                  <button 
-                    className="text-xs text-primary hover:underline"
-                    onClick={markAllAsRead}
-                  >
-                    Mark all as read
+          {isLoggedIn ? (
+            // Authenticated user UI
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="relative p-2 rounded-full hover:bg-secondary transition-colors">
+                    <Filter className="h-5 w-5 text-muted-foreground" />
                   </button>
-                </div>
-              </div>
-              <div className="max-h-80 overflow-auto">
-                {notifications.length > 0 ? (
-                  <div>
-                    {notifications.map((notification) => (
-                      <div 
-                        key={notification.id} 
-                        className="p-3 border-b hover:bg-muted/50 cursor-pointer"
-                        onClick={() => {
-                          toast({
-                            title: notification.title,
-                            description: notification.description
-                          });
-                          setUnreadNotifications(prev => Math.max(0, prev - 1));
-                        }}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Filter Documents</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleFilterClick("All")}>
+                    All Documents
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleFilterClick("Invoice")}>
+                    Invoices
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleFilterClick("Warranty")}>
+                    Warranties
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleFilterClick("Subscription")}>
+                    Subscriptions
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleFilterClick("upcoming")}>
+                    Upcoming Deadlines
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="relative p-2 rounded-full hover:bg-secondary transition-colors">
+                    <Bell className="h-5 w-5 text-muted-foreground" />
+                    {unreadNotifications > 0 && (
+                      <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="end">
+                  <div className="p-3 border-b">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium">Notifications</h4>
+                      <button 
+                        className="text-xs text-primary hover:underline"
+                        onClick={markAllAsRead}
                       >
-                        <div className="flex gap-3">
-                          <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                            <FileText className="h-4 w-4 text-primary" />
+                        Mark all as read
+                      </button>
+                    </div>
+                  </div>
+                  <div className="max-h-80 overflow-auto">
+                    {notifications.length > 0 ? (
+                      <div>
+                        {notifications.map((notification) => (
+                          <div 
+                            key={notification.id} 
+                            className="p-3 border-b hover:bg-muted/50 cursor-pointer"
+                            onClick={() => {
+                              toast({
+                                title: notification.title,
+                                description: notification.description
+                              });
+                              setUnreadNotifications(prev => Math.max(0, prev - 1));
+                            }}
+                          >
+                            <div className="flex gap-3">
+                              <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                                <FileText className="h-4 w-4 text-primary" />
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-medium">{notification.title}</h5>
+                                <p className="text-xs text-muted-foreground mt-1">{notification.description}</p>
+                                <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <h5 className="text-sm font-medium">{notification.title}</h5>
-                            <p className="text-xs text-muted-foreground mt-1">{notification.description}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
-                          </div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
+                    ) : (
+                      <div className="p-6 text-center">
+                        <MessageSquare className="h-8 w-8 mx-auto text-muted-foreground" />
+                        <p className="text-sm mt-2">No notifications</p>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="p-6 text-center">
-                    <MessageSquare className="h-8 w-8 mx-auto text-muted-foreground" />
-                    <p className="text-sm mt-2">No notifications</p>
+                </PopoverContent>
+              </Popover>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center cursor-pointer hover:bg-accent/70 transition-colors">
+                    <span className="text-xs font-medium text-primary">
+                      {getInitials()}
+                    </span>
                   </div>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center cursor-pointer">
-                <span className="text-xs font-medium text-primary">
-                  {displayName ? displayName.split(' ').map(name => name[0]).join('').toUpperCase().slice(0, 2) : "JD"}
-                </span>
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setShowUserDialog(true)}>
-                <User className="mr-2 h-4 w-4" />
-                <span>View Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/settings" className="flex items-center cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Profile Settings</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowUserDialog(true)}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>View Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings" className="flex items-center cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Profile Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/documents" className="flex items-center cursor-pointer">
+                      <FileText className="mr-2 h-4 w-4" />
+                      <span>My Documents</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="text-red-500 focus:text-red-500"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            // Non-authenticated user UI
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/sign-in" className="flex items-center gap-1.5">
+                  <LogIn className="h-4 w-4" />
+                  <span>Sign In</span>
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/documents" className="flex items-center cursor-pointer">
-                  <FileText className="mr-2 h-4 w-4" />
-                  <span>My Documents</span>
+              </Button>
+              <Button size="sm" asChild>
+                <Link to="/sign-up" className="flex items-center gap-1.5">
+                  <UserPlus className="h-4 w-4" />
+                  <span>Sign Up</span>
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleSignOut}
-                className="text-red-500 focus:text-red-500"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Sign out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </Button>
+            </div>
+          )}
         </div>
       </BlurContainer>
       
@@ -253,7 +272,7 @@ const Header = () => {
             <div className="flex justify-center mb-4">
               <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-2xl font-medium text-primary">
-                  {displayName ? displayName.split(' ').map(name => name[0]).join('').toUpperCase().slice(0, 2) : "JD"}
+                  {getInitials()}
                 </span>
               </div>
             </div>
@@ -266,7 +285,7 @@ const Header = () => {
               
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
-                <p className="text-base">{userEmail || "Not set"}</p>
+                <p className="text-base">{email || "Not set"}</p>
               </div>
               
               <div>

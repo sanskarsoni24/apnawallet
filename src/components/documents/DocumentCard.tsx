@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { Calendar, FileText, Trash2, Download, ExternalLink, Pencil } from "lucide-react";
+import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -11,6 +10,10 @@ import { toast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import { Textarea } from "../ui/textarea";
 import { Input } from "../ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { speakNotification } from "@/services/NotificationService";
 
 interface DocumentCardProps extends Document {
   className?: string;
@@ -31,7 +34,8 @@ const DocumentCard = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(title);
   const [editDescription, setEditDescription] = useState(description || "");
-  const { deleteDocument, updateDocument } = useDocuments();
+  const [date, setDate] = useState<Date | undefined>();
+  const { deleteDocument, updateDocument, updateDueDate } = useDocuments();
   
   const getStatusVariant = () => {
     if (daysRemaining < 0) return "destructive";
@@ -80,34 +84,93 @@ const DocumentCard = ({
     }
   };
 
+  // Parse the dueDate string to a Date object for the calendar
+  const parseDueDate = () => {
+    try {
+      // Try direct parsing first
+      let dateObj = new Date(dueDate);
+      
+      // If invalid, try parsing "Month Day, Year" format
+      if (isNaN(dateObj.getTime())) {
+        const parts = dueDate.split(" ");
+        if (parts.length === 3) {
+          const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            .findIndex(m => parts[0].includes(m)) + 1;
+          const day = parseInt(parts[1].replace(",", ""));
+          const year = parseInt(parts[2]);
+          if (!isNaN(month) && !isNaN(day) && !isNaN(year)) {
+            dateObj = new Date(year, month - 1, day);
+          }
+        }
+      }
+      
+      return isNaN(dateObj.getTime()) ? undefined : dateObj;
+    } catch (error) {
+      console.error("Error parsing date:", error);
+      return undefined;
+    }
+  };
+
+  // Function to handle changing the due date
+  const handleDateChange = (newDate: Date | undefined) => {
+    if (newDate) {
+      setDate(newDate);
+      const formattedDate = format(newDate, "MMMM d, yyyy");
+      updateDueDate(id, formattedDate);
+      toast({
+        title: "Due date updated",
+        description: `The due date for ${title} has been changed to ${formattedDate}.`
+      });
+    }
+  };
+
+  // Function to handle voice reminder
+  const handleVoiceReminder = () => {
+    const reminderText = `Reminder: ${title} is due in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}.`;
+    const success = speakNotification(reminderText);
+    
+    if (success) {
+      toast({
+        title: "Voice Reminder",
+        description: "Reminder has been spoken.",
+      });
+    } else {
+      toast({
+        title: "Voice Reminder Unavailable",
+        description: "Your browser doesn't support speech synthesis.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <>
       <BlurContainer 
-        className={cn("document-card document-card-hover cursor-pointer p-4", className)}
+        className={cn("document-card document-card-hover cursor-pointer p-4 transition-all duration-300", className)}
         hover
         onClick={handleCardClick}
       >
         <div className="flex items-start justify-between">
           <div className="flex flex-col gap-1">
-            <Badge variant="outline">
+            <Badge variant="outline" className="animate-pulse-subtle">
               {type}
             </Badge>
-            <h3 className="text-base font-medium mt-2">{title}</h3>
+            <h3 className="text-base font-medium mt-2 hover:text-primary transition-colors">{title}</h3>
             {description && (
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{description}</p>
             )}
           </div>
-          <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+          <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors">
             <FileText className="h-5 w-5 text-primary" />
           </div>
         </div>
         
         <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4" />
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <CalendarIcon className="h-4 w-4" />
             <span>{dueDate}</span>
           </div>
-          <Badge variant={getStatusVariant()}>
+          <Badge variant={getStatusVariant()} className="transition-all">
             {getStatusText()}
           </Badge>
         </div>
@@ -116,7 +179,19 @@ const DocumentCard = ({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+            className="h-8 w-8 p-0 text-primary/80 hover:text-primary hover:bg-primary/10"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleVoiceReminder();
+            }}
+          >
+            <Bell className="h-4 w-4" />
+            <span className="sr-only">Voice Reminder</span>
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               setShowPreview(true);
@@ -129,7 +204,7 @@ const DocumentCard = ({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               setShowDeleteConfirm(true);
@@ -156,7 +231,30 @@ const DocumentCard = ({
                   value={editTitle} 
                   onChange={(e) => setEditTitle(e.target.value)}
                   placeholder="Document title"
+                  className="transition-all focus:ring-2 focus:ring-primary"
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Due Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date ? format(date, "MMMM d, yyyy") : dueDate}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={date || parseDueDate()}
+                      onSelect={handleDateChange}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Description / Notes</label>
@@ -164,14 +262,14 @@ const DocumentCard = ({
                   value={editDescription} 
                   onChange={(e) => setEditDescription(e.target.value)}
                   placeholder="Add notes about this document..."
-                  className="min-h-[100px]"
+                  className="min-h-[100px] transition-all focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div className="pt-2 flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsEditing(false)}>
+                <Button variant="outline" onClick={() => setIsEditing(false)} className="hover:bg-secondary/80 transition-colors">
                   Cancel
                 </Button>
-                <Button onClick={handleSaveEdit}>
+                <Button onClick={handleSaveEdit} className="hover:bg-primary/90 transition-colors">
                   Save Changes
                 </Button>
               </div>

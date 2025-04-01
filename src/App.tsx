@@ -9,14 +9,19 @@ import Index from "./pages/Index";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import { DocumentProvider } from "./contexts/DocumentContext";
-import { UserProvider } from "./contexts/UserContext";
+import { DocumentProvider, useDocuments } from "./contexts/DocumentContext";
+import { UserProvider, useUser } from "./contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
+import { checkForDueDocuments } from "./services/NotificationService";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  // Show welcome notification when app loads
+// NotificationCheck component to handle notifications
+// This is a separate component to use the hooks inside the providers
+const NotificationCheck = () => {
+  const { documents } = useDocuments();
+  const { email } = useUser();
+
   useEffect(() => {
     const firstVisit = localStorage.getItem("firstVisit") !== "false";
     
@@ -30,33 +35,42 @@ const App = () => {
       }, 1000);
     }
 
-    // Check for documents that are about to expire
-    const checkExpiringDocuments = () => {
-      const storedDocs = localStorage.getItem("documents");
-      if (storedDocs) {
+    // Check user notification preferences
+    const checkNotificationPreferences = () => {
+      const userSettings = localStorage.getItem("userSettings");
+      if (userSettings) {
         try {
-          const docs = JSON.parse(storedDocs);
-          const expiringDocs = docs.filter(doc => doc.daysRemaining > 0 && doc.daysRemaining <= 3);
+          const settings = JSON.parse(userSettings);
+          const preferences = {
+            emailNotifications: settings.emailNotifications !== false,
+            pushNotifications: settings.pushNotifications || false,
+            voiceReminders: settings.voiceReminders || false,
+            reminderDays: settings.reminderDays || 3
+          };
           
-          if (expiringDocs.length > 0) {
-            expiringDocs.forEach(doc => {
-              toast({
-                title: `${doc.title} expires soon`,
-                description: `Only ${doc.daysRemaining} day${doc.daysRemaining !== 1 ? 's' : ''} remaining until due date.`,
-                variant: "destructive"
-              });
-            });
-          }
+          // Check for documents due soon and send notifications
+          checkForDueDocuments(documents, email, preferences);
         } catch (e) {
-          console.error("Failed to parse documents:", e);
+          console.error("Failed to parse user settings:", e);
         }
       }
     };
 
-    // Check for expiring documents after a delay
-    setTimeout(checkExpiringDocuments, 3000);
-  }, []);
+    // Check for notifications after a delay
+    setTimeout(checkNotificationPreferences, 3000);
+    
+    // Set up a daily check for notifications
+    const intervalId = setInterval(() => {
+      checkNotificationPreferences();
+    }, 24 * 60 * 60 * 1000); // Once every 24 hours
+    
+    return () => clearInterval(intervalId);
+  }, [documents, email]);
 
+  return null;
+};
+
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -64,6 +78,7 @@ const App = () => {
           <DocumentProvider>
             <Toaster />
             <Sonner />
+            <NotificationCheck />
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />

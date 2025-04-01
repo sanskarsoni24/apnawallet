@@ -16,6 +16,7 @@ interface DocumentContextType {
   documents: Document[];
   addDocument: (doc: Omit<Document, "id">) => void;
   updateDocument: (id: string, updates: Partial<Document>) => void;
+  updateDueDate: (id: string, newDueDate: string) => void;
   deleteDocument: (id: string) => void;
   filteredDocuments: (type: string) => Document[];
 }
@@ -104,6 +105,53 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   };
 
+  // New function to specifically update the due date
+  const updateDueDate = (id: string, newDueDate: string) => {
+    // Calculate new days remaining based on the new due date
+    const calculateDaysRemaining = (dateString: string) => {
+      try {
+        // Handle different date formats
+        let dueDate = new Date(dateString);
+        
+        // Check if the date is valid
+        if (isNaN(dueDate.getTime())) {
+          // Try to parse formats like "May 15, 2023"
+          const parts = dateString.split(" ");
+          if (parts.length === 3) {
+            const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+              .findIndex(m => parts[0].includes(m)) + 1;
+            const day = parseInt(parts[1].replace(",", ""));
+            const year = parseInt(parts[2]);
+            if (!isNaN(month) && !isNaN(day) && !isNaN(year)) {
+              dueDate = new Date(year, month - 1, day);
+            }
+          }
+        }
+        
+        // Calculate days difference
+        if (!isNaN(dueDate.getTime())) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const diffTime = dueDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays;
+        }
+        return 0;
+      } catch (error) {
+        console.error("Error calculating days remaining:", error);
+        return 0;
+      }
+    };
+
+    const daysRemaining = calculateDaysRemaining(newDueDate);
+    
+    setDocuments((prev) => 
+      prev.map((doc) => 
+        doc.id === id ? { ...doc, dueDate: newDueDate, daysRemaining } : doc
+      )
+    );
+  };
+
   const deleteDocument = (id: string) => {
     setDocuments((prev) => prev.filter((doc) => doc.id !== id));
   };
@@ -115,7 +163,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   return (
     <DocumentContext.Provider
-      value={{ documents, addDocument, updateDocument, deleteDocument, filteredDocuments }}
+      value={{ documents, addDocument, updateDocument, updateDueDate, deleteDocument, filteredDocuments }}
     >
       {children}
     </DocumentContext.Provider>

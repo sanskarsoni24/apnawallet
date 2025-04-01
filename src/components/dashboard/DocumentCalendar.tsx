@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { useDocuments } from "@/contexts/DocumentContext";
@@ -96,9 +95,6 @@ const DocumentCalendar = () => {
           }}
           modifiersStyles={{
             today: { fontWeight: "bold" }
-          }}
-          styles={{
-            day_today: { fontWeight: "bold" }
           }}
           components={{
             DayContent: ({ date: dayDate }) => {

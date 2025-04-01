@@ -7,6 +7,7 @@ export interface Document {
   type: string;
   dueDate: string;
   daysRemaining: number;
+  description?: string;
   file?: File;
   fileURL?: string;
 }
@@ -14,6 +15,7 @@ export interface Document {
 interface DocumentContextType {
   documents: Document[];
   addDocument: (doc: Omit<Document, "id">) => void;
+  updateDocument: (id: string, updates: Partial<Document>) => void;
   deleteDocument: (id: string) => void;
   filteredDocuments: (type: string) => Document[];
 }
@@ -41,6 +43,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           type: "Invoice",
           dueDate: "May 15, 2023",
           daysRemaining: 3,
+          description: "Annual car insurance premium payment."
         },
         {
           id: "2",
@@ -48,6 +51,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           type: "Warranty",
           dueDate: "May 20, 2023",
           daysRemaining: 8,
+          description: "Extended warranty for iPhone purchase."
         },
         {
           id: "3",
@@ -55,6 +59,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           type: "Subscription",
           dueDate: "May 25, 2023",
           daysRemaining: 13,
+          description: "Monthly streaming service subscription."
         },
         {
           id: "4",
@@ -62,6 +67,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           type: "Boarding Pass",
           dueDate: "June 1, 2023",
           daysRemaining: 20,
+          description: "Flight from SFO to JFK."
         },
         {
           id: "5",
@@ -69,6 +75,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           type: "Invoice",
           dueDate: "May 10, 2023",
           daysRemaining: -2,
+          description: "Monthly internet service payment."
         },
       ];
       setDocuments(sampleDocuments);
@@ -89,6 +96,14 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setDocuments((prev) => [...prev, newDocument]);
   };
 
+  const updateDocument = (id: string, updates: Partial<Document>) => {
+    setDocuments((prev) => 
+      prev.map((doc) => 
+        doc.id === id ? { ...doc, ...updates } : doc
+      )
+    );
+  };
+
   const deleteDocument = (id: string) => {
     setDocuments((prev) => prev.filter((doc) => doc.id !== id));
   };
@@ -100,7 +115,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   return (
     <DocumentContext.Provider
-      value={{ documents, addDocument, deleteDocument, filteredDocuments }}
+      value={{ documents, addDocument, updateDocument, deleteDocument, filteredDocuments }}
     >
       {children}
     </DocumentContext.Provider>

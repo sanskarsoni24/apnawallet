@@ -5,6 +5,7 @@ import BlurContainer from "../ui/BlurContainer";
 import DocumentCard from "../documents/DocumentCard";
 import DocumentUpload from "../documents/DocumentUpload";
 import DocumentTimeline from "../documents/DocumentTimeline";
+import DocumentCalendar from "./DocumentCalendar";
 import { useDocuments } from "@/contexts/DocumentContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
@@ -114,6 +115,7 @@ const Dashboard = () => {
         
         <div className="flex flex-col gap-6">
           <DocumentUpload />
+          <DocumentCalendar />
           <DocumentTimeline />
         </div>
       </div>

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
@@ -255,6 +256,7 @@ const DocumentCard = ({
                       className="p-3 pointer-events-auto"
                     />
                   </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Description / Notes</label>

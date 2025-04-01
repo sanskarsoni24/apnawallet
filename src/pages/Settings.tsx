@@ -5,6 +5,7 @@ import Container from "@/components/layout/Container";
 import BlurContainer from "@/components/ui/BlurContainer";
 import { toast } from "@/hooks/use-toast";
 import { useUser } from "@/contexts/UserContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Settings = () => {
   const { displayName, email, updateProfile } = useUser();
@@ -14,6 +15,7 @@ const Settings = () => {
   const [pushNotifications, setPushNotifications] = useState(false);
   const [reminderFrequency, setReminderFrequency] = useState("1 day before");
   const [theme, setTheme] = useState("light");
+  const [notificationPermission, setNotificationPermission] = useState("default");
 
   // Load settings from localStorage on initial render
   useEffect(() => {
@@ -30,6 +32,11 @@ const Settings = () => {
       } catch (e) {
         console.error("Failed to parse saved settings:", e);
       }
+    }
+    
+    // Check current notification permission
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission);
     }
   }, [displayName, email]);
 
@@ -66,6 +73,62 @@ const Settings = () => {
       title: "Settings updated",
       description: `Your ${key} setting has been updated.`
     });
+  };
+
+  // Request notification permission
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      toast({
+        title: "Push Notifications Unavailable",
+        description: "Your browser doesn't support push notifications.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      
+      if (permission === 'granted') {
+        setPushNotifications(true);
+        saveNotificationSettings("pushNotifications", true);
+        
+        // Send a test notification
+        new Notification("DocuNinja Notifications", {
+          body: "You have successfully enabled push notifications!",
+          icon: "/favicon.ico"
+        });
+      } else {
+        setPushNotifications(false);
+        saveNotificationSettings("pushNotifications", false);
+        
+        toast({
+          title: "Permission Denied",
+          description: "You need to allow notifications in your browser settings.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error requesting notification permission:", error);
+      toast({
+        title: "Error",
+        description: "There was an error enabling push notifications.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Toggle push notifications
+  const togglePushNotifications = () => {
+    if (!pushNotifications) {
+      // If turning on notifications
+      requestNotificationPermission();
+    } else {
+      // If turning off notifications
+      setPushNotifications(false);
+      saveNotificationSettings("pushNotifications", false);
+    }
   };
 
   // Save theme setting
@@ -186,16 +249,21 @@ const Settings = () => {
                     type="checkbox" 
                     className="sr-only peer"
                     checked={pushNotifications}
-                    onChange={() => {
-                      setPushNotifications(!pushNotifications);
-                      saveNotificationSettings("pushNotifications", !pushNotifications);
-                    }}
+                    onChange={togglePushNotifications}
                   />
                   <div className="relative h-5 w-10 cursor-pointer rounded-full bg-muted peer-checked:bg-primary">
                     <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-all peer-checked:left-5" />
                   </div>
                 </label>
               </div>
+              
+              {notificationPermission === 'denied' && (
+                <Alert variant="destructive" className="mt-2">
+                  <AlertDescription>
+                    Notification permission denied. You need to allow notifications in your browser settings.
+                  </AlertDescription>
+                </Alert>
+              )}
               
               <div className="flex items-center justify-between py-2">
                 <div>

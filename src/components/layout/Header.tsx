@@ -82,43 +82,45 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full animate-fade-in">
-      <BlurContainer className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 border-b border-border/40">
+      <BlurContainer className="mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 border-b border-border/40">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
             <Files className="h-5 w-5 text-primary" />
           </div>
-          <span className="font-medium text-lg">DocuNinja</span>
+          <Link to="/" className="font-medium text-lg hover:text-primary transition-colors">DocuNinja</Link>
         </div>
         
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-4">
           {navigation.map((item) => (
             <Link
               key={item.name}
               to={item.href}
               className={cn(
-                "px-3 py-2 rounded-md text-sm font-medium transition-colors relative",
+                "px-3 py-2 rounded-md text-sm font-medium transition-colors relative group",
                 location.pathname === item.href
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
               {item.name}
-              {location.pathname === item.href && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full transform" />
+              {location.pathname === item.href ? (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+              ) : (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary/0 group-hover:bg-primary/40 rounded-full transition-all" />
               )}
             </Link>
           ))}
         </nav>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {isLoggedIn ? (
             // Authenticated user UI
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="relative p-2 rounded-full hover:bg-secondary transition-colors">
+                  <Button variant="ghost" size="icon" className="relative rounded-full">
                     <Filter className="h-5 w-5 text-muted-foreground" />
-                  </button>
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Filter Documents</DropdownMenuLabel>
@@ -143,12 +145,12 @@ const Header = () => {
             
               <Popover>
                 <PopoverTrigger asChild>
-                  <button className="relative p-2 rounded-full hover:bg-secondary transition-colors">
+                  <Button variant="ghost" size="icon" className="relative rounded-full">
                     <Bell className="h-5 w-5 text-muted-foreground" />
                     {unreadNotifications > 0 && (
-                      <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
+                      <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-background" />
                     )}
-                  </button>
+                  </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-0" align="end">
                   <div className="p-3 border-b">
@@ -202,7 +204,7 @@ const Header = () => {
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center cursor-pointer hover:bg-accent/70 transition-colors">
+                  <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center cursor-pointer hover:bg-accent/70 transition-colors">
                     <span className="text-xs font-medium text-primary">
                       {getInitials()}
                     </span>

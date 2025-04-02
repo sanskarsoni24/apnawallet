@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +38,12 @@ const DocumentCard = ({
   const [date, setDate] = useState<Date | undefined>();
   const { deleteDocument, updateDocument, updateDueDate } = useDocuments();
   
+  // Update local state when props change
+  useEffect(() => {
+    setEditTitle(title);
+    setEditDescription(description || "");
+  }, [title, description]);
+
   const getStatusVariant = () => {
     if (daysRemaining < 0) return "destructive";
     if (daysRemaining < 7) return "default";
@@ -317,9 +323,11 @@ const DocumentCard = ({
                     <img 
                       src={fileURL} 
                       alt={title} 
-                      className="w-full object-contain"
+                      className="w-full h-auto object-contain max-h-[400px]"
                       onError={(e) => {
-                        e.currentTarget.src = 'https://placehold.co/600x400?text=Image+Preview+Failed';
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://placehold.co/600x400?text=Image+Preview+Failed';
+                        target.onerror = null; // Prevent infinite loops
                       }}
                     />
                   ) : (

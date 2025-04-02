@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useUser } from "./UserContext";
 
 export interface Document {
   id: string;
@@ -10,6 +11,7 @@ export interface Document {
   description?: string;
   file?: File;
   fileURL?: string;
+  userId?: string; // Add userId field to associate documents with users
 }
 
 interface DocumentContextType {
@@ -25,6 +27,7 @@ const DocumentContext = createContext<DocumentContextType | undefined>(undefined
 
 export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
+  const { email, isLoggedIn, displayName } = useUser();
 
   // Load documents from localStorage on initial render
   useEffect(() => {
@@ -36,7 +39,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.error("Failed to parse saved documents:", e);
       }
     } else {
-      // Sample documents for demo
+      // Sample documents for demo - we'll add userId to them
       const sampleDocuments = [
         {
           id: "1",
@@ -44,7 +47,8 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           type: "Invoice",
           dueDate: "May 15, 2023",
           daysRemaining: 3,
-          description: "Annual car insurance premium payment."
+          description: "Annual car insurance premium payment.",
+          userId: email || "demo@example.com" // Default userId for sample data
         },
         {
           id: "2",
@@ -52,7 +56,8 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           type: "Warranty",
           dueDate: "May 20, 2023",
           daysRemaining: 8,
-          description: "Extended warranty for iPhone purchase."
+          description: "Extended warranty for iPhone purchase.",
+          userId: email || "demo@example.com"
         },
         {
           id: "3",
@@ -60,7 +65,8 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           type: "Subscription",
           dueDate: "May 25, 2023",
           daysRemaining: 13,
-          description: "Monthly streaming service subscription."
+          description: "Monthly streaming service subscription.",
+          userId: email || "demo@example.com"
         },
         {
           id: "4",
@@ -68,7 +74,8 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           type: "Boarding Pass",
           dueDate: "June 1, 2023",
           daysRemaining: 20,
-          description: "Flight from SFO to JFK."
+          description: "Flight from SFO to JFK.",
+          userId: email || "demo@example.com"
         },
         {
           id: "5",
@@ -76,23 +83,31 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           type: "Invoice",
           dueDate: "May 10, 2023",
           daysRemaining: -2,
-          description: "Monthly internet service payment."
+          description: "Monthly internet service payment.",
+          userId: email || "demo@example.com"
         },
       ];
       setDocuments(sampleDocuments);
       localStorage.setItem("documents", JSON.stringify(sampleDocuments));
     }
-  }, []);
+  }, [email]);
 
   // Save documents to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("documents", JSON.stringify(documents));
   }, [documents]);
 
+  // Function to get only the documents that belong to the current user
+  const getUserDocuments = () => {
+    if (!isLoggedIn) return [];
+    return documents.filter(doc => doc.userId === email);
+  };
+
   const addDocument = (doc: Omit<Document, "id">) => {
     const newDocument = {
       ...doc,
       id: Date.now().toString(),
+      userId: email, // Associate the document with the current user
     };
     setDocuments((prev) => [...prev, newDocument]);
   };
@@ -157,13 +172,22 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const filteredDocuments = (type: string) => {
-    if (type === "All") return documents;
-    return documents.filter((doc) => doc.type === type);
+    // First filter by user ID, then by document type
+    const userDocs = getUserDocuments();
+    if (type === "All") return userDocs;
+    return userDocs.filter((doc) => doc.type === type);
   };
 
   return (
     <DocumentContext.Provider
-      value={{ documents, addDocument, updateDocument, updateDueDate, deleteDocument, filteredDocuments }}
+      value={{ 
+        documents: getUserDocuments(), // Only return the current user's documents
+        addDocument, 
+        updateDocument, 
+        updateDueDate, 
+        deleteDocument, 
+        filteredDocuments 
+      }}
     >
       {children}
     </DocumentContext.Provider>

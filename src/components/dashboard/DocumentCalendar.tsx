@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { useDocuments } from "@/contexts/DocumentContext";
@@ -8,9 +9,11 @@ import { FileText } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Link } from "react-router-dom";
+import { useUser } from "@/contexts/UserContext";
 
 const DocumentCalendar = () => {
   const { documents } = useDocuments();
+  const { email } = useUser();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [showDocuments, setShowDocuments] = useState(false);
   
@@ -44,9 +47,10 @@ const DocumentCalendar = () => {
   }).filter(doc => doc.dateObj && !isNaN(doc.dateObj.getTime()));
   
   // Function to find documents due on a selected date
+  // Only show documents belonging to the current user
   const getDocumentsForDate = (selectedDate: Date) => {
     return documentDates.filter(doc => 
-      doc.dateObj && isSameDay(doc.dateObj, selectedDate)
+      doc.dateObj && isSameDay(doc.dateObj, selectedDate) && doc.userId === email
     );
   };
   
@@ -56,7 +60,7 @@ const DocumentCalendar = () => {
   // Function to render dots under dates with documents
   const getDayClassNames = (day: Date) => {
     const docsOnDay = documentDates.filter(doc => 
-      doc.dateObj && isSameDay(doc.dateObj, day)
+      doc.dateObj && isSameDay(doc.dateObj, day) && doc.userId === email
     );
     
     if (docsOnDay.length > 0) {

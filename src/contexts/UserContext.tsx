@@ -24,6 +24,7 @@ interface UserContextType {
   logout: () => void;
   updateProfile: (name: string, email: string) => void;
   updateUserSettings: (settings: Partial<UserSettings>) => void;
+  register: (email: string, password: string, name: string) => void;
 }
 
 const defaultContextValue: UserContextType = {
@@ -35,6 +36,7 @@ const defaultContextValue: UserContextType = {
   logout: () => {},
   updateProfile: () => {},
   updateUserSettings: () => {},
+  register: () => {},
 };
 
 const UserContext = createContext<UserContextType>(defaultContextValue);
@@ -68,20 +70,74 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [email, setEmail] = useState(userSettings.email || "");
 
   // Mock user database for simple authentication
-  const mockUsers: Record<string, string> = {
-    "user@example.com": "password123",
-    "test@example.com": "test123",
-    "admin@example.com": "admin123",
-  };
+  const [mockUsers, setMockUsers] = useState<Record<string, {password: string, name: string}>>(() => {
+    const savedUsers = localStorage.getItem("mockUsers");
+    if (savedUsers) {
+      return JSON.parse(savedUsers);
+    } else {
+      // Default users
+      const defaultUsers = {
+        "user@example.com": {password: "password123", name: "Demo User"},
+        "test@example.com": {password: "test123", name: "Test User"},
+        "admin@example.com": {password: "admin123", name: "Admin User"},
+      };
+      localStorage.setItem("mockUsers", JSON.stringify(defaultUsers));
+      return defaultUsers;
+    }
+  });
 
-  // Login function with proper validation and password check
-  const login = (userEmail: string, password: string) => {
-    if (!userEmail || !password) {
-      throw new Error("Email and password are required");
+  // Register a new user
+  const register = (userEmail: string, password: string, name: string) => {
+    if (!userEmail || !password || !name) {
+      throw new Error("Email, password, and name are required");
     }
     
     if (password.length < 6) {
       throw new Error("Password must be at least 6 characters");
+    }
+    
+    // Check if the user already exists
+    if (userEmail in mockUsers) {
+      throw new Error("Email already in use");
+    }
+    
+    // Add user to mock database
+    const updatedUsers = {
+      ...mockUsers,
+      [userEmail]: {password, name}
+    };
+    
+    setMockUsers(updatedUsers);
+    localStorage.setItem("mockUsers", JSON.stringify(updatedUsers));
+    
+    // Log in the user after registration
+    setIsLoggedIn(true);
+    setEmail(userEmail);
+    setDisplayName(name);
+    
+    const updatedSettings = {
+      ...userSettings,
+      email: userEmail,
+      displayName: name,
+      isLoggedIn: true,
+      lastLogin: new Date().toISOString(),
+    };
+    
+    // Save to localStorage
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("userSettings", JSON.stringify(updatedSettings));
+    setUserSettings(updatedSettings);
+    
+    toast({
+      title: "Account created successfully",
+      description: `Welcome, ${name}!`
+    });
+  };
+  
+  // Login function with proper validation and password check
+  const login = (userEmail: string, password: string) => {
+    if (!userEmail || !password) {
+      throw new Error("Email and password are required");
     }
     
     // Check if the user exists
@@ -90,15 +146,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     // Validate password strictly
-    if (mockUsers[userEmail] !== password) {
+    if (mockUsers[userEmail].password !== password) {
       throw new Error("Invalid email or password");
     }
     
     setIsLoggedIn(true);
     setEmail(userEmail);
     
-    // Find or set display name
-    let userName = displayName || userEmail.split('@')[0];
+    // Set display name from the mock database
+    const userName = mockUsers[userEmail].name;
     setDisplayName(userName);
     
     const updatedSettings = {
@@ -174,6 +230,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (settings.email) {
       setEmail(settings.email);
     }
+    
+    console.log("Updated settings:", updatedSettings);
   };
 
   // Listen for changes in localStorage from other tabs/windows
@@ -199,6 +257,29 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [displayName, email]);
 
+  // Initialize theme based on user settings
+  useEffect(() => {
+    const theme = userSettings.theme || "system";
+    document.documentElement.classList.remove("light", "dark");
+    
+    if (theme === "system") {
+      const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.classList.add(isDarkMode ? "dark" : "light");
+      
+      // Add listener for system theme changes
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      const handleChange = (e: MediaQueryListEvent) => {
+        document.documentElement.classList.remove("light", "dark");
+        document.documentElement.classList.add(e.matches ? "dark" : "light");
+      };
+      
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
+    } else {
+      document.documentElement.classList.add(theme);
+    }
+  }, [userSettings.theme]);
+
   return (
     <UserContext.Provider
       value={{
@@ -210,6 +291,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         updateProfile,
         updateUserSettings,
+        register,
       }}
     >
       {children}

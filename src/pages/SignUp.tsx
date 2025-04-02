@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,7 +20,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import BlurContainer from "@/components/ui/BlurContainer";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
@@ -41,13 +39,13 @@ type FormValues = z.infer<typeof formSchema>;
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const { updateProfile, login, isLoggedIn } = useUser();
+  const { register, isLoggedIn } = useUser();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Redirect if already logged in
-  React.useEffect(() => {
+  useEffect(() => {
     if (isLoggedIn) {
       navigate("/");
     }
@@ -67,14 +65,8 @@ const SignUp = () => {
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      // Create a mock user if it doesn't exist
-      // In a real app, this would be a call to your backend API
-
-      // First attempt to login the user (this will throw if user doesn't exist)
-      login(values.email, values.password);
-      
-      // Then update their profile with the name
-      updateProfile(values.name, values.email);
+      // Register the new user
+      register(values.email, values.password, values.name);
       
       toast({
         title: "Account created",
@@ -82,12 +74,10 @@ const SignUp = () => {
       });
       
       navigate("/");
-    } catch (error) {
-      // In a real app, you would register the user here
-      // For this mock app, we'll create a toast notification
+    } catch (error: any) {
       toast({
         title: "Sign up failed",
-        description: "This email is already in use or your password doesn't match our requirements. Please try a different email or password.",
+        description: error.message || "An error occurred during registration",
         variant: "destructive",
       });
     } finally {

@@ -68,13 +68,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [email, setEmail] = useState(userSettings.email || "");
 
   // Mock user database for simple authentication
-  const mockUsers = {
+  const mockUsers: Record<string, string> = {
     "user@example.com": "password123",
     "test@example.com": "test123",
     "admin@example.com": "admin123",
   };
 
-  // Login function with basic validation and proper password check
+  // Login function with proper validation and password check
   const login = (userEmail: string, password: string) => {
     if (!userEmail || !password) {
       throw new Error("Email and password are required");
@@ -84,17 +84,27 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error("Password must be at least 6 characters");
     }
     
-    // Check if the email exists and the password matches
-    if (!(userEmail in mockUsers) || mockUsers[userEmail as keyof typeof mockUsers] !== password) {
+    // Check if the user exists
+    if (!(userEmail in mockUsers)) {
+      throw new Error("Invalid email or password");
+    }
+    
+    // Validate password strictly
+    if (mockUsers[userEmail] !== password) {
       throw new Error("Invalid email or password");
     }
     
     setIsLoggedIn(true);
     setEmail(userEmail);
     
+    // Find or set display name
+    let userName = displayName || userEmail.split('@')[0];
+    setDisplayName(userName);
+    
     const updatedSettings = {
       ...userSettings,
       email: userEmail,
+      displayName: userName,
       isLoggedIn: true,
       lastLogin: new Date().toISOString(),
     };
@@ -103,6 +113,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem("isLoggedIn", "true");
     localStorage.setItem("userSettings", JSON.stringify(updatedSettings));
     setUserSettings(updatedSettings);
+    
+    toast({
+      title: "Signed in successfully",
+      description: `Welcome back, ${userName}!`
+    });
   };
 
   // Logout function

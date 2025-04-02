@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Mail, User, UserPlus } from "lucide-react";
+import { Eye, EyeOff, Mail, User, UserPlus, Key } from "lucide-react";
 
 import {
   Form,
@@ -44,6 +44,7 @@ const SignUp = () => {
   const { updateProfile, login, isLoggedIn } = useUser();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Redirect if already logged in
   React.useEffect(() => {
@@ -63,9 +64,13 @@ const SignUp = () => {
     },
   });
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = async (values: FormValues) => {
+    setIsSubmitting(true);
     try {
-      // First register/login the user
+      // Create a mock user if it doesn't exist
+      // In a real app, this would be a call to your backend API
+
+      // First attempt to login the user (this will throw if user doesn't exist)
       login(values.email, values.password);
       
       // Then update their profile with the name
@@ -78,11 +83,15 @@ const SignUp = () => {
       
       navigate("/");
     } catch (error) {
+      // In a real app, you would register the user here
+      // For this mock app, we'll create a toast notification
       toast({
         title: "Sign up failed",
-        description: "There was an error creating your account. Please try again.",
+        description: "This email is already in use or your password doesn't match our requirements. Please try a different email or password.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -138,6 +147,7 @@ const SignUp = () => {
                               placeholder="John Doe" 
                               className="pl-10" 
                               {...field} 
+                              disabled={isSubmitting}
                             />
                             <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                           </div>
@@ -160,6 +170,7 @@ const SignUp = () => {
                               type="email" 
                               className="pl-10" 
                               {...field} 
+                              disabled={isSubmitting}
                             />
                             <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                           </div>
@@ -182,14 +193,16 @@ const SignUp = () => {
                               type={showPassword ? "text" : "password"}
                               className="pl-10 pr-10"
                               {...field}
+                              disabled={isSubmitting}
                             />
-                            <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                            <Key className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
                               className="absolute right-0 top-0 h-10 w-10 p-0"
                               onClick={() => setShowPassword(!showPassword)}
+                              disabled={isSubmitting}
                             >
                               {showPassword ? (
                                 <EyeOff className="h-4 w-4" />
@@ -220,14 +233,16 @@ const SignUp = () => {
                               type={showConfirmPassword ? "text" : "password"}
                               className="pl-10 pr-10"
                               {...field}
+                              disabled={isSubmitting}
                             />
-                            <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                            <Key className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
                               className="absolute right-0 top-0 h-10 w-10 p-0"
                               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              disabled={isSubmitting}
                             >
                               {showConfirmPassword ? (
                                 <EyeOff className="h-4 w-4" />
@@ -254,6 +269,7 @@ const SignUp = () => {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
+                            disabled={isSubmitting}
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -273,8 +289,8 @@ const SignUp = () => {
                     )}
                   />
                   
-                  <Button type="submit" className="w-full">
-                    Create Account
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? "Creating Account..." : "Create Account"}
                   </Button>
                 </form>
               </Form>

@@ -34,6 +34,7 @@ const SignIn = () => {
   const navigate = useNavigate();
   const { login, isLoggedIn } = useUser();
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Redirect if already logged in
   React.useEffect(() => {
@@ -50,7 +51,8 @@ const SignIn = () => {
     },
   });
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = async (values: FormValues) => {
+    setIsSubmitting(true);
     try {
       login(values.email, values.password);
       toast({
@@ -59,11 +61,17 @@ const SignIn = () => {
       });
       navigate("/");
     } catch (error) {
+      let errorMessage = "Please check your credentials and try again";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       toast({
         title: "Sign in failed",
-        description: "Please check your credentials and try again",
+        description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -124,6 +132,7 @@ const SignIn = () => {
                               type="email" 
                               className="pl-10" 
                               {...field} 
+                              disabled={isSubmitting}
                             />
                             <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                           </div>
@@ -145,6 +154,7 @@ const SignIn = () => {
                               type={showPassword ? "text" : "password"}
                               className="pl-10 pr-10"
                               {...field}
+                              disabled={isSubmitting}
                             />
                             <LogIn className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                             <Button
@@ -153,6 +163,7 @@ const SignIn = () => {
                               size="sm"
                               className="absolute right-0 top-0 h-10 w-10 p-0"
                               onClick={togglePasswordVisibility}
+                              disabled={isSubmitting}
                             >
                               {showPassword ? (
                                 <EyeOff className="h-4 w-4" />
@@ -169,8 +180,13 @@ const SignIn = () => {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full">
-                    Sign In
+                  <div className="text-sm text-muted-foreground">
+                    <p>Demo accounts:</p>
+                    <p>Email: user@example.com | Password: password123</p>
+                    <p>Email: test@example.com | Password: test123</p>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? "Signing in..." : "Sign In"}
                   </Button>
                 </form>
               </Form>

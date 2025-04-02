@@ -8,7 +8,7 @@ import NotificationSettings from "@/components/settings/NotificationSettings";
 import AppearanceSettings from "@/components/settings/AppearanceSettings";
 
 const Settings = () => {
-  const { displayName, email, updateProfile } = useUser();
+  const { displayName, email, updateProfile, userSettings } = useUser();
   const [localDisplayName, setLocalDisplayName] = useState(displayName);
   const [localEmail, setLocalEmail] = useState(email);
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -29,7 +29,11 @@ const Settings = () => {
         setEmailNotifications(settings.emailNotifications !== false);
         setPushNotifications(settings.pushNotifications || false);
         setVoiceReminders(settings.voiceReminders || false);
-        setReminderFrequency(settings.reminderFrequency || "1 day before");
+        
+        // Handle reminder days setting
+        const reminderDays = settings.reminderDays || 1;
+        setReminderFrequency(`${reminderDays} day${reminderDays > 1 ? 's' : ''} before`);
+        
         setTheme(settings.theme || "light");
       } catch (e) {
         console.error("Failed to parse saved settings:", e);
@@ -40,7 +44,7 @@ const Settings = () => {
     if ('Notification' in window) {
       setNotificationPermission(Notification.permission);
     }
-  }, [displayName, email]);
+  }, [displayName, email, userSettings]);
 
   // Save account settings
   const saveAccountSettings = () => {

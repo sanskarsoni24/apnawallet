@@ -27,9 +27,9 @@ const DocumentContext = createContext<DocumentContextType | undefined>(undefined
 
 export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
-  const { email, isLoggedIn, displayName } = useUser();
+  const { email, isLoggedIn } = useUser();
 
-  // Load documents from localStorage on initial render
+  // Load documents from localStorage on initial render or when user changes
   useEffect(() => {
     const savedDocs = localStorage.getItem("documents");
     if (savedDocs) {
@@ -48,7 +48,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           dueDate: "May 15, 2023",
           daysRemaining: 3,
           description: "Annual car insurance premium payment.",
-          userId: email || "demo@example.com" // Default userId for sample data
+          userId: "user@example.com" // Assign to a specific user
         },
         {
           id: "2",
@@ -57,7 +57,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           dueDate: "May 20, 2023",
           daysRemaining: 8,
           description: "Extended warranty for iPhone purchase.",
-          userId: email || "demo@example.com"
+          userId: "user@example.com"
         },
         {
           id: "3",
@@ -66,7 +66,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           dueDate: "May 25, 2023",
           daysRemaining: 13,
           description: "Monthly streaming service subscription.",
-          userId: email || "demo@example.com"
+          userId: "test@example.com"
         },
         {
           id: "4",
@@ -75,7 +75,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           dueDate: "June 1, 2023",
           daysRemaining: 20,
           description: "Flight from SFO to JFK.",
-          userId: email || "demo@example.com"
+          userId: "test@example.com"
         },
         {
           id: "5",
@@ -84,13 +84,13 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           dueDate: "May 10, 2023",
           daysRemaining: -2,
           description: "Monthly internet service payment.",
-          userId: email || "demo@example.com"
+          userId: "admin@example.com"
         },
       ];
       setDocuments(sampleDocuments);
       localStorage.setItem("documents", JSON.stringify(sampleDocuments));
     }
-  }, [email]);
+  }, []);
 
   // Save documents to localStorage whenever they change
   useEffect(() => {
@@ -99,29 +99,44 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Function to get only the documents that belong to the current user
   const getUserDocuments = () => {
-    if (!isLoggedIn) return [];
+    if (!isLoggedIn || !email) return [];
     return documents.filter(doc => doc.userId === email);
   };
 
   const addDocument = (doc: Omit<Document, "id">) => {
+    if (!isLoggedIn || !email) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to add documents",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newDocument = {
       ...doc,
       id: Date.now().toString(),
-      userId: email, // Associate the document with the current user
+      userId: email, // Associate document with current user
     };
+    
     setDocuments((prev) => [...prev, newDocument]);
   };
 
   const updateDocument = (id: string, updates: Partial<Document>) => {
+    if (!isLoggedIn) return;
+    
     setDocuments((prev) => 
       prev.map((doc) => 
-        doc.id === id ? { ...doc, ...updates } : doc
+        // Only update if document belongs to current user
+        doc.id === id && doc.userId === email ? { ...doc, ...updates } : doc
       )
     );
   };
 
-  // New function to specifically update the due date
+  // Update the due date
   const updateDueDate = (id: string, newDueDate: string) => {
+    if (!isLoggedIn) return;
+    
     // Calculate new days remaining based on the new due date
     const calculateDaysRemaining = (dateString: string) => {
       try {
@@ -162,13 +177,18 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     setDocuments((prev) => 
       prev.map((doc) => 
-        doc.id === id ? { ...doc, dueDate: newDueDate, daysRemaining } : doc
+        // Only update if document belongs to current user
+        doc.id === id && doc.userId === email ? { ...doc, dueDate: newDueDate, daysRemaining } : doc
       )
     );
   };
 
   const deleteDocument = (id: string) => {
-    setDocuments((prev) => prev.filter((doc) => doc.id !== id));
+    if (!isLoggedIn) return;
+    
+    setDocuments((prev) => 
+      prev.filter((doc) => !(doc.id === id && doc.userId === email))
+    );
   };
 
   const filteredDocuments = (type: string) => {
@@ -177,6 +197,9 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (type === "All") return userDocs;
     return userDocs.filter((doc) => doc.type === type);
   };
+
+  // Add import for toast
+  const { toast } = require("@/hooks/use-toast");
 
   return (
     <DocumentContext.Provider

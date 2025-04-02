@@ -1,9 +1,7 @@
-
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Bell, Files, Settings, LogOut, User, FileText, MessageSquare, Filter, LogIn, UserPlus } from "lucide-react";
-import BlurContainer from "../ui/BlurContainer";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -27,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
+import BlurContainer from "../ui/BlurContainer";
 
 const Header = () => {
   const location = useLocation();
@@ -82,7 +81,7 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full animate-fade-in">
-      <BlurContainer className="mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 border-b border-border/40">
+      <div className="mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 border-b border-border/40 bg-background">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
             <Files className="h-5 w-5 text-primary" />
@@ -258,7 +257,7 @@ const Header = () => {
             </div>
           )}
         </div>
-      </BlurContainer>
+      </div>
       
       {/* User Profile Dialog */}
       <Dialog open={showUserDialog} onOpenChange={setShowUserDialog}>

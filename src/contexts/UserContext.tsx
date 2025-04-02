@@ -12,6 +12,7 @@ interface UserSettings {
   reminderDays?: number;
   theme?: string;
   lastLogin?: string;
+  voiceType?: string;
 }
 
 interface UserContextType {
@@ -59,13 +60,21 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       voiceReminders: false,
       reminderDays: 3,
       theme: "system",
+      voiceType: "default",
     };
   });
   
   const [displayName, setDisplayName] = useState(userSettings.displayName || "");
   const [email, setEmail] = useState(userSettings.email || "");
 
-  // Login function with basic validation
+  // Mock user database for simple authentication
+  const mockUsers = {
+    "user@example.com": "password123",
+    "test@example.com": "test123",
+    "admin@example.com": "admin123",
+  };
+
+  // Login function with basic validation and proper password check
   const login = (userEmail: string, password: string) => {
     if (!userEmail || !password) {
       throw new Error("Email and password are required");
@@ -73,6 +82,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     if (password.length < 6) {
       throw new Error("Password must be at least 6 characters");
+    }
+    
+    // Check if the email exists and the password matches
+    if (!(userEmail in mockUsers) || mockUsers[userEmail as keyof typeof mockUsers] !== password) {
+      throw new Error("Invalid email or password");
     }
     
     setIsLoggedIn(true);

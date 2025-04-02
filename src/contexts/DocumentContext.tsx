@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useUser } from "./UserContext";
+import { toast } from "@/hooks/use-toast";
 
 export interface Document {
   id: string;
@@ -197,9 +198,6 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (type === "All") return userDocs;
     return userDocs.filter((doc) => doc.type === type);
   };
-
-  // Add import for toast
-  const { toast } = require("@/hooks/use-toast");
 
   return (
     <DocumentContext.Provider

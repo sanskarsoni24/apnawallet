@@ -1,291 +1,256 @@
+// Ensure Button is properly imported
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { useToast } from "@/hooks/use-toast"
+import { cn } from "@/lib/utils"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+import { useUser } from "@/contexts/UserContext";
+import { Slider } from "@/components/ui/slider"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import React from "react";
-import { Bell, Volume2 } from "lucide-react";
-import BlurContainer from "@/components/ui/BlurContainer";
-import { toast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { speakNotification } from "@/services/NotificationService";
+const formSchema = z.object({
+  displayName: z.string().min(2, {
+    message: "Display Name must be at least 2 characters.",
+  }),
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+  emailNotifications: z.boolean().default(false),
+  pushNotifications: z.boolean().default(false),
+  voiceReminders: z.boolean().default(false),
+  reminderDays: z.number().min(1).max(30).default(3),
+  theme: z.string().default("system"),
+  voiceType: z.string().default("default"),
+})
 
-interface NotificationSettingsProps {
-  emailNotifications: boolean;
-  setEmailNotifications: (value: boolean) => void;
-  pushNotifications: boolean;
-  setPushNotifications: (value: boolean) => void;
-  voiceReminders: boolean;
-  setVoiceReminders: (value: boolean) => void;
-  reminderFrequency: string;
-  setReminderFrequency: (value: string) => void;
-  notificationPermission: string;
-  requestNotificationPermission: () => void;
-  saveNotificationSettings: (key: string, value: any) => void;
+const NotificationSettings = () => {
+  const { toast } = useToast()
+  const { userSettings, updateProfile, updateUserSettings } = useUser();
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      displayName: userSettings.displayName || "",
+      email: userSettings.email || "",
+      emailNotifications: userSettings.emailNotifications !== false,
+      pushNotifications: userSettings.pushNotifications || false,
+      voiceReminders: userSettings.voiceReminders || false,
+      reminderDays: userSettings.reminderDays || 3,
+      theme: userSettings.theme || "system",
+      voiceType: userSettings.voiceType || "default",
+    },
+  })
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    updateProfile(values.displayName, values.email);
+    updateUserSettings({
+      emailNotifications: values.emailNotifications,
+      pushNotifications: values.pushNotifications,
+      voiceReminders: values.voiceReminders,
+      reminderDays: values.reminderDays,
+      theme: values.theme,
+      voiceType: values.voiceType,
+    });
+    
+    toast({
+      title: "Settings updated.",
+      description: "Your notification settings have been updated.",
+    })
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <div className="grid gap-6">
+          <FormField
+            control={form.control}
+            name="displayName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Display Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Display Name" {...field} />
+                </FormControl>
+                <FormDescription>
+                  This is the name that will be displayed on your profile and in emails.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="shadcn@example.com" {...field} />
+                </FormControl>
+                <FormDescription>
+                  This is the email that will be used to send you notifications.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-lg font-medium">Notifications</h2>
+          <p className="text-muted-foreground">
+            Configure how you receive notifications.
+          </p>
+        </div>
+        <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="emailNotifications"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Email Notifications</FormLabel>
+                  <FormDescription>
+                    Receive notifications via email.
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="pushNotifications"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Push Notifications</FormLabel>
+                  <FormDescription>
+                    Receive notifications via push notifications.
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="voiceReminders"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Voice Reminders</FormLabel>
+                  <FormDescription>
+                    Receive voice reminders for upcoming deadlines.
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="reminderDays"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Reminder Days</FormLabel>
+                <FormDescription>
+                  Set the number of days before a deadline to receive a reminder.
+                </FormDescription>
+                <FormControl>
+                  <Slider
+                    defaultValue={[field.value]}
+                    max={30}
+                    step={1}
+                    onValueChange={(value) => field.onChange(value[0])}
+                  />
+                </FormControl>
+                <FormMessage>{field.value} days</FormMessage>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="theme"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Theme</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a theme" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="system">System</SelectItem>
+                    <SelectItem value="light">Light</SelectItem>
+                    <SelectItem value="dark">Dark</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Select the theme for the application.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="voiceType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Voice Type</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a voice" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="default">Default</SelectItem>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Select the voice for voice reminders.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <Button type="submit">Update Settings</Button>
+      </form>
+    </Form>
+  )
 }
 
-const VOICE_OPTIONS = [
-  { id: "default", name: "Default" },
-  { id: "female", name: "Female" },
-  { id: "male", name: "Male" },
-  { id: "child", name: "Child" },
-  { id: "british", name: "British" },
-  { id: "australian", name: "Australian" },
-];
-
-const NotificationSettings = ({
-  emailNotifications,
-  setEmailNotifications,
-  pushNotifications,
-  setPushNotifications,
-  voiceReminders,
-  setVoiceReminders,
-  reminderFrequency,
-  setReminderFrequency,
-  notificationPermission,
-  requestNotificationPermission,
-  saveNotificationSettings
-}: NotificationSettingsProps) => {
-  
-  // Get current voice type from localStorage or use default
-  const [selectedVoice, setSelectedVoice] = React.useState(() => {
-    const settings = JSON.parse(localStorage.getItem("userSettings") || "{}");
-    return settings.voiceType || "default";
-  });
-  
-  // Play voice sample
-  const playVoiceSample = (voiceId: string) => {
-    const message = `This is a sample of the ${VOICE_OPTIONS.find(v => v.id === voiceId)?.name || "default"} voice.`;
-    
-    // Adjust speech synthesis parameters based on selected voice
-    const utterance = new SpeechSynthesisUtterance(message);
-    
-    // Apply voice settings
-    switch(voiceId) {
-      case "female":
-        utterance.pitch = 1.2;
-        utterance.rate = 1.0;
-        break;
-      case "male":
-        utterance.pitch = 0.8;
-        utterance.rate = 0.9;
-        break;
-      case "child":
-        utterance.pitch = 1.5;
-        utterance.rate = 1.1;
-        break;
-      case "british":
-        utterance.pitch = 1.0;
-        utterance.rate = 0.9;
-        // Try to use a UK English voice if available
-        const voices = window.speechSynthesis.getVoices();
-        const ukVoice = voices.find(voice => voice.lang === 'en-GB');
-        if (ukVoice) utterance.voice = ukVoice;
-        break;
-      case "australian":
-        utterance.pitch = 1.0;
-        utterance.rate = 0.95;
-        // Try to use an Australian English voice if available
-        const auVoices = window.speechSynthesis.getVoices();
-        const auVoice = auVoices.find(voice => voice.lang === 'en-AU');
-        if (auVoice) utterance.voice = auVoice;
-        break;
-      default:
-        utterance.pitch = 1.0;
-        utterance.rate = 1.0;
-    }
-    
-    window.speechSynthesis.speak(utterance);
-    
-    toast({
-      title: "Voice Sample",
-      description: `Playing ${VOICE_OPTIONS.find(v => v.id === voiceId)?.name || "default"} voice sample`
-    });
-  };
-  
-  // Handle voice change
-  const handleVoiceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const voiceId = e.target.value;
-    setSelectedVoice(voiceId);
-    saveNotificationSettings("voiceType", voiceId);
-    
-    toast({
-      title: "Voice Updated",
-      description: `Voice type set to ${VOICE_OPTIONS.find(v => v.id === voiceId)?.name || "default"}`
-    });
-  };
-  
-  // Toggle voice reminders
-  const toggleVoiceReminders = () => {
-    // Test if speech synthesis is available
-    if (!voiceReminders && 'speechSynthesis' in window) {
-      const success = speakNotification("Voice reminders have been enabled.");
-      if (success) {
-        setVoiceReminders(true);
-        saveNotificationSettings("voiceReminders", true);
-      } else {
-        toast({
-          title: "Voice Reminders Unavailable",
-          description: "Your browser doesn't support voice synthesis.",
-          variant: "destructive"
-        });
-      }
-    } else if (!('speechSynthesis' in window)) {
-      toast({
-        title: "Voice Reminders Unavailable",
-        description: "Your browser doesn't support voice synthesis.",
-        variant: "destructive"
-      });
-    } else {
-      setVoiceReminders(false);
-      saveNotificationSettings("voiceReminders", false);
-    }
-  };
-
-  // Toggle push notifications
-  const togglePushNotifications = () => {
-    if (!pushNotifications) {
-      requestNotificationPermission();
-    } else {
-      setPushNotifications(false);
-      saveNotificationSettings("pushNotifications", false);
-    }
-  };
-  
-  return (
-    <BlurContainer className="p-6 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-      <div className="mb-4 flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-          <Bell className="h-5 w-5 text-primary" />
-        </div>
-        <h2 className="text-lg font-medium">Notification Settings</h2>
-      </div>
-      
-      <div className="space-y-4">
-        <div className="flex items-center justify-between py-2">
-          <div>
-            <h3 className="text-sm font-medium">Email Notifications</h3>
-            <p className="text-xs text-muted-foreground">
-              Receive email notifications for upcoming deadlines.
-            </p>
-          </div>
-          <label className="inline-flex items-center">
-            <input 
-              type="checkbox" 
-              className="sr-only peer" 
-              checked={emailNotifications}
-              onChange={() => {
-                setEmailNotifications(!emailNotifications);
-                saveNotificationSettings("emailNotifications", !emailNotifications);
-              }}
-            />
-            <div className="relative h-5 w-10 cursor-pointer rounded-full bg-muted peer-checked:bg-primary transition-colors">
-              <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-all peer-checked:left-5" />
-            </div>
-          </label>
-        </div>
-        
-        <div className="flex items-center justify-between py-2">
-          <div>
-            <h3 className="text-sm font-medium">Push Notifications</h3>
-            <p className="text-xs text-muted-foreground">
-              Receive push notifications on your devices.
-            </p>
-          </div>
-          <label className="inline-flex items-center">
-            <input 
-              type="checkbox" 
-              className="sr-only peer"
-              checked={pushNotifications}
-              onChange={togglePushNotifications}
-            />
-            <div className="relative h-5 w-10 cursor-pointer rounded-full bg-muted peer-checked:bg-primary transition-colors">
-              <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-all peer-checked:left-5" />
-            </div>
-          </label>
-        </div>
-        
-        {notificationPermission === 'denied' && (
-          <Alert variant="destructive" className="mt-2">
-            <AlertDescription>
-              Notification permission denied. You need to allow notifications in your browser settings.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <div className="flex items-center justify-between py-2">
-          <div>
-            <h3 className="text-sm font-medium">Voice Reminders</h3>
-            <p className="text-xs text-muted-foreground">
-              Enable spoken reminders for upcoming deadlines.
-            </p>
-          </div>
-          <label className="inline-flex items-center">
-            <input 
-              type="checkbox" 
-              className="sr-only peer"
-              checked={voiceReminders}
-              onChange={toggleVoiceReminders}
-            />
-            <div className="relative h-5 w-10 cursor-pointer rounded-full bg-muted peer-checked:bg-primary transition-colors">
-              <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-all peer-checked:left-5" />
-            </div>
-          </label>
-        </div>
-        
-        {/* Voice Selection */}
-        {voiceReminders && (
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <h3 className="text-sm font-medium">Voice Type</h3>
-              <p className="text-xs text-muted-foreground">
-                Choose the voice for your spoken reminders.
-              </p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <select 
-                className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all"
-                value={selectedVoice}
-                onChange={handleVoiceChange}
-              >
-                {VOICE_OPTIONS.map(voice => (
-                  <option key={voice.id} value={voice.id}>
-                    {voice.name}
-                  </option>
-                ))}
-              </select>
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => playVoiceSample(selectedVoice)}
-                title="Play sample"
-              >
-                <Volume2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-        
-        <div className="flex items-center justify-between py-2">
-          <div>
-            <h3 className="text-sm font-medium">Reminder Days</h3>
-            <p className="text-xs text-muted-foreground">
-              How many days before due date should we remind you?
-            </p>
-          </div>
-          <select 
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all"
-            value={reminderFrequency}
-            onChange={(e) => {
-              setReminderFrequency(e.target.value);
-              saveNotificationSettings("reminderDays", e.target.value.split(" ")[0]);
-            }}
-          >
-            <option>1 day before</option>
-            <option>3 days before</option>
-            <option>5 days before</option>
-            <option>7 days before</option>
-          </select>
-        </div>
-      </div>
-    </BlurContainer>
-  );
-};
-
-export default NotificationSettings;
+export default NotificationSettings

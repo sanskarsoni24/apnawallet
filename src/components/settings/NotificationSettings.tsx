@@ -10,7 +10,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -68,27 +67,51 @@ const NotificationSettings = () => {
       const utterance = new SpeechSynthesisUtterance("This is a preview of the voice reminder.");
       
       // Get available voices
-      const voices = synth.getVoices();
+      let voices = synth.getVoices();
       
-      // Set voice based on type
-      switch(voiceType) {
-        case "male":
-          // Find first male voice (usually deeper voices)
-          const maleVoice = voices.find(voice => voice.name.includes("Male") || voice.name.includes("male"));
-          if (maleVoice) utterance.voice = maleVoice;
-          break;
-        case "female":
-          // Find first female voice
-          const femaleVoice = voices.find(voice => voice.name.includes("Female") || voice.name.includes("female"));
-          if (femaleVoice) utterance.voice = femaleVoice;
-          break;
-        default:
-          // Use default voice
-          break;
+      // If voices array is empty, wait for them to load
+      if (voices.length === 0) {
+        // Wait for voices to be loaded
+        synth.onvoiceschanged = () => {
+          voices = synth.getVoices();
+          setVoiceBasedOnType(utterance, voices, voiceType);
+          synth.speak(utterance);
+        };
+      } else {
+        setVoiceBasedOnType(utterance, voices, voiceType);
+        synth.speak(utterance);
       }
       
-      synth.speak(utterance);
       setPreviewVoice("");
+    }
+  };
+  
+  // Helper function to set voice based on type
+  const setVoiceBasedOnType = (utterance: SpeechSynthesisUtterance, voices: SpeechSynthesisVoice[], voiceType: string) => {
+    switch(voiceType) {
+      case "male":
+        // Find first male voice (usually deeper voices)
+        const maleVoice = voices.find(voice => 
+          voice.name.toLowerCase().includes("male") || 
+          voice.name.includes("David") || 
+          voice.name.includes("Mark") || 
+          voice.name.includes("Tom")
+        );
+        if (maleVoice) utterance.voice = maleVoice;
+        break;
+      case "female":
+        // Find first female voice
+        const femaleVoice = voices.find(voice => 
+          voice.name.toLowerCase().includes("female") || 
+          voice.name.includes("Samantha") || 
+          voice.name.includes("Victoria") || 
+          voice.name.includes("Karen")
+        );
+        if (femaleVoice) utterance.voice = femaleVoice;
+        break;
+      default:
+        // Use default voice
+        break;
     }
   };
 
@@ -154,30 +177,34 @@ const NotificationSettings = () => {
   };
 
   return (
-    <BlurContainer className="p-6 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-      <div className="mb-4 flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-          <Bell className="h-5 w-5 text-primary" />
+    <BlurContainer className="p-6 animate-fade-in bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/30 dark:to-purple-950/30 backdrop-blur-xl border border-indigo-100/50 dark:border-indigo-800/30 rounded-xl shadow-lg" style={{ animationDelay: "0.2s" }}>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="h-12 w-12 rounded-full bg-indigo-500/10 flex items-center justify-center">
+          <Bell className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
         </div>
-        <h2 className="text-lg font-medium">Notification Settings</h2>
+        <h2 className="text-xl font-medium bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">Notification Settings</h2>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
             <FormField
               control={form.control}
               name="emailNotifications"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border border-indigo-100/80 dark:border-indigo-800/30 p-4 bg-white/50 dark:bg-slate-900/50 shadow-sm">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Email Notifications</FormLabel>
-                    <FormDescription className="text-xs">
+                    <FormLabel className="text-base font-medium text-indigo-800 dark:text-indigo-300">Email Notifications</FormLabel>
+                    <FormDescription className="text-xs text-slate-600 dark:text-slate-400">
                       Receive notifications via email
                     </FormDescription>
                   </div>
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch 
+                      checked={field.value} 
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-indigo-600"
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -187,22 +214,26 @@ const NotificationSettings = () => {
               control={form.control}
               name="pushNotifications"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border border-indigo-100/80 dark:border-indigo-800/30 p-4 bg-white/50 dark:bg-slate-900/50 shadow-sm">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Push Notifications</FormLabel>
-                    <FormDescription className="text-xs">
+                    <FormLabel className="text-base font-medium text-indigo-800 dark:text-indigo-300">Push Notifications</FormLabel>
+                    <FormDescription className="text-xs text-slate-600 dark:text-slate-400">
                       Receive notifications in your browser
                     </FormDescription>
                   </div>
                   <div className="flex items-center space-x-2">
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={(checked) => {
-                        if (checked && 'Notification' in window && Notification.permission !== 'granted') {
-                          requestNotificationPermission();
-                        } else {
-                          field.onChange(checked);
-                        }
-                      }} />
+                      <Switch 
+                        checked={field.value} 
+                        onCheckedChange={(checked) => {
+                          if (checked && 'Notification' in window && Notification.permission !== 'granted') {
+                            requestNotificationPermission();
+                          } else {
+                            field.onChange(checked);
+                          }
+                        }}
+                        className="data-[state=checked]:bg-indigo-600"
+                      />
                     </FormControl>
                   </div>
                 </FormItem>
@@ -213,15 +244,19 @@ const NotificationSettings = () => {
               control={form.control}
               name="voiceReminders"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border border-indigo-100/80 dark:border-indigo-800/30 p-4 bg-white/50 dark:bg-slate-900/50 shadow-sm">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Voice Reminders</FormLabel>
-                    <FormDescription className="text-xs">
+                    <FormLabel className="text-base font-medium text-indigo-800 dark:text-indigo-300">Voice Reminders</FormLabel>
+                    <FormDescription className="text-xs text-slate-600 dark:text-slate-400">
                       Receive voice reminders for upcoming deadlines
                     </FormDescription>
                   </div>
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch 
+                      checked={field.value} 
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-indigo-600"
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -232,9 +267,9 @@ const NotificationSettings = () => {
                 control={form.control}
                 name="voiceType"
                 render={({ field }) => (
-                  <FormItem className="rounded-lg border p-3">
-                    <FormLabel>Voice Type</FormLabel>
-                    <div className="flex items-center gap-2">
+                  <FormItem className="rounded-lg border border-indigo-100/80 dark:border-indigo-800/30 p-4 bg-white/50 dark:bg-slate-900/50 shadow-sm">
+                    <FormLabel className="text-base font-medium text-indigo-800 dark:text-indigo-300">Voice Type</FormLabel>
+                    <div className="flex items-center gap-2 mt-2">
                       <FormControl>
                         <Select
                           value={field.value}
@@ -243,7 +278,7 @@ const NotificationSettings = () => {
                             setPreviewVoice(value);
                           }}
                         >
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger className="w-full border-indigo-200 dark:border-indigo-800/30 focus:ring-indigo-500">
                             <SelectValue placeholder="Select a voice" />
                           </SelectTrigger>
                           <SelectContent>
@@ -259,14 +294,15 @@ const NotificationSettings = () => {
                           variant="outline" 
                           size="sm"
                           onClick={() => speakPreview(form.watch("voiceType"))}
+                          className="border-indigo-200 hover:bg-indigo-50 dark:border-indigo-800/30 dark:hover:bg-indigo-900/30"
                         >
-                          <Volume2 className="h-4 w-4 mr-2" />
+                          <Volume2 className="h-4 w-4 mr-2 text-indigo-600 dark:text-indigo-400" />
                           Preview
                         </Button>
                       )}
                     </div>
                     {previewVoice && (
-                      <div className="text-xs text-muted-foreground mt-1">
+                      <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                         Click preview to hear the {previewVoice} voice.
                       </div>
                     )}
@@ -279,9 +315,9 @@ const NotificationSettings = () => {
               control={form.control}
               name="reminderDays"
               render={({ field }) => (
-                <FormItem className="rounded-lg border p-3">
-                  <FormLabel>Reminder Days</FormLabel>
-                  <FormDescription className="text-xs">
+                <FormItem className="rounded-lg border border-indigo-100/80 dark:border-indigo-800/30 p-4 bg-white/50 dark:bg-slate-900/50 shadow-sm">
+                  <FormLabel className="text-base font-medium text-indigo-800 dark:text-indigo-300">Reminder Days</FormLabel>
+                  <FormDescription className="text-xs text-slate-600 dark:text-slate-400">
                     Set how many days before a deadline to receive reminders
                   </FormDescription>
                   <div className="pt-2">
@@ -292,10 +328,11 @@ const NotificationSettings = () => {
                         max={30}
                         step={1}
                         onValueChange={(vals) => field.onChange(vals[0])}
+                        className="[&_[role=slider]]:bg-indigo-600"
                       />
                     </FormControl>
                   </div>
-                  <div className="text-xs text-end mt-1">
+                  <div className="text-xs text-right mt-1 text-indigo-600 dark:text-indigo-400 font-medium">
                     {field.value} {field.value === 1 ? 'day' : 'days'} before deadline
                   </div>
                 </FormItem>
@@ -303,7 +340,7 @@ const NotificationSettings = () => {
             />
           </div>
           
-          <Button type="submit">Save Notification Settings</Button>
+          <Button type="submit" className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">Save Notification Settings</Button>
         </form>
       </Form>
     </BlurContainer>

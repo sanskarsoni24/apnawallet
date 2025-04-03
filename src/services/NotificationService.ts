@@ -3,13 +3,57 @@ import { toast } from "@/hooks/use-toast";
 import { Document } from "@/contexts/DocumentContext";
 
 // Speech synthesis for voice reminders
-const speakNotification = (text: string) => {
+const speakNotification = (text: string, voiceType: string = 'default') => {
   if ('speechSynthesis' in window) {
     const utterance = new SpeechSynthesisUtterance(text);
-    window.speechSynthesis.speak(utterance);
+    
+    // Get available voices
+    let voices = window.speechSynthesis.getVoices();
+    
+    // If voices array is empty, wait for them to load
+    if (voices.length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        voices = window.speechSynthesis.getVoices();
+        setVoiceBasedOnType(utterance, voices, voiceType);
+        window.speechSynthesis.speak(utterance);
+      };
+    } else {
+      setVoiceBasedOnType(utterance, voices, voiceType);
+      window.speechSynthesis.speak(utterance);
+    }
+    
     return true;
   }
   return false;
+};
+
+// Helper function to set voice based on type
+const setVoiceBasedOnType = (utterance: SpeechSynthesisUtterance, voices: SpeechSynthesisVoice[], voiceType: string) => {
+  switch(voiceType) {
+    case "male":
+      // Find first male voice (usually deeper voices)
+      const maleVoice = voices.find(voice => 
+        voice.name.toLowerCase().includes("male") || 
+        voice.name.includes("David") || 
+        voice.name.includes("Mark") || 
+        voice.name.includes("Tom")
+      );
+      if (maleVoice) utterance.voice = maleVoice;
+      break;
+    case "female":
+      // Find first female voice
+      const femaleVoice = voices.find(voice => 
+        voice.name.toLowerCase().includes("female") || 
+        voice.name.includes("Samantha") || 
+        voice.name.includes("Victoria") || 
+        voice.name.includes("Karen")
+      );
+      if (femaleVoice) utterance.voice = femaleVoice;
+      break;
+    default:
+      // Use default voice
+      break;
+  }
 };
 
 // Send email notification (mock implementation)
@@ -32,7 +76,7 @@ const sendEmailNotification = async (email: string, subject: string, body: strin
 
 // Check for documents nearing their due date and send reminders
 const checkForDueDocuments = (documents: Document[], userEmail: string, preferences: any) => {
-  const { emailNotifications, pushNotifications, voiceReminders, reminderDays } = preferences;
+  const { emailNotifications, pushNotifications, voiceReminders, reminderDays, voiceType } = preferences;
   const daysThreshold = parseInt(reminderDays) || 3;
   
   // Filter documents that are due within the threshold
@@ -56,7 +100,7 @@ const checkForDueDocuments = (documents: Document[], userEmail: string, preferen
     
     // Voice reminder
     if (voiceReminders) {
-      speakNotification(notificationText);
+      speakNotification(notificationText, voiceType || 'default');
     }
     
     // Email notification

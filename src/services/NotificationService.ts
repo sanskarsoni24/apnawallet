@@ -74,6 +74,24 @@ const sendEmailNotification = async (email: string, subject: string, body: strin
   });
 };
 
+// Create app notification
+const createAppNotification = (title: string, description: string) => {
+  // This would typically update the notification state in a real app
+  // For this mock implementation, we'll just show a toast
+  toast({
+    title,
+    description,
+  });
+  
+  // Trigger an event so other components can update their notification state
+  const event = new CustomEvent('newNotification', { 
+    detail: { title, description, time: 'Just now', read: false } 
+  });
+  window.dispatchEvent(event);
+  
+  return true;
+};
+
 // Check for documents nearing their due date and send reminders
 const checkForDueDocuments = (documents: Document[], userEmail: string, preferences: any) => {
   const { emailNotifications, pushNotifications, voiceReminders, reminderDays, voiceType } = preferences;
@@ -89,6 +107,12 @@ const checkForDueDocuments = (documents: Document[], userEmail: string, preferen
   // Handle notifications based on user preferences
   dueDocuments.forEach(doc => {
     const notificationText = `${doc.title} is due in ${doc.daysRemaining} day${doc.daysRemaining !== 1 ? 's' : ''}`;
+    
+    // App notification
+    createAppNotification(
+      "Document Due Soon",
+      notificationText
+    );
     
     // Push notification
     if (pushNotifications && 'Notification' in window && Notification.permission === 'granted') {
@@ -114,4 +138,4 @@ const checkForDueDocuments = (documents: Document[], userEmail: string, preferen
   });
 };
 
-export { speakNotification, sendEmailNotification, checkForDueDocuments };
+export { speakNotification, sendEmailNotification, createAppNotification, checkForDueDocuments };

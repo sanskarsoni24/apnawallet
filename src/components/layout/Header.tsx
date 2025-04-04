@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -32,28 +33,47 @@ const Header = () => {
   const navigate = useNavigate();
   const [unreadNotifications, setUnreadNotifications] = React.useState(3);
   const [showUserDialog, setShowUserDialog] = React.useState(false);
+  const [notifications, setNotifications] = React.useState([
+    { id: 1, title: "Car Insurance Expires Soon", description: "Your car insurance expires in 3 days", time: "2 hours ago", read: false },
+    { id: 2, title: "New Document Added", description: "Internet Bill has been added to your documents", time: "Yesterday", read: false },
+    { id: 3, title: "Document Updated", description: "Netflix Subscription details were updated", time: "2 days ago", read: false },
+  ]);
   
   // Get user data from context
   const { isLoggedIn, displayName, email, logout } = useUser();
   
+  // Update unread count whenever notifications change
+  React.useEffect(() => {
+    const unreadCount = notifications.filter(notification => !notification.read).length;
+    setUnreadNotifications(unreadCount);
+  }, [notifications]);
+
   const navigation = [
     { name: "Dashboard", href: "/", icon: Files },
     { name: "Documents", href: "/documents", icon: Files },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
 
-  const notifications = [
-    { id: 1, title: "Car Insurance Expires Soon", description: "Your car insurance expires in 3 days", time: "2 hours ago" },
-    { id: 2, title: "New Document Added", description: "Internet Bill has been added to your documents", time: "Yesterday" },
-    { id: 3, title: "Document Updated", description: "Netflix Subscription details were updated", time: "2 days ago" },
-  ];
-
   const markAllAsRead = () => {
+    const updatedNotifications = notifications.map(notification => ({
+      ...notification,
+      read: true
+    }));
+    setNotifications(updatedNotifications);
     setUnreadNotifications(0);
     toast({
       title: "Notifications cleared",
       description: "All notifications have been marked as read",
     });
+  };
+  
+  const markNotificationAsRead = (id) => {
+    const updatedNotifications = notifications.map(notification => 
+      notification.id === id ? { ...notification, read: true } : notification
+    );
+    setNotifications(updatedNotifications);
+    const unreadCount = updatedNotifications.filter(notification => !notification.read).length;
+    setUnreadNotifications(unreadCount);
   };
 
   const handleSignOut = () => {
@@ -169,13 +189,13 @@ const Header = () => {
                         {notifications.map((notification) => (
                           <div 
                             key={notification.id} 
-                            className="p-3 border-b hover:bg-muted/50 cursor-pointer"
+                            className={`p-3 border-b hover:bg-muted/50 cursor-pointer ${notification.read ? 'bg-muted/20' : ''}`}
                             onClick={() => {
                               toast({
                                 title: notification.title,
                                 description: notification.description
                               });
-                              setUnreadNotifications(prev => Math.max(0, prev - 1));
+                              markNotificationAsRead(notification.id);
                             }}
                           >
                             <div className="flex gap-3">
@@ -183,7 +203,10 @@ const Header = () => {
                                 <FileText className="h-4 w-4 text-primary" />
                               </div>
                               <div>
-                                <h5 className="text-sm font-medium">{notification.title}</h5>
+                                <h5 className={`text-sm font-medium ${notification.read ? 'text-muted-foreground' : ''}`}>
+                                  {notification.title}
+                                  {!notification.read && <span className="ml-2 inline-block h-2 w-2 rounded-full bg-primary"></span>}
+                                </h5>
                                 <p className="text-xs text-muted-foreground mt-1">{notification.description}</p>
                                 <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
                               </div>

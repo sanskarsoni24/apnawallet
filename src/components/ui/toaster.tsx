@@ -21,11 +21,11 @@ export function Toaster() {
         let progressStyle = "from-indigo-500 to-purple-500";
         
         // Add specific styles for document processing toasts
-        if (title?.includes("Processing")) {
+        if (title?.includes("Processing") || title?.includes("Reminder") || title?.includes("Due Soon")) {
           customStyle = "bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 border border-blue-100 dark:border-blue-800/30";
           titleStyle = "text-blue-700 dark:text-blue-300 font-medium";
           progressStyle = "from-blue-500 to-cyan-500";
-        } else if (title?.includes("processed") || title?.includes("extracted")) {
+        } else if (title?.includes("processed") || title?.includes("extracted") || title?.includes("Sent")) {
           customStyle = "bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border border-green-100 dark:border-green-800/30";
           titleStyle = "text-green-700 dark:text-green-300 font-medium";
           progressStyle = "from-green-500 to-emerald-500";
@@ -33,6 +33,10 @@ export function Toaster() {
           customStyle = "bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950 dark:to-rose-950 border border-red-100 dark:border-red-800/30";
           titleStyle = "text-red-700 dark:text-red-300 font-medium";
           progressStyle = "from-red-500 to-rose-500";
+        } else if (title?.includes("Notification")) {
+          customStyle = "bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-950 dark:to-violet-950 border border-indigo-100 dark:border-indigo-800/30";
+          titleStyle = "text-indigo-700 dark:text-indigo-300 font-medium";
+          progressStyle = "from-indigo-500 to-violet-500";
         }
         
         return (

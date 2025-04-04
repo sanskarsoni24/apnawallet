@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Index from "./pages/Index";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
@@ -14,7 +14,7 @@ import SignUp from "./pages/SignUp";
 import { DocumentProvider, useDocuments } from "./contexts/DocumentContext";
 import { UserProvider, useUser } from "./contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
-import { checkForDueDocuments } from "./services/NotificationService";
+import { checkForDueDocuments, createAppNotification } from "./services/NotificationService";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -45,7 +45,8 @@ const NotificationCheck = () => {
         emailNotifications: userSettings.emailNotifications !== false,
         pushNotifications: userSettings.pushNotifications || false,
         voiceReminders: userSettings.voiceReminders || false,
-        reminderDays: userSettings.reminderDays || 3
+        reminderDays: userSettings.reminderDays || 3,
+        voiceType: userSettings.voiceType || "default"
       };
       
       // Check for documents due soon and send notifications
@@ -60,7 +61,23 @@ const NotificationCheck = () => {
       checkNotificationPreferences();
     }, 24 * 60 * 60 * 1000); // Once every 24 hours
     
-    return () => clearInterval(intervalId);
+    // Set up an interval to create periodic test notifications (for demo purposes)
+    // This would be removed in a production environment
+    const demoNotificationId = setInterval(() => {
+      const demoMessages = [
+        { title: "Document Due Soon", desc: "Your Car Insurance expires in 5 days" },
+        { title: "New Document Available", desc: "Your utility bill is ready for review" },
+        { title: "Reminder", desc: "Don't forget to renew your subscription" }
+      ];
+      
+      const randomMsg = demoMessages[Math.floor(Math.random() * demoMessages.length)];
+      createAppNotification(randomMsg.title, randomMsg.desc);
+    }, 60000); // Create a demo notification every minute
+    
+    return () => {
+      clearInterval(intervalId);
+      clearInterval(demoNotificationId);
+    };
   }, [documents, email, userSettings]);
 
   return null;

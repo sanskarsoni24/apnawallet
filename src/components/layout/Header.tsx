@@ -1,337 +1,298 @@
-
-import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { Bell, Files, Settings, LogOut, User, FileText, MessageSquare, Filter, LogIn, UserPlus } from "lucide-react";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { toast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
-import BlurContainer from "../ui/BlurContainer";
+import { Button } from "@/components/ui/button";
+import { navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
+import {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuLink,
+} from "@/components/ui/navigation-menu";
+import { Bell, Menu, X } from "lucide-react";
+import { useMobile } from "@/hooks/use-mobile";
+import { Badge } from "../ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 const Header = () => {
-  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isMobile } = useMobile();
+  const { isLoggedIn, logout } = useUser();
   const navigate = useNavigate();
-  const [unreadNotifications, setUnreadNotifications] = React.useState(3);
-  const [showUserDialog, setShowUserDialog] = React.useState(false);
-  const [notifications, setNotifications] = React.useState([
-    { id: 1, title: "Car Insurance Expires Soon", description: "Your car insurance expires in 3 days", time: "2 hours ago", read: false },
-    { id: 2, title: "New Document Added", description: "Internet Bill has been added to your documents", time: "Yesterday", read: false },
-    { id: 3, title: "Document Updated", description: "Netflix Subscription details were updated", time: "2 days ago", read: false },
-  ]);
   
-  // Get user data from context
-  const { isLoggedIn, displayName, email, logout } = useUser();
-  
-  // Update unread count whenever notifications change
-  React.useEffect(() => {
-    const unreadCount = notifications.filter(notification => !notification.read).length;
-    setUnreadNotifications(unreadCount);
+  const [notifications, setNotifications] = useState<{ title: string; description: string; read: boolean }[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Listen for custom notification events
+  useEffect(() => {
+    const handleNotification = (event: CustomEvent) => {
+      const { title, desc } = event.detail;
+      const newNotification = { title, description: desc, read: false };
+      setNotifications(prev => [newNotification, ...prev]);
+      updateUnreadCount([newNotification, ...notifications]);
+    };
+
+    // Create a type assertion for the event listener
+    window.addEventListener('app-notification' as any, handleNotification as EventListener);
+
+    return () => {
+      window.removeEventListener('app-notification' as any, handleNotification as EventListener);
+    };
   }, [notifications]);
 
-  const navigation = [
-    { name: "Dashboard", href: "/", icon: Files },
-    { name: "Documents", href: "/documents", icon: Files },
-    { name: "Settings", href: "/settings", icon: Settings },
-  ];
+  // Update unread count
+  const updateUnreadCount = (notifs: any[]) => {
+    const count = notifs.filter(n => !n.read).length;
+    setUnreadCount(count);
+    // Save to localStorage to persist across page loads
+    localStorage.setItem('notifications', JSON.stringify(notifs));
+    localStorage.setItem('unreadCount', count.toString());
+  };
+
+  // Load notifications from localStorage
+  useEffect(() => {
+    const savedNotifications = localStorage.getItem('notifications');
+    if (savedNotifications) {
+      try {
+        const parsed = JSON.parse(savedNotifications);
+        setNotifications(parsed);
+        setUnreadCount(parsed.filter((n: any) => !n.read).length);
+      } catch (e) {
+        console.error('Error parsing saved notifications:', e);
+      }
+    }
+  }, []);
 
   const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(notification => ({
-      ...notification,
-      read: true
-    }));
+    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
     setNotifications(updatedNotifications);
-    setUnreadNotifications(0);
-    toast({
-      title: "Notifications cleared",
-      description: "All notifications have been marked as read",
-    });
-  };
-  
-  const markNotificationAsRead = (id) => {
-    const updatedNotifications = notifications.map(notification => 
-      notification.id === id ? { ...notification, read: true } : notification
-    );
-    setNotifications(updatedNotifications);
-    const unreadCount = updatedNotifications.filter(notification => !notification.read).length;
-    setUnreadNotifications(unreadCount);
+    updateUnreadCount(updatedNotifications);
   };
 
-  const handleSignOut = () => {
-    logout();
-    navigate("/");
+  const markAsRead = (index: number) => {
+    const updatedNotifications = [...notifications];
+    updatedNotifications[index] = { ...updatedNotifications[index], read: true };
+    setNotifications(updatedNotifications);
+    updateUnreadCount(updatedNotifications);
   };
 
-  const handleFilterClick = (filter) => {
-    navigate(`/documents?filter=${filter}`);
-    toast({
-      title: `Filtered by ${filter}`,
-      description: `Showing ${filter.toLowerCase()} documents`
-    });
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
   };
-  
-  const getInitials = () => {
-    if (!displayName) return "?";
-    return displayName
-      .split(' ')
-      .map(name => name[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setMobileMenuOpen(false);
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full animate-fade-in">
-      <div className="mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 border-b border-border/40 bg-background">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Files className="h-5 w-5 text-primary" />
+    <header className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-30">
+      <div className="container flex h-16 items-center justify-between">
+        {/* Logo */}
+        <div 
+          className="flex items-center gap-2 cursor-pointer" 
+          onClick={() => handleNavigation("/")}
+        >
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+            <span className="text-white font-bold">DN</span>
           </div>
-          <Link to="/" className="font-medium text-lg hover:text-primary transition-colors">DocuNinja</Link>
+          <span className="font-bold text-xl hidden sm:inline">DocuNinja</span>
         </div>
-        
-        <nav className="hidden md:flex items-center gap-4">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={cn(
-                "px-3 py-2 rounded-md text-sm font-medium transition-colors relative group",
-                location.pathname === item.href
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {item.name}
-              {location.pathname === item.href ? (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-              ) : (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary/0 group-hover:bg-primary/40 rounded-full transition-all" />
-              )}
-            </Link>
-          ))}
-        </nav>
-        
-        <div className="flex items-center gap-3">
-          {isLoggedIn ? (
-            // Authenticated user UI
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative rounded-full">
-                    <Filter className="h-5 w-5 text-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Filter Documents</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleFilterClick("All")}>
-                    All Documents
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleFilterClick("Invoice")}>
-                    Invoices
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleFilterClick("Warranty")}>
-                    Warranties
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleFilterClick("Subscription")}>
-                    Subscriptions
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleFilterClick("upcoming")}>
-                    Upcoming Deadlines
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            
+
+        {/* Mobile Menu Button */}
+        {isMobile && (
+          <button
+            onClick={toggleMobileMenu}
+            className="p-2 focus:outline-none"
+          >
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
+        )}
+
+        {/* Desktop Navigation */}
+        {!isMobile && (
+          <div className="flex items-center gap-2">
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    className={navigationMenuTriggerStyle()}
+                    onClick={() => handleNavigation("/")}
+                  >
+                    Home
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+                {isLoggedIn && (
+                  <NavigationMenuItem>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                      onClick={() => handleNavigation("/documents")}
+                    >
+                      Documents
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                )}
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    className={navigationMenuTriggerStyle()}
+                    onClick={() => handleNavigation("/pricing")}
+                  >
+                    Pricing
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+                {isLoggedIn && (
+                  <NavigationMenuItem>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                      onClick={() => handleNavigation("/settings")}
+                    >
+                      Settings
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                )}
+              </NavigationMenuList>
+            </NavigationMenu>
+
+            {/* Notifications */}
+            {isLoggedIn && (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative rounded-full">
-                    <Bell className="h-5 w-5 text-muted-foreground" />
-                    {unreadNotifications > 0 && (
-                      <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-background" />
+                  <Button variant="outline" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white">
+                        {unreadCount}
+                      </Badge>
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-0" align="end">
-                  <div className="p-3 border-b">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium">Notifications</h4>
-                      <button 
-                        className="text-xs text-primary hover:underline"
-                        onClick={markAllAsRead}
-                      >
+                <PopoverContent className="w-80 p-0">
+                  <div className="p-3 border-b flex justify-between items-center">
+                    <h3 className="font-medium">Notifications</h3>
+                    {notifications.length > 0 && (
+                      <Button variant="ghost" size="sm" onClick={markAllAsRead}>
                         Mark all as read
-                      </button>
-                    </div>
+                      </Button>
+                    )}
                   </div>
                   <div className="max-h-80 overflow-auto">
-                    {notifications.length > 0 ? (
-                      <div>
-                        {notifications.map((notification) => (
-                          <div 
-                            key={notification.id} 
-                            className={`p-3 border-b hover:bg-muted/50 cursor-pointer ${notification.read ? 'bg-muted/20' : ''}`}
-                            onClick={() => {
-                              toast({
-                                title: notification.title,
-                                description: notification.description
-                              });
-                              markNotificationAsRead(notification.id);
-                            }}
-                          >
-                            <div className="flex gap-3">
-                              <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                                <FileText className="h-4 w-4 text-primary" />
-                              </div>
-                              <div>
-                                <h5 className={`text-sm font-medium ${notification.read ? 'text-muted-foreground' : ''}`}>
-                                  {notification.title}
-                                  {!notification.read && <span className="ml-2 inline-block h-2 w-2 rounded-full bg-primary"></span>}
-                                </h5>
-                                <p className="text-xs text-muted-foreground mt-1">{notification.description}</p>
-                                <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-muted-foreground">
+                        No notifications
                       </div>
                     ) : (
-                      <div className="p-6 text-center">
-                        <MessageSquare className="h-8 w-8 mx-auto text-muted-foreground" />
-                        <p className="text-sm mt-2">No notifications</p>
-                      </div>
+                      notifications.map((notification, i) => (
+                        <div 
+                          key={i}
+                          className={`p-3 border-b cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 ${!notification.read ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
+                          onClick={() => markAsRead(i)}
+                        >
+                          <p className="font-medium text-sm">{notification.title}</p>
+                          <p className="text-sm text-muted-foreground">{notification.description}</p>
+                        </div>
+                      ))
                     )}
                   </div>
                 </PopoverContent>
               </Popover>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center cursor-pointer hover:bg-accent/70 transition-colors">
-                    <span className="text-xs font-medium text-primary">
-                      {getInitials()}
-                    </span>
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setShowUserDialog(true)}>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>View Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/settings" className="flex items-center cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Profile Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/documents" className="flex items-center cursor-pointer">
-                      <FileText className="mr-2 h-4 w-4" />
-                      <span>My Documents</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleSignOut}
-                    className="text-red-500 focus:text-red-500"
+            )}
+
+            {/* Auth Buttons */}
+            {isLoggedIn ? (
+              <Button variant="outline" onClick={logout}>
+                Sign out
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => handleNavigation("/sign-in")}
+                >
+                  Sign in
+                </Button>
+                <Button onClick={() => handleNavigation("/sign-up")}>
+                  Sign up
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Mobile Navigation */}
+        {isMobile && mobileMenuOpen && (
+          <div className="fixed inset-0 top-16 z-50 bg-background/95 backdrop-blur-sm p-4">
+            <div className="flex flex-col space-y-4">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => handleNavigation("/")}
+              >
+                Home
+              </Button>
+              {isLoggedIn && (
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => handleNavigation("/documents")}
+                >
+                  Documents
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => handleNavigation("/pricing")}
+              >
+                Pricing
+              </Button>
+              {isLoggedIn && (
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => handleNavigation("/settings")}
+                >
+                  Settings
+                </Button>
+              )}
+
+              <div className="border-t pt-4 mt-4">
+                {isLoggedIn ? (
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sign out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
-          ) : (
-            // Non-authenticated user UI
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/sign-in" className="flex items-center gap-1.5">
-                  <LogIn className="h-4 w-4" />
-                  <span>Sign In</span>
-                </Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link to="/sign-up" className="flex items-center gap-1.5">
-                  <UserPlus className="h-4 w-4" />
-                  <span>Sign Up</span>
-                </Link>
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* User Profile Dialog */}
-      <Dialog open={showUserDialog} onOpenChange={setShowUserDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>User Profile</DialogTitle>
-            <DialogDescription>
-              Your account information
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="flex justify-center mb-4">
-              <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-2xl font-medium text-primary">
-                  {getInitials()}
-                </span>
+                    Sign out
+                  </Button>
+                ) : (
+                  <div className="flex flex-col space-y-2">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => handleNavigation("/sign-in")}
+                    >
+                      Sign in
+                    </Button>
+                    <Button
+                      className="w-full"
+                      onClick={() => handleNavigation("/sign-up")}
+                    >
+                      Sign up
+                    </Button>
+                  </div>
+                )}
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Display Name</h3>
-                <p className="text-base">{displayName || "Not set"}</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
-                <p className="text-base">{email || "Not set"}</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Account Status</h3>
-                <p className="text-base">Active</p>
-              </div>
-            </div>
-            
-            <div className="flex justify-between mt-6">
-              <Button variant="outline" onClick={() => setShowUserDialog(false)}>
-                Close
-              </Button>
-              <Button onClick={() => {
-                navigate("/settings");
-                setShowUserDialog(false);
-              }}>
-                Edit Profile
-              </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        )}
+      </div>
     </header>
   );
 };

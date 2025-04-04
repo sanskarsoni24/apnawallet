@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import Index from "./pages/Index";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
+import Monetization from "./pages/Monetization";
 import NotFound from "./pages/NotFound";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
@@ -113,6 +114,7 @@ const App = () => {
                     </ProtectedRoute>
                   } 
                 />
+                <Route path="/pricing" element={<Monetization />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

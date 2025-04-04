@@ -9,26 +9,29 @@ import AppearanceSettings from "@/components/settings/AppearanceSettings";
 
 const Settings = () => {
   const { displayName, email, updateProfile, userSettings, updateUserSettings } = useUser();
-  const [localDisplayName, setLocalDisplayName] = useState(displayName);
-  const [localEmail, setLocalEmail] = useState(email);
-  const [theme, setTheme] = useState("light");
+  const [localDisplayName, setLocalDisplayName] = useState(displayName || "");
+  const [localEmail, setLocalEmail] = useState(email || "");
+  const [theme, setTheme] = useState(userSettings.theme || "light");
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: userSettings.emailNotifications !== false,
+    pushNotifications: userSettings.pushNotifications || false,
+    voiceReminders: userSettings.voiceReminders || false,
+    reminderDays: userSettings.reminderDays || 3,
+    voiceType: userSettings.voiceType || "default"
+  });
 
   // Load settings from localStorage on initial render
   useEffect(() => {
-    const savedSettings = localStorage.getItem("userSettings");
-    if (savedSettings) {
-      try {
-        const settings = JSON.parse(savedSettings);
-        setLocalDisplayName(settings.displayName || displayName);
-        setLocalEmail(settings.email || email);
-        setTheme(settings.theme || "light");
-      } catch (e) {
-        console.error("Failed to parse saved settings:", e);
-      }
-    }
-    
-    // Apply theme to document
-    applyTheme(theme);
+    setLocalDisplayName(displayName || "");
+    setLocalEmail(email || "");
+    setTheme(userSettings.theme || "light");
+    setNotificationSettings({
+      emailNotifications: userSettings.emailNotifications !== false,
+      pushNotifications: userSettings.pushNotifications || false,
+      voiceReminders: userSettings.voiceReminders || false,
+      reminderDays: userSettings.reminderDays || 3,
+      voiceType: userSettings.voiceType || "default"
+    });
   }, [displayName, email, userSettings]);
 
   // Apply theme to document
@@ -50,6 +53,25 @@ const Settings = () => {
     toast({
       title: "Settings saved",
       description: "Your account settings have been updated successfully."
+    });
+  };
+
+  // Save notification settings
+  const saveNotificationSettings = (settings: any) => {
+    setNotificationSettings(settings);
+    
+    // Update user settings in context
+    updateUserSettings({
+      emailNotifications: settings.emailNotifications,
+      pushNotifications: settings.pushNotifications,
+      voiceReminders: settings.voiceReminders,
+      reminderDays: settings.reminderDays,
+      voiceType: settings.voiceType
+    });
+    
+    toast({
+      title: "Notification settings updated",
+      description: "Your notification preferences have been saved."
     });
   };
 
@@ -90,7 +112,10 @@ const Settings = () => {
             saveAccountSettings={saveAccountSettings}
           />
           
-          <NotificationSettings />
+          <NotificationSettings 
+            settings={notificationSettings}
+            saveSettings={saveNotificationSettings}
+          />
           
           <AppearanceSettings theme={theme} saveTheme={saveTheme} />
         </div>

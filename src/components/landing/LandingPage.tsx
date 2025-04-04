@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import {
   Clock, 
   FileText, 
   ScanSearch, 
-  ZapCircle, 
+  Circle, 
   Brain, 
   Star, 
   Users, 
@@ -83,7 +82,7 @@ const LandingPage = () => {
         />
         
         <FeatureCard
-          icon={<ZapCircle className="h-8 w-8 text-pink-500" />}
+          icon={<Circle className="h-8 w-8 text-pink-500" />}
           title="Priority Tracking"
           color="from-pink-500 to-rose-500"
           delay={300}

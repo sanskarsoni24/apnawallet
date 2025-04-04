@@ -1,7 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useUser } from "./UserContext";
 import { toast } from "@/hooks/use-toast";
+
+export type DocumentImportance = "low" | "medium" | "high" | "critical";
 
 export interface Document {
   id: string;
@@ -12,7 +13,10 @@ export interface Document {
   description?: string;
   file?: File;
   fileURL?: string;
-  userId?: string; // Add userId field to associate documents with users
+  userId?: string;
+  importance?: DocumentImportance;
+  extractedText?: string; // Text extracted from document
+  autoCategories?: string[]; // Automatically detected categories
 }
 
 interface DocumentContextType {
@@ -29,6 +33,14 @@ const DocumentContext = createContext<DocumentContextType | undefined>(undefined
 export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const { email, isLoggedIn } = useUser();
+
+  // Calculate importance based on days remaining
+  const calculateImportance = (daysRemaining: number): DocumentImportance => {
+    if (daysRemaining < 0) return "critical"; // Overdue
+    if (daysRemaining <= 3) return "high"; // Due soon
+    if (daysRemaining <= 7) return "medium"; // Coming up
+    return "low"; // Plenty of time
+  };
 
   // Load documents from localStorage on initial render or when user changes
   useEffect(() => {
@@ -104,6 +116,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return documents.filter(doc => doc.userId === email);
   };
 
+  // Update addDocument to include text extraction and auto-categorization
   const addDocument = (doc: Omit<Document, "id">) => {
     if (!isLoggedIn || !email) {
       toast({
@@ -114,10 +127,13 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
 
+    const importance = calculateImportance(doc.daysRemaining);
+
     const newDocument = {
       ...doc,
       id: Date.now().toString(),
-      userId: email, // Associate document with current user
+      userId: email,
+      importance: importance,
     };
     
     setDocuments((prev) => [...prev, newDocument]);
@@ -134,7 +150,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   };
 
-  // Update the due date
+  // Update the due date with recalculated importance
   const updateDueDate = (id: string, newDueDate: string) => {
     if (!isLoggedIn) return;
     
@@ -175,11 +191,17 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     const daysRemaining = calculateDaysRemaining(newDueDate);
+    const importance = calculateImportance(daysRemaining);
     
     setDocuments((prev) => 
       prev.map((doc) => 
         // Only update if document belongs to current user
-        doc.id === id && doc.userId === email ? { ...doc, dueDate: newDueDate, daysRemaining } : doc
+        doc.id === id && doc.userId === email ? { 
+          ...doc, 
+          dueDate: newDueDate, 
+          daysRemaining,
+          importance 
+        } : doc
       )
     );
   };

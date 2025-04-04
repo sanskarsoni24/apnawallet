@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell } from "lucide-react";
+import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell, AlertTriangle } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -29,6 +28,7 @@ const DocumentCard = ({
   description,
   fileURL,
   className,
+  importance = "medium", // Default importance
 }: DocumentCardProps) => {
   const [showPreview, setShowPreview] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -46,7 +46,7 @@ const DocumentCard = ({
 
   const getStatusVariant = () => {
     if (daysRemaining < 0) return "destructive";
-    if (daysRemaining < 7) return "default";
+    if (daysRemaining < 3) return "default";
     return "secondary";
   };
 
@@ -55,6 +55,29 @@ const DocumentCard = ({
     if (daysRemaining === 0) return "Due today";
     if (daysRemaining === 1) return "Due tomorrow";
     return `${daysRemaining} days left`;
+  };
+  
+  // Get importance based on due date
+  const getImportance = () => {
+    if (daysRemaining < 0) return "critical"; // Overdue
+    if (daysRemaining <= 3) return "high"; // Due soon
+    if (daysRemaining <= 7) return "medium"; // Coming up
+    return "low"; // Plenty of time
+  };
+  
+  // Get importance badge color
+  const getImportanceBadge = () => {
+    const importance = getImportance();
+    switch (importance) {
+      case "critical": 
+        return "bg-red-600 text-white";
+      case "high": 
+        return "bg-orange-500 text-white";
+      case "medium": 
+        return "bg-amber-400 text-black";
+      default: 
+        return "bg-green-500 text-white";
+    }
   };
 
   const handleDelete = () => {
@@ -159,13 +182,23 @@ const DocumentCard = ({
       >
         <div className="flex items-start justify-between">
           <div className="flex flex-col gap-1">
-            <Badge variant="outline" className="animate-pulse-subtle">
-              {type}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="animate-pulse-subtle">
+                {type}
+              </Badge>
+              {getImportance() === "critical" && (
+                <span className="text-red-500"><AlertTriangle className="h-4 w-4" /></span>
+              )}
+            </div>
             <h3 className="text-base font-medium mt-2 hover:text-primary transition-colors">{title}</h3>
             {description && (
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{description}</p>
             )}
+            <div className="mt-2">
+              <span className={`text-xs px-2 py-0.5 rounded-full ${getImportanceBadge()}`}>
+                {getImportance().charAt(0).toUpperCase() + getImportance().slice(1)} Priority
+              </span>
+            </div>
           </div>
           <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors">
             <FileText className="h-5 w-5 text-primary" />

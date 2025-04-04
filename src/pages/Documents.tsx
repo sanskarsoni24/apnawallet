@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { FileText, Filter, Search, SlidersHorizontal, ArrowDown, ArrowUp } from "lucide-react";
 import Container from "@/components/layout/Container";
@@ -16,7 +15,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 
-const documentTypes = ["All", "Invoice", "Warranty", "Subscription", "Boarding Pass"];
+const documentTypes = ["All", "Invoice", "Warranty", "Subscription", "Boarding Pass", "Other"];
 
 const Documents = () => {
   const location = useLocation();
@@ -26,7 +25,7 @@ const Documents = () => {
   
   const [activeFilter, setActiveFilter] = useState(filterParam || "All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<"date" | "name" | "">("");
+  const [sortBy, setSortBy] = useState<"date" | "name" | "importance" | "">("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const { documents, filteredDocuments } = useDocuments();
 
@@ -43,23 +42,24 @@ const Documents = () => {
     navigate(`/documents?filter=${filter}`);
   };
   
-  const handleSort = (type: "date" | "name") => {
+  // Updated sort function to include importance
+  const handleSort = (type: "date" | "name" | "importance") => {
     if (sortBy === type) {
       // Toggle direction if clicking the same sort type
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
-      // Set new sort type with default asc direction
+      // Set new sort type with default direction
       setSortBy(type);
-      setSortDirection("asc");
+      setSortDirection(type === "importance" ? "desc" : "asc"); // Default high to low for importance
     }
     
     toast({
-      title: `Sort by ${type === "date" ? "Due Date" : "Name"}`,
+      title: `Sort by ${type === "date" ? "Due Date" : type === "name" ? "Name" : "Priority"}`,
       description: `Documents sorted ${sortDirection === "asc" ? "ascending" : "descending"}`
     });
   };
   
-  // Filter documents based on active filter and search term
+  // Filter documents based on active filter, search term, and sort
   const getFilteredDocs = () => {
     let filtered = [];
     
@@ -78,7 +78,7 @@ const Documents = () => {
       doc.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
     
-    // Apply sorting if set
+    // Apply sorting
     if (sortBy) {
       filtered.sort((a, b) => {
         if (sortBy === "name") {
@@ -87,6 +87,13 @@ const Documents = () => {
         } else if (sortBy === "date") {
           const comparison = a.daysRemaining - b.daysRemaining;
           return sortDirection === "asc" ? comparison : -comparison;
+        } else if (sortBy === "importance") {
+          // Map importance to numeric values for sorting
+          const importanceValues = { "critical": 3, "high": 2, "medium": 1, "low": 0 };
+          const aValue = importanceValues[(a.importance || "medium") as keyof typeof importanceValues];
+          const bValue = importanceValues[(b.importance || "medium") as keyof typeof importanceValues];
+          const comparison = bValue - aValue; // Default higher priority first
+          return sortDirection === "asc" ? -comparison : comparison;
         }
         return 0;
       });
@@ -176,6 +183,14 @@ const Documents = () => {
                       )}
                     </div>
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSort("importance")} className="cursor-pointer">
+                    <div className="flex items-center justify-between w-full">
+                      <span>Sort by Priority</span>
+                      {sortBy === "importance" && (
+                        sortDirection === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      )}
+                    </div>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => {
                     setSortBy("");
                     toast({
@@ -194,7 +209,7 @@ const Documents = () => {
               <div className="px-2 py-1 bg-muted rounded-md text-sm flex items-center">
                 <span className="mr-1">Sorted by:</span>
                 <Badge variant="outline" className="flex items-center gap-1">
-                  {sortBy === "date" ? "Due Date" : "Name"}
+                  {sortBy === "date" ? "Due Date" : sortBy === "name" ? "Name" : "Priority"}
                   {sortDirection === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
                 </Badge>
                 <button 

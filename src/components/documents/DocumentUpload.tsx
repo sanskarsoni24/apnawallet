@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Upload, Camera, ArrowRight, Loader2, ScanSearch } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
@@ -6,6 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import { useDocuments } from "@/contexts/DocumentContext";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "../ui/form";
 import { useForm } from "react-hook-form";

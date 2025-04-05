@@ -21,6 +21,7 @@ interface DocumentContextType {
   deleteDocument: (id: string) => void;
   updateDueDate: (id: string, newDate: string) => void;
   setCustomReminderDays: (id: string, days: number) => void;
+  filterDocumentsByType: (type: string) => Document[];
 }
 
 const DocumentContext = createContext<DocumentContextType>({
@@ -30,6 +31,7 @@ const DocumentContext = createContext<DocumentContextType>({
   deleteDocument: () => {},
   updateDueDate: () => {},
   setCustomReminderDays: () => {},
+  filterDocumentsByType: () => [],
 });
 
 export const useDocuments = () => useContext(DocumentContext);
@@ -42,76 +44,93 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Load documents from localStorage
     const storedDocuments = localStorage.getItem("documents");
     if (storedDocuments) {
-      setDocuments(JSON.parse(storedDocuments));
+      try {
+        const parsedDocs = JSON.parse(storedDocuments);
+        // Ensure all documents have a valid importance value
+        const validatedDocs = parsedDocs.map((doc: any) => ({
+          ...doc,
+          importance: doc.importance && ["low", "medium", "high", "critical"].includes(doc.importance) 
+            ? doc.importance 
+            : "medium"
+        }));
+        setDocuments(validatedDocs);
+      } catch (e) {
+        console.error("Error parsing stored documents:", e);
+        setInitialSampleDocuments();
+      }
     } else {
       // Initialize with sample data if no documents exist
-      const sampleDocuments = [
-        {
-          id: "1",
-          title: "Car Insurance",
-          type: "Insurance",
-          dueDate: "May 15, 2025",
-          daysRemaining: 30,
-          description: "Annual premium payment for car insurance.",
-          importance: "medium",
-          userId: email,
-        },
-        {
-          id: "2",
-          title: "Passport Renewal",
-          type: "Document",
-          dueDate: "April 30, 2025",
-          daysRemaining: 10,
-          description: "Passport expires soon. Need to start renewal process.",
-          importance: "high",
-          userId: email,
-        },
-        {
-          id: "3",
-          title: "Property Tax",
-          type: "Invoice",
-          dueDate: "April 12, 2025",
-          daysRemaining: 2,
-          description: "Annual property tax payment due.",
-          importance: "critical",
-          userId: email,
-        },
-        {
-          id: "4",
-          title: "Health Insurance",
-          type: "Insurance",
-          dueDate: "June 20, 2025",
-          daysRemaining: 60,
-          description: "Health insurance renewal.",
-          importance: "medium",
-          userId: email,
-        },
-        {
-          id: "5",
-          title: "Credit Card Bill",
-          type: "Invoice",
-          dueDate: "April 10, 2025",
-          daysRemaining: -2,
-          description: "Monthly credit card payment.",
-          importance: "critical",
-          userId: email,
-        },
-      ];
-      setDocuments(sampleDocuments);
-      localStorage.setItem("documents", JSON.stringify(sampleDocuments));
+      setInitialSampleDocuments();
     }
   }, [email]);
+
+  const setInitialSampleDocuments = () => {
+    const sampleDocuments: Document[] = [
+      {
+        id: "1",
+        title: "Car Insurance",
+        type: "Insurance",
+        dueDate: "May 15, 2025",
+        daysRemaining: 30,
+        description: "Annual premium payment for car insurance.",
+        importance: "medium",
+        userId: email,
+      },
+      {
+        id: "2",
+        title: "Passport Renewal",
+        type: "Document",
+        dueDate: "April 30, 2025",
+        daysRemaining: 10,
+        description: "Passport expires soon. Need to start renewal process.",
+        importance: "high",
+        userId: email,
+      },
+      {
+        id: "3",
+        title: "Property Tax",
+        type: "Invoice",
+        dueDate: "April 12, 2025",
+        daysRemaining: 2,
+        description: "Annual property tax payment due.",
+        importance: "critical",
+        userId: email,
+      },
+      {
+        id: "4",
+        title: "Health Insurance",
+        type: "Insurance",
+        dueDate: "June 20, 2025",
+        daysRemaining: 60,
+        description: "Health insurance renewal.",
+        importance: "medium",
+        userId: email,
+      },
+      {
+        id: "5",
+        title: "Credit Card Bill",
+        type: "Invoice",
+        dueDate: "April 10, 2025",
+        daysRemaining: -2,
+        description: "Monthly credit card payment.",
+        importance: "critical",
+        userId: email,
+      },
+    ];
+    setDocuments(sampleDocuments);
+    localStorage.setItem("documents", JSON.stringify(sampleDocuments));
+  };
 
   // Save documents to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("documents", JSON.stringify(documents));
     
-    // If Chrome extension API is available, sync with extension storage
-    if (typeof window !== 'undefined' && window.chrome && chrome.storage) {
+    // Safely check for Chrome extension API
+    if (typeof window !== 'undefined' && window.chrome && 'storage' in window.chrome) {
       try {
-        chrome.storage.local.set({ documents });
+        window.chrome.storage?.local?.set({ documents });
         // Send a message to the extension that documents were updated
-        chrome.runtime.sendMessage({ action: "documentsUpdated" });
+        window.chrome.runtime?.sendMessage?.({ action: "documentsUpdated" });
       } catch (error) {
         console.log("Chrome extension storage not available:", error);
       }
@@ -127,14 +146,13 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     setDocuments((prevDocuments) => [...prevDocuments, newDocument]);
     
-    // If Chrome extension API is available, sync with extension storage
-    if (typeof window !== 'undefined' && window.chrome && chrome.storage) {
+    // Safely check for Chrome extension API
+    if (typeof window !== 'undefined' && window.chrome && 'storage' in window.chrome) {
       try {
-        chrome.storage.local.set({
-          documents: [...documents, newDocument],
-        });
+        const updatedDocs = [...documents, newDocument];
+        window.chrome.storage?.local?.set({ documents: updatedDocs });
         // Notify extension of update
-        chrome.runtime.sendMessage({ action: "documentsUpdated" });
+        window.chrome.runtime?.sendMessage?.({ action: "documentsUpdated" });
       } catch (error) {
         console.log("Chrome extension storage not available:", error);
       }
@@ -148,15 +166,15 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       )
     );
     
-    // If Chrome extension API is available, sync with extension storage
-    if (typeof window !== 'undefined' && window.chrome && chrome.storage) {
+    // Safely check for Chrome extension API
+    if (typeof window !== 'undefined' && window.chrome && 'storage' in window.chrome) {
       try {
         const updatedDocuments = documents.map((doc) =>
           doc.id === id ? { ...doc, ...updates } : doc
         );
-        chrome.storage.local.set({ documents: updatedDocuments });
+        window.chrome.storage?.local?.set({ documents: updatedDocuments });
         // Notify extension of update
-        chrome.runtime.sendMessage({ action: "documentsUpdated" });
+        window.chrome.runtime?.sendMessage?.({ action: "documentsUpdated" });
       } catch (error) {
         console.log("Chrome extension storage not available:", error);
       }
@@ -168,13 +186,13 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       prevDocuments.filter((doc) => doc.id !== id)
     );
     
-    // If Chrome extension API is available, sync with extension storage
-    if (typeof window !== 'undefined' && window.chrome && chrome.storage) {
+    // Safely check for Chrome extension API
+    if (typeof window !== 'undefined' && window.chrome && 'storage' in window.chrome) {
       try {
         const updatedDocuments = documents.filter((doc) => doc.id !== id);
-        chrome.storage.local.set({ documents: updatedDocuments });
+        window.chrome.storage?.local?.set({ documents: updatedDocuments });
         // Notify extension of update
-        chrome.runtime.sendMessage({ action: "documentsUpdated" });
+        window.chrome.runtime?.sendMessage?.({ action: "documentsUpdated" });
       } catch (error) {
         console.log("Chrome extension storage not available:", error);
       }
@@ -218,17 +236,17 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         )
       );
       
-      // If Chrome extension API is available, sync with extension storage
-      if (typeof window !== 'undefined' && window.chrome && chrome.storage) {
+      // Safely check for Chrome extension API
+      if (typeof window !== 'undefined' && window.chrome && 'storage' in window.chrome) {
         try {
           const updatedDocuments = documents.map((doc) =>
             doc.id === id
               ? { ...doc, dueDate: newDate, daysRemaining }
               : doc
           );
-          chrome.storage.local.set({ documents: updatedDocuments });
+          window.chrome.storage?.local?.set({ documents: updatedDocuments });
           // Notify extension of update
-          chrome.runtime.sendMessage({ action: "documentsUpdated" });
+          window.chrome.runtime?.sendMessage?.({ action: "documentsUpdated" });
         } catch (error) {
           console.log("Chrome extension storage not available:", error);
         }
@@ -245,19 +263,26 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       )
     );
     
-    // If Chrome extension API is available, sync with extension storage
-    if (typeof window !== 'undefined' && window.chrome && chrome.storage) {
+    // Safely check for Chrome extension API
+    if (typeof window !== 'undefined' && window.chrome && 'storage' in window.chrome) {
       try {
         const updatedDocuments = documents.map((doc) =>
           doc.id === id ? { ...doc, customReminderDays: days } : doc
         );
-        chrome.storage.local.set({ documents: updatedDocuments });
+        window.chrome.storage?.local?.set({ documents: updatedDocuments });
         // Notify extension of update
-        chrome.runtime.sendMessage({ action: "documentsUpdated" });
+        window.chrome.runtime?.sendMessage?.({ action: "documentsUpdated" });
       } catch (error) {
         console.log("Chrome extension storage not available:", error);
       }
     }
+  };
+
+  const filterDocumentsByType = (type: string) => {
+    if (type === "All") {
+      return documents;
+    }
+    return documents.filter(doc => doc.type === type);
   };
 
   return (
@@ -269,6 +294,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deleteDocument,
         updateDueDate,
         setCustomReminderDays,
+        filterDocumentsByType,
       }}
     >
       {children}

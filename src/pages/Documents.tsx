@@ -27,7 +27,7 @@ const Documents = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "name" | "importance" | "">("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const { documents, filteredDocuments } = useDocuments();
+  const { documents, filterDocumentsByType } = useDocuments();
 
   useEffect(() => {
     // Update the active filter when the URL parameter changes
@@ -70,7 +70,7 @@ const Documents = () => {
       );
     } else {
       // Use the regular filter by document type
-      filtered = filteredDocuments(activeFilter);
+      filtered = filterDocumentsByType(activeFilter);
     }
     
     // Apply search term filter

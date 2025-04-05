@@ -6,10 +6,12 @@ import { useUser } from "@/contexts/UserContext";
 import { CreditCard, CheckCircle, DollarSign, Zap, Crown } from "lucide-react";
 import BlurContainer from "@/components/ui/BlurContainer";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Monetization = () => {
   const { isLoggedIn } = useUser();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handlePlanSelect = (plan: string) => {
     setSelectedPlan(plan);
@@ -24,21 +26,24 @@ const Monetization = () => {
       return;
     }
 
-    // This would connect to a payment processor in production
+    if (!isLoggedIn) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to subscribe to a plan",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Convert plan name to URL parameter for checkout
+    const planParam = selectedPlan.toLowerCase();
+    navigate(`/checkout?plan=${planParam}`);
+    
     toast({
-      title: "Purchase initiated",
-      description: `Processing your ${selectedPlan} plan subscription`,
+      title: "Redirecting to checkout",
+      description: `Setting up your ${selectedPlan} plan subscription`,
       variant: "default",
     });
-    
-    // Simulate a successful purchase after a delay
-    setTimeout(() => {
-      toast({
-        title: "Purchase successful!",
-        description: `Thank you for subscribing to the ${selectedPlan} plan!`,
-        variant: "default",
-      });
-    }, 2000);
   };
 
   return (
@@ -127,7 +132,7 @@ const Monetization = () => {
             </ul>
             <Button 
               variant={selectedPlan === 'Pro' ? "default" : "outline"} 
-              className="w-full"
+              className="w-full bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white transition-all duration-300"
               onClick={(e) => {
                 e.stopPropagation();
                 handlePlanSelect('Pro');
@@ -174,7 +179,7 @@ const Monetization = () => {
             </ul>
             <Button 
               variant={selectedPlan === 'Enterprise' ? "default" : "outline"} 
-              className="w-full"
+              className="w-full bg-gradient-to-r hover:from-purple-600 hover:to-indigo-600 hover:text-white transition-all duration-300"
               onClick={(e) => {
                 e.stopPropagation();
                 handlePlanSelect('Enterprise');
@@ -185,15 +190,15 @@ const Monetization = () => {
           </BlurContainer>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-8 flex justify-center">
           {isLoggedIn ? (
             <Button 
               onClick={handlePurchase} 
-              disabled={!selectedPlan}
-              className="px-8 py-6 text-lg flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all"
+              disabled={!selectedPlan || selectedPlan === 'Free'}
+              className="px-8 py-6 text-lg flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
             >
               <CreditCard className="h-5 w-5" />
-              Subscribe Now
+              {selectedPlan === 'Free' ? 'Continue with Free Plan' : 'Subscribe Now'}
             </Button>
           ) : (
             <div className="p-6 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800/30">
@@ -201,7 +206,8 @@ const Monetization = () => {
               <p className="mb-4">Please sign in to subscribe to a plan.</p>
               <Button 
                 variant="outline" 
-                onClick={() => window.location.href = '/sign-in'}
+                onClick={() => navigate('/sign-in')}
+                className="border-amber-500 text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/30 transition-all"
               >
                 Sign In
               </Button>

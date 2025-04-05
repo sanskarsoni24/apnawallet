@@ -5,7 +5,7 @@ import { useDocuments } from "@/contexts/DocumentContext";
 import BlurContainer from "../ui/BlurContainer";
 import { format, isToday, isSameDay } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { FileText, Bell } from "lucide-react";
+import { FileText, Bell, Clock } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Link } from "react-router-dom";
@@ -117,23 +117,31 @@ const DocumentCalendar = () => {
               
               // Determine status color
               let dotColor = "";
+              let dotSize = "h-1 w-1";
               if (docsOnDay.length > 0) {
                 if (docsOnDay.some(doc => doc.daysRemaining < 0)) {
-                  dotColor = "bg-destructive";
+                  dotColor = "bg-red-500";
+                  dotSize = "h-1.5 w-1.5";
                 } else if (docsOnDay.some(doc => doc.daysRemaining >= 0 && doc.daysRemaining <= 3)) {
-                  dotColor = "bg-primary";
+                  dotColor = "bg-orange-500";
+                  dotSize = "h-1.5 w-1.5";
                 } else {
-                  dotColor = "bg-secondary";
+                  dotColor = "bg-green-500";
                 }
               }
               
               return (
-                <div className="relative flex h-9 w-9 items-center justify-center p-0">
-                  <span className={`${getDayClassNames(dayDate)}`}>
+                <div className="relative flex h-9 w-9 items-center justify-center">
+                  <div className={`flex items-center justify-center h-7 w-7 rounded-full ${getDayClassNames(dayDate)}`}>
                     {dayDate.getDate()}
-                  </span>
+                  </div>
                   {docsOnDay.length > 0 && (
-                    <span className={`absolute bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full ${dotColor}`} />
+                    <div className="absolute -bottom-0.5 flex items-center justify-center gap-0.5">
+                      <span className={`${dotSize} rounded-full ${dotColor} animate-pulse`} />
+                      {docsOnDay.length > 1 && (
+                        <span className="text-xs font-medium text-muted-foreground">+{docsOnDay.length}</span>
+                      )}
+                    </div>
                   )}
                 </div>
               );
@@ -231,19 +239,28 @@ const DocumentCalendar = () => {
                     </div>
                   </div>
                   
-                  <div className="mt-3 flex justify-end">
+                  <div className="mt-3 flex justify-end gap-2">
                     <Button 
                       variant="outline" 
                       size="sm"
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 border-indigo-200"
                       onClick={() => {
                         setSelectedDoc(doc.id);
                         setShowReminderSettings(true);
                       }}
                     >
-                      <Bell className="h-4 w-4" />
-                      Set Reminder
+                      <Clock className="h-4 w-4 text-indigo-600" />
+                      <span className="whitespace-nowrap">Set Reminder</span>
                     </Button>
+                    <Link to={`/documents?id=${doc.id}`}>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        className="whitespace-nowrap"
+                      >
+                        View Details
+                      </Button>
+                    </Link>
                   </div>
                 </BlurContainer>
               ))

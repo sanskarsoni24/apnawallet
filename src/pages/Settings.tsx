@@ -6,6 +6,7 @@ import { useUser } from "@/contexts/UserContext";
 import AccountSettings from "@/components/settings/AccountSettings";
 import NotificationSettings from "@/components/settings/NotificationSettings";
 import AppearanceSettings from "@/components/settings/AppearanceSettings";
+import ChromeExtensionDownload from "@/components/settings/ChromeExtensionDownload";
 
 const Settings = () => {
   const { displayName, email, updateProfile, userSettings, updateUserSettings } = useUser();
@@ -102,6 +103,9 @@ const Settings = () => {
             Manage your preferences and account settings.
           </p>
         </div>
+        
+        {/* Chrome Extension Download */}
+        <ChromeExtensionDownload />
         
         <div className="grid gap-6 md:grid-cols-2">
           <AccountSettings 

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell, AlertTriangle } from "lucide-react";
+import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell, AlertTriangle, Clock } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -228,19 +228,19 @@ const DocumentCard = ({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100"
+            className="h-8 w-8 p-0 rounded-full bg-indigo-100 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-200"
             onClick={(e) => {
               e.stopPropagation();
               setShowReminderSettings(true);
             }}
           >
-            <Bell className="h-4 w-4" />
+            <Clock className="h-4 w-4" />
             <span className="sr-only">Reminder Settings</span>
           </Button>
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 w-8 p-0 text-primary/80 hover:text-primary hover:bg-primary/10"
+            className="h-8 w-8 p-0 rounded-full bg-amber-100 text-amber-600 hover:text-amber-800 hover:bg-amber-200"
             onClick={(e) => {
               e.stopPropagation();
               handleVoiceReminder();
@@ -252,7 +252,7 @@ const DocumentCard = ({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
+            className="h-8 w-8 p-0 rounded-full bg-sky-100 text-sky-600 hover:text-sky-800 hover:bg-sky-200"
             onClick={(e) => {
               e.stopPropagation();
               setShowPreview(true);
@@ -265,7 +265,7 @@ const DocumentCard = ({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
+            className="h-8 w-8 p-0 rounded-full bg-red-100 text-red-600 hover:text-red-800 hover:bg-red-200"
             onClick={(e) => {
               e.stopPropagation();
               setShowDeleteConfirm(true);
@@ -426,19 +426,19 @@ const DocumentCard = ({
               <div className="flex justify-end gap-2 w-full mt-2">
                 <Button 
                   variant="outline" 
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 border-indigo-200"
                   onClick={() => setShowReminderSettings(true)}
                 >
-                  <Bell className="h-4 w-4" />
-                  Reminder Settings
+                  <Clock className="h-4 w-4 text-indigo-600" />
+                  <span className="whitespace-nowrap">Set Reminders</span>
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 bg-sky-50 hover:bg-sky-100 border-sky-200"
                   onClick={() => setIsEditing(true)}
                 >
-                  <Pencil className="h-4 w-4" />
-                  Edit Details
+                  <Pencil className="h-4 w-4 text-sky-600" />
+                  <span className="whitespace-nowrap">Edit</span>
                 </Button>
                 <Button 
                   variant="outline" 

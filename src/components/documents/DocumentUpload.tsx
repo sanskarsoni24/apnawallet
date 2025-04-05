@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Upload, Camera, ArrowRight, Loader2, ScanSearch } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
@@ -6,7 +7,7 @@ import { useDocuments } from "@/contexts/DocumentContext";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "../ui/form";
 import { useForm } from "react-hook-form";
 import { processDocument } from "@/services/DocumentProcessingService";
@@ -20,6 +21,8 @@ const DocumentUpload = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isScannerActive, setIsScannerActive] = useState(false);
+  const [scanStatus, setScanStatus] = useState("");
+  const [customReminderDays, setCustomReminderDays] = useState<number>(3); // Default 3 days
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { addDocument } = useDocuments();
@@ -37,6 +40,8 @@ const DocumentUpload = () => {
     form.reset();
     setSelectedFile(null);
     setIsProcessing(false);
+    setScanStatus("");
+    setCustomReminderDays(3);
   };
   
   const handleDragOver = (e: React.DragEvent) => {
@@ -70,9 +75,25 @@ const DocumentUpload = () => {
     setIsDialogOpen(true);
     setIsProcessing(true);
     
+    // Create a more visual processing experience
+    setScanStatus("Analyzing document...");
+    
     try {
+      // Simulate document processing steps
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setScanStatus("Extracting text...");
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setScanStatus("Identifying document type...");
+      
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setScanStatus("Detecting due dates...");
+      
       // Process document to extract information
       const extractedInfo = await processDocument(file);
+      
+      await new Promise(resolve => setTimeout(resolve, 600));
+      setScanStatus("Finalizing results...");
       
       // Update form with extracted info
       if (extractedInfo.title) {
@@ -112,10 +133,21 @@ const DocumentUpload = () => {
         }
       }
       
+      toast({
+        title: "Document Processed",
+        description: "Document information extracted successfully!",
+      });
+      
     } catch (error) {
       console.error("Error processing document:", error);
+      toast({
+        title: "Processing Failed",
+        description: "Could not extract information from document.",
+        variant: "destructive",
+      });
     } finally {
       setIsProcessing(false);
+      setScanStatus("");
     }
   };
   
@@ -146,6 +178,7 @@ const DocumentUpload = () => {
       file: selectedFile,
       fileURL,
       description: data.description,
+      customReminderDays: customReminderDays // Add custom reminder days
     });
     
     toast({
@@ -161,6 +194,7 @@ const DocumentUpload = () => {
   const startScanner = async () => {
     try {
       setIsScannerActive(true);
+      setScanStatus("Initializing camera...");
       
       // Check if browser supports camera
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -173,6 +207,7 @@ const DocumentUpload = () => {
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        setScanStatus("Camera active. Position document in frame and tap Capture.");
       }
       
     } catch (error) {
@@ -182,6 +217,7 @@ const DocumentUpload = () => {
         description: "Could not access device camera. Please check permissions.",
         variant: "destructive",
       });
+      setScanStatus("");
       setIsScannerActive(false);
     }
   };
@@ -193,6 +229,7 @@ const DocumentUpload = () => {
       tracks.forEach(track => track.stop());
       videoRef.current.srcObject = null;
     }
+    setScanStatus("");
     setIsScannerActive(false);
   };
   
@@ -210,11 +247,16 @@ const DocumentUpload = () => {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
+    // Visual feedback
+    setScanStatus("Capturing image...");
+    
     // Draw video frame to canvas
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     // Convert canvas to blob
     try {
+      setScanStatus("Processing captured image...");
+      
       canvas.toBlob(async (blob) => {
         if (blob) {
           const capturedFile = new File([blob], "scanned-document.jpg", { type: 'image/jpeg' });
@@ -233,6 +275,7 @@ const DocumentUpload = () => {
         description: "Failed to capture image from camera",
         variant: "destructive",
       });
+      setScanStatus("");
     }
   };
   
@@ -263,7 +306,7 @@ const DocumentUpload = () => {
           </div>
           
           <div className="flex gap-2">
-            <label className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer">
+            <label className="inline-flex h-9 items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer">
               Select documents
               <input 
                 type="file" 
@@ -275,7 +318,7 @@ const DocumentUpload = () => {
             
             <Button
               variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200 hover:bg-gradient-to-r hover:from-indigo-100 hover:to-blue-100 text-indigo-700"
               onClick={startScanner}
             >
               <Camera className="h-4 w-4" />
@@ -297,6 +340,9 @@ const DocumentUpload = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Document Scanner</DialogTitle>
+            {scanStatus && (
+              <DialogDescription>{scanStatus}</DialogDescription>
+            )}
           </DialogHeader>
           
           <div className="flex flex-col items-center space-y-4">
@@ -307,7 +353,17 @@ const DocumentUpload = () => {
                 playsInline 
                 className="w-full h-full object-contain"
               />
-              <div className="absolute inset-0 border-4 border-primary/50 pointer-events-none" />
+              <div className="absolute inset-0 border-4 border-indigo-400/50 pointer-events-none" />
+              
+              {/* Scanning animation */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-1 bg-indigo-500/30 w-full absolute animate-scanning-line" />
+              </div>
+              
+              {/* Visual guides for document positioning */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="border-2 border-white/20 border-dashed m-8 h-[calc(100%-64px)]"></div>
+              </div>
             </div>
             
             <canvas ref={canvasRef} className="hidden"></canvas>
@@ -316,12 +372,13 @@ const DocumentUpload = () => {
               <Button
                 variant="outline"
                 onClick={stopScanner}
+                className="bg-white dark:bg-background"
               >
                 Cancel
               </Button>
               <Button
                 onClick={captureDocument}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
               >
                 <ScanSearch className="h-4 w-4" />
                 <span>Capture</span>
@@ -336,14 +393,27 @@ const DocumentUpload = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Document Details</DialogTitle>
+            {scanStatus && (
+              <DialogDescription>
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {scanStatus}
+                </div>
+              </DialogDescription>
+            )}
           </DialogHeader>
           
           {isProcessing ? (
             <div className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 text-primary animate-spin" />
-              <p className="mt-4 text-center text-sm text-muted-foreground">
-                Processing document...<br />
-                Extracting information and categorizing
+              <div className="relative h-20 w-20">
+                <div className="absolute inset-0 rounded-full border-2 border-indigo-200 border-dashed animate-spin-slow"></div>
+                <div className="absolute inset-2 rounded-full border-b-2 border-indigo-600 animate-spin"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+                </div>
+              </div>
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                {scanStatus || "Processing document..."}
               </p>
             </div>
           ) : (
@@ -397,6 +467,24 @@ const DocumentUpload = () => {
                   )}
                 />
                 
+                <div className="space-y-2">
+                  <FormLabel>Custom Reminder</FormLabel>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={customReminderDays}
+                    onChange={(e) => setCustomReminderDays(Number(e.target.value))}
+                  >
+                    <option value="1">1 day before</option>
+                    <option value="3">3 days before</option>
+                    <option value="7">7 days before</option>
+                    <option value="14">14 days before</option>
+                    <option value="30">30 days before</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    Select when you want to be reminded about this document
+                  </p>
+                </div>
+                
                 <FormField
                   control={form.control}
                   name="description"
@@ -425,7 +513,10 @@ const DocumentUpload = () => {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" className="flex items-center gap-2">
+                  <Button 
+                    type="submit" 
+                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
                     <span>Save Document</span>
                     <ArrowRight className="h-4 w-4" />
                   </Button>

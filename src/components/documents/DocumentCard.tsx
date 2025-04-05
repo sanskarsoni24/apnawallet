@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell, AlertTriangle } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
@@ -14,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { speakNotification } from "@/services/NotificationService";
+import DocumentReminderSettings from "./DocumentReminderSettings";
 
 interface DocumentCardProps extends Document {
   className?: string;
@@ -29,6 +31,7 @@ const DocumentCard = ({
   fileURL,
   className,
   importance = "medium", // Default importance
+  customReminderDays,
 }: DocumentCardProps) => {
   const [showPreview, setShowPreview] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -36,6 +39,7 @@ const DocumentCard = ({
   const [editTitle, setEditTitle] = useState(title);
   const [editDescription, setEditDescription] = useState(description || "");
   const [date, setDate] = useState<Date | undefined>();
+  const [showReminderSettings, setShowReminderSettings] = useState(false);
   const { deleteDocument, updateDocument, updateDueDate } = useDocuments();
   
   // Update local state when props change
@@ -198,6 +202,11 @@ const DocumentCard = ({
               <span className={`text-xs px-2 py-0.5 rounded-full ${getImportanceBadge()}`}>
                 {getImportance().charAt(0).toUpperCase() + getImportance().slice(1)} Priority
               </span>
+              {customReminderDays !== undefined && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  Reminder: {customReminderDays} days before
+                </span>
+              )}
             </div>
           </div>
           <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors">
@@ -216,6 +225,18 @@ const DocumentCard = ({
         </div>
         
         <div className="mt-3 flex justify-end gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 w-8 p-0 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowReminderSettings(true);
+            }}
+          >
+            <Bell className="h-4 w-4" />
+            <span className="sr-only">Reminder Settings</span>
+          </Button>
           <Button 
             variant="ghost" 
             size="sm" 
@@ -390,6 +411,9 @@ const DocumentCard = ({
                     <p><strong>Type:</strong> {type}</p>
                     <p><strong>Due Date:</strong> {dueDate}</p>
                     <p><strong>Status:</strong> {getStatusText()}</p>
+                    {customReminderDays !== undefined && (
+                      <p><strong>Custom reminder:</strong> {customReminderDays} days before due date</p>
+                    )}
                     {description && (
                       <div className="mt-3">
                         <p><strong>Notes:</strong></p>
@@ -400,6 +424,14 @@ const DocumentCard = ({
                 </div>
               )}
               <div className="flex justify-end gap-2 w-full mt-2">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                  onClick={() => setShowReminderSettings(true)}
+                >
+                  <Bell className="h-4 w-4" />
+                  Reminder Settings
+                </Button>
                 <Button 
                   variant="outline" 
                   className="flex items-center gap-2"
@@ -419,6 +451,21 @@ const DocumentCard = ({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Document Reminder Settings Dialog */}
+      <DocumentReminderSettings 
+        document={{
+          id,
+          title,
+          type,
+          dueDate,
+          daysRemaining,
+          description,
+          customReminderDays
+        }}
+        isOpen={showReminderSettings}
+        onClose={() => setShowReminderSettings(false)}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>

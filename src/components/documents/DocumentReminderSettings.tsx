@@ -78,7 +78,7 @@ const DocumentReminderSettings = ({ document, isOpen, onClose }: DocumentReminde
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave}>Save Settings</Button>
+          <Button onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-700">Save Settings</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

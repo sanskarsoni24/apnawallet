@@ -3,19 +3,22 @@ import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { useDocuments } from "@/contexts/DocumentContext";
 import BlurContainer from "../ui/BlurContainer";
-import { format, isToday, isSameDay, parseISO } from "date-fns";
+import { format, isToday, isSameDay } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { FileText } from "lucide-react";
+import { FileText, Bell } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Link } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
+import DocumentReminderSettings from "../documents/DocumentReminderSettings";
 
 const DocumentCalendar = () => {
   const { documents } = useDocuments();
   const { email } = useUser();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [showDocuments, setShowDocuments] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
+  const [showReminderSettings, setShowReminderSettings] = useState(false);
   
   // Parse dates from documents for highlighting in the calendar
   const documentDates = documents.map(doc => {
@@ -56,6 +59,11 @@ const DocumentCalendar = () => {
   
   // Documents for the currently selected date
   const selectedDateDocuments = date ? getDocumentsForDate(date) : [];
+  
+  // Get the specific document for reminder settings
+  const getDocumentById = (id: string) => {
+    return documents.find(doc => doc.id === id);
+  };
   
   // Function to render dots under dates with documents
   const getDayClassNames = (day: Date) => {
@@ -104,7 +112,7 @@ const DocumentCalendar = () => {
             DayContent: ({ date: dayDate }) => {
               // Get documents due on this day
               const docsOnDay = documentDates.filter(doc => 
-                doc.dateObj && isSameDay(doc.dateObj, dayDate)
+                doc.dateObj && isSameDay(doc.dateObj, dayDate) && doc.userId === email
               );
               
               // Determine status color
@@ -152,7 +160,14 @@ const DocumentCalendar = () => {
                       }`} />
                       <span className="font-medium">{doc.title}</span>
                     </div>
-                    <Badge variant="outline">{doc.type}</Badge>
+                    <div className="flex items-center gap-2">
+                      {doc.customReminderDays !== undefined && (
+                        <span className="text-xs text-muted-foreground">
+                          {doc.customReminderDays}d reminder
+                        </span>
+                      )}
+                      <Badge variant="outline">{doc.type}</Badge>
+                    </div>
                   </li>
                 ))}
                 {selectedDateDocuments.length > 3 && (
@@ -198,6 +213,11 @@ const DocumentCalendar = () => {
                            doc.daysRemaining === 1 ? "Due tomorrow" : 
                            `${doc.daysRemaining} days left`}
                         </Badge>
+                        {doc.customReminderDays !== undefined && (
+                          <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">
+                            {doc.customReminderDays}d reminder
+                          </Badge>
+                        )}
                       </div>
                       <h4 className="font-medium mt-2">{doc.title}</h4>
                       {doc.description && (
@@ -210,6 +230,21 @@ const DocumentCalendar = () => {
                       <FileText className="h-5 w-5 text-primary" />
                     </div>
                   </div>
+                  
+                  <div className="mt-3 flex justify-end">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="flex items-center gap-2"
+                      onClick={() => {
+                        setSelectedDoc(doc.id);
+                        setShowReminderSettings(true);
+                      }}
+                    >
+                      <Bell className="h-4 w-4" />
+                      Set Reminder
+                    </Button>
+                  </div>
                 </BlurContainer>
               ))
             ) : (
@@ -220,6 +255,18 @@ const DocumentCalendar = () => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Document Reminder Settings Dialog */}
+      {selectedDoc && (
+        <DocumentReminderSettings 
+          document={getDocumentById(selectedDoc)!}
+          isOpen={showReminderSettings}
+          onClose={() => {
+            setShowReminderSettings(false);
+            setSelectedDoc(null);
+          }}
+        />
+      )}
     </>
   );
 };

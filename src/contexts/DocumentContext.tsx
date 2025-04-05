@@ -17,6 +17,7 @@ export interface Document {
   importance?: DocumentImportance;
   extractedText?: string; // Text extracted from document
   autoCategories?: string[]; // Automatically detected categories
+  customReminderDays?: number; // Document-specific reminder setting
 }
 
 interface DocumentContextType {
@@ -26,6 +27,7 @@ interface DocumentContextType {
   updateDueDate: (id: string, newDueDate: string) => void;
   deleteDocument: (id: string) => void;
   filteredDocuments: (type: string) => Document[];
+  setCustomReminderDays: (id: string, days: number) => void;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(undefined);
@@ -114,6 +116,20 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const getUserDocuments = () => {
     if (!isLoggedIn || !email) return [];
     return documents.filter(doc => doc.userId === email);
+  };
+
+  // Add a new function to set custom reminder days for a specific document
+  const setCustomReminderDays = (id: string, days: number) => {
+    if (!isLoggedIn) return;
+    
+    setDocuments((prev) => 
+      prev.map((doc) => 
+        doc.id === id && doc.userId === email ? { 
+          ...doc, 
+          customReminderDays: days 
+        } : doc
+      )
+    );
   };
 
   // Update addDocument to include text extraction and auto-categorization
@@ -229,7 +245,8 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         updateDocument, 
         updateDueDate, 
         deleteDocument, 
-        filteredDocuments 
+        filteredDocuments,
+        setCustomReminderDays
       }}
     >
       {children}

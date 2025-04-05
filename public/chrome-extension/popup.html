@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DocuNinja</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      width: 350px;
+      min-height: 450px;
+      overflow-x: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    
+    .logo {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+    
+    .doc-card {
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    
+    .doc-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .critical { background-color: rgba(239, 68, 68, 0.1); border-left: 4px solid rgb(239, 68, 68); }
+    .high { background-color: rgba(249, 115, 22, 0.1); border-left: 4px solid rgb(249, 115, 22); }
+    .medium { background-color: rgba(234, 179, 8, 0.1); border-left: 4px solid rgb(234, 179, 8); }
+    .low { background-color: rgba(34, 197, 94, 0.1); border-left: 4px solid rgb(34, 197, 94); }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white p-4">
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center space-x-2">
+      <div class="logo">DN</div>
+      <h1 class="text-xl font-bold">DocuNinja</h1>
+    </div>
+    <button id="openWebApp" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-md text-sm">Open Web App</button>
+  </div>
+  
+  <div id="loginPrompt" class="hidden flex flex-col items-center justify-center h-64">
+    <p class="text-center text-gray-500 dark:text-gray-400 mb-4">Sign in to view your documents and reminders</p>
+    <button id="loginBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md">Sign In</button>
+  </div>
+  
+  <div id="loadingState" class="flex flex-col items-center justify-center h-64">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+    <p class="mt-4 text-gray-500 dark:text-gray-400">Loading your documents...</p>
+  </div>
+  
+  <div id="contentArea" class="hidden">
+    <div class="mb-4">
+      <h2 class="text-lg font-medium mb-2">Upcoming Deadlines</h2>
+      <div id="documentsList" class="space-y-3">
+        <!-- Documents will be inserted here by JavaScript -->
+      </div>
+      <p id="noDocuments" class="hidden text-center py-8 text-gray-500 dark:text-gray-400">No upcoming deadlines</p>
+    </div>
+    
+    <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <h3 class="text-sm font-medium mb-2">Quick Actions</h3>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="uploadBtn" class="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-md p-3 flex flex-col items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+          </svg>
+          <span class="text-xs mt-1">Upload Document</span>
+        </button>
+        
+        <button id="scanBtn" class="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-md p-3 flex flex-col items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+          </svg>
+          <span class="text-xs mt-1">Scan Document</span>
+        </button>
+        
+        <button id="settingsBtn" class="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-md p-3 flex flex-col items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+          </svg>
+          <span class="text-xs mt-1">Settings</span>
+        </button>
+        
+        <button id="logoutBtn" class="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-md p-3 flex flex-col items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V7.414l-4-4H3zm9 8a1 1 0 01-1 1H8a1 1 0 010-2h3a1 1 0 011 1z" clip-rule="evenodd" />
+            <path d="M14 7V5.586l-2.293-2.293A1 1 0 0011 3h-1v4h4z" />
+          </svg>
+          <span class="text-xs mt-1">Sign Out</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

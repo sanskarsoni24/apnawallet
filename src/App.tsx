@@ -17,6 +17,7 @@ import { UserProvider, useUser } from "./contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
 import { checkForDueDocuments, createAppNotification } from "./services/NotificationService";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import StripeCheckout from "./pages/StripeCheckout";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const queryClient = new QueryClient();
 const NotificationCheck = () => {
   const { documents } = useDocuments();
   const { email, userSettings } = useUser();
+  const [lastNotificationCheck, setLastNotificationCheck] = useState<string | null>(null);
 
   useEffect(() => {
     const firstVisit = localStorage.getItem("firstVisit") !== "false";
@@ -39,45 +41,43 @@ const NotificationCheck = () => {
       }, 1000);
     }
 
-    // Check user notification preferences
+    // Check user notification preferences - only once per hour
     const checkNotificationPreferences = () => {
-      // Get preferences from user settings
-      const preferences = {
-        emailNotifications: userSettings.emailNotifications !== false,
-        pushNotifications: userSettings.pushNotifications || false,
-        voiceReminders: userSettings.voiceReminders || false,
-        reminderDays: userSettings.reminderDays || 3,
-        voiceType: userSettings.voiceType || "default"
-      };
+      const now = new Date().toISOString();
+      const lastCheck = localStorage.getItem("lastNotificationCheck");
+      const oneHourAgo = new Date();
+      oneHourAgo.setHours(oneHourAgo.getHours() - 1);
       
-      // Check for documents due soon and send notifications
-      checkForDueDocuments(documents, email, preferences);
+      if (!lastCheck || new Date(lastCheck) < oneHourAgo) {
+        // Get preferences from user settings
+        const preferences = {
+          emailNotifications: userSettings.emailNotifications !== false,
+          pushNotifications: userSettings.pushNotifications || false,
+          voiceReminders: userSettings.voiceReminders || false,
+          reminderDays: userSettings.reminderDays || 3,
+          voiceType: userSettings.voiceType || "default"
+        };
+        
+        // Check for documents due soon and send notifications
+        checkForDueDocuments(documents, email, preferences);
+        
+        // Update last check time
+        localStorage.setItem("lastNotificationCheck", now);
+        setLastNotificationCheck(now);
+      }
     };
 
-    // Check for notifications after a delay
-    setTimeout(checkNotificationPreferences, 3000);
+    // Check for notifications after a short delay
+    const initialTimeout = setTimeout(checkNotificationPreferences, 3000);
     
-    // Set up a daily check for notifications
-    const intervalId = setInterval(() => {
-      checkNotificationPreferences();
-    }, 24 * 60 * 60 * 1000); // Once every 24 hours
+    // Set up checks every 2 hours
+    const intervalId = setInterval(checkNotificationPreferences, 2 * 60 * 60 * 1000);
     
-    // Set up an interval to create periodic test notifications (for demo purposes)
-    // This would be removed in a production environment
-    const demoNotificationId = setInterval(() => {
-      const demoMessages = [
-        { title: "Document Due Soon", desc: "Your Car Insurance expires in 5 days" },
-        { title: "New Document Available", desc: "Your utility bill is ready for review" },
-        { title: "Reminder", desc: "Don't forget to renew your subscription" }
-      ];
-      
-      const randomMsg = demoMessages[Math.floor(Math.random() * demoMessages.length)];
-      createAppNotification(randomMsg.title, randomMsg.desc);
-    }, 60000); // Create a demo notification every minute
+    // Remove the demo notifications that were creating too much noise
     
     return () => {
+      clearTimeout(initialTimeout);
       clearInterval(intervalId);
-      clearInterval(demoNotificationId);
     };
   }, [documents, email, userSettings]);
 
@@ -115,6 +115,7 @@ const App = () => {
                   } 
                 />
                 <Route path="/pricing" element={<Monetization />} />
+                <Route path="/checkout" element={<StripeCheckout />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

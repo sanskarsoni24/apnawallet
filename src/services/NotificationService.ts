@@ -50,6 +50,13 @@ const setVoiceBasedOnType = (utterance: SpeechSynthesisUtterance, voices: Speech
       );
       if (femaleVoice) utterance.voice = femaleVoice;
       break;
+    case "robot":
+      const robotVoice = voices.find(voice =>
+        voice.name.includes("Google") ||
+        voice.name.toLowerCase().includes("robot")
+      );
+      if (robotVoice) utterance.voice = robotVoice;
+      break;
     default:
       // Use default voice
       break;
@@ -92,25 +99,44 @@ const createAppNotification = (title: string, description: string) => {
   return true;
 };
 
-// Check for documents nearing their due date and send reminders
+// Modified to respect document-level reminder settings
 const checkForDueDocuments = (documents: Document[], userEmail: string, preferences: any) => {
   const { emailNotifications, pushNotifications, voiceReminders, reminderDays, voiceType } = preferences;
-  const daysThreshold = parseInt(reminderDays) || 3;
   
-  // Filter documents that are due within the threshold
-  const dueDocuments = documents.filter(
-    doc => doc.daysRemaining > 0 && doc.daysRemaining <= daysThreshold
-  );
+  // No need to spam notifications for each document
+  // We'll collect documents by threshold and send grouped notifications
+  const dueSoonDocuments: Record<string, Document[]> = {};
   
-  if (dueDocuments.length === 0) return;
-  
-  // Handle notifications based on user preferences
-  dueDocuments.forEach(doc => {
-    const notificationText = `${doc.title} is due in ${doc.daysRemaining} day${doc.daysRemaining !== 1 ? 's' : ''}`;
+  // Filter documents that are due within their respective thresholds
+  documents.forEach(doc => {
+    // Use document-specific reminder days if available, otherwise use global setting
+    const daysThreshold = doc.customReminderDays !== undefined ? doc.customReminderDays : (parseInt(reminderDays) || 3);
     
-    // App notification
+    if (doc.daysRemaining > 0 && doc.daysRemaining <= daysThreshold) {
+      const key = `${daysThreshold}-days`;
+      if (!dueSoonDocuments[key]) dueSoonDocuments[key] = [];
+      dueSoonDocuments[key].push(doc);
+    }
+  });
+  
+  // Exit if no documents match any threshold
+  if (Object.keys(dueSoonDocuments).length === 0) return;
+  
+  // Process notifications by threshold
+  Object.entries(dueSoonDocuments).forEach(([thresholdKey, docs]) => {
+    if (docs.length === 0) return;
+    
+    // Create notification message for this threshold
+    let notificationText = '';
+    if (docs.length === 1) {
+      notificationText = `${docs[0].title} is due in ${docs[0].daysRemaining} day${docs[0].daysRemaining !== 1 ? 's' : ''}`;
+    } else {
+      notificationText = `${docs.length} documents are due within ${docs[0].daysRemaining} days`;
+    }
+    
+    // App notification (limited to one per threshold)
     createAppNotification(
-      "Document Due Soon",
+      "Document Reminders",
       notificationText
     );
     
@@ -122,18 +148,35 @@ const checkForDueDocuments = (documents: Document[], userEmail: string, preferen
       });
     }
     
-    // Voice reminder
+    // Voice reminder (only for critical documents)
     if (voiceReminders) {
-      speakNotification(notificationText, voiceType || 'default');
+      const criticalDocs = docs.filter(d => d.importance === 'critical' || d.importance === 'high');
+      if (criticalDocs.length > 0) {
+        const criticalText = criticalDocs.length === 1 
+          ? `Urgent reminder: ${criticalDocs[0].title} is due in ${criticalDocs[0].daysRemaining} day${criticalDocs[0].daysRemaining !== 1 ? 's' : ''}`
+          : `Urgent reminder: ${criticalDocs.length} important documents are due soon`;
+        speakNotification(criticalText, voiceType || 'default');
+      }
     }
     
-    // Email notification
+    // Email notification (only once per day)
     if (emailNotifications && userEmail) {
-      sendEmailNotification(
-        userEmail,
-        `Reminder: ${doc.title} is due soon`,
-        `Your document "${doc.title}" is due in ${doc.daysRemaining} day${doc.daysRemaining !== 1 ? 's' : ''}.`
-      );
+      const lastSentKey = `last_email_sent_${thresholdKey}`;
+      const lastSent = localStorage.getItem(lastSentKey);
+      const today = new Date().toDateString();
+      
+      if (lastSent !== today) {
+        // Build a list of documents for the email body
+        const docList = docs.map(d => `- ${d.title}: due in ${d.daysRemaining} day${d.daysRemaining !== 1 ? 's' : ''}`).join('\n');
+        
+        sendEmailNotification(
+          userEmail,
+          `DocuNinja: ${docs.length} document${docs.length !== 1 ? 's' : ''} due soon`,
+          `The following documents need your attention:\n\n${docList}`
+        );
+        
+        localStorage.setItem(lastSentKey, today);
+      }
     }
   });
 };

@@ -24,6 +24,23 @@ interface DocumentContextType {
   filterDocumentsByType: (type: string) => Document[];
 }
 
+// Define global chrome interface for TypeScript
+declare global {
+  interface Window {
+    chrome?: {
+      storage?: {
+        local?: {
+          get?: (keys: string | string[] | object | null, callback: (items: any) => void) => void;
+          set?: (items: object, callback?: () => void) => void;
+        };
+      };
+      runtime?: {
+        sendMessage?: (message: any, responseCallback?: (response: any) => void) => void;
+      };
+    };
+  }
+}
+
 const DocumentContext = createContext<DocumentContextType>({
   documents: [],
   addDocument: () => {},
@@ -126,11 +143,13 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem("documents", JSON.stringify(documents));
     
     // Safely check for Chrome extension API
-    if (typeof window !== 'undefined' && window.chrome && 'storage' in window.chrome) {
+    if (typeof window !== 'undefined' && window.chrome && window.chrome.storage && window.chrome.storage.local) {
       try {
-        window.chrome.storage?.local?.set({ documents });
+        window.chrome.storage.local.set({ documents });
         // Send a message to the extension that documents were updated
-        window.chrome.runtime?.sendMessage?.({ action: "documentsUpdated" });
+        if (window.chrome.runtime && window.chrome.runtime.sendMessage) {
+          window.chrome.runtime.sendMessage({ action: "documentsUpdated" });
+        }
       } catch (error) {
         console.log("Chrome extension storage not available:", error);
       }
@@ -147,12 +166,14 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setDocuments((prevDocuments) => [...prevDocuments, newDocument]);
     
     // Safely check for Chrome extension API
-    if (typeof window !== 'undefined' && window.chrome && 'storage' in window.chrome) {
+    if (typeof window !== 'undefined' && window.chrome && window.chrome.storage && window.chrome.storage.local) {
       try {
         const updatedDocs = [...documents, newDocument];
-        window.chrome.storage?.local?.set({ documents: updatedDocs });
+        window.chrome.storage.local.set({ documents: updatedDocs });
         // Notify extension of update
-        window.chrome.runtime?.sendMessage?.({ action: "documentsUpdated" });
+        if (window.chrome.runtime && window.chrome.runtime.sendMessage) {
+          window.chrome.runtime.sendMessage({ action: "documentsUpdated" });
+        }
       } catch (error) {
         console.log("Chrome extension storage not available:", error);
       }
@@ -167,14 +188,16 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
     
     // Safely check for Chrome extension API
-    if (typeof window !== 'undefined' && window.chrome && 'storage' in window.chrome) {
+    if (typeof window !== 'undefined' && window.chrome && window.chrome.storage && window.chrome.storage.local) {
       try {
         const updatedDocuments = documents.map((doc) =>
           doc.id === id ? { ...doc, ...updates } : doc
         );
-        window.chrome.storage?.local?.set({ documents: updatedDocuments });
+        window.chrome.storage.local.set({ documents: updatedDocuments });
         // Notify extension of update
-        window.chrome.runtime?.sendMessage?.({ action: "documentsUpdated" });
+        if (window.chrome.runtime && window.chrome.runtime.sendMessage) {
+          window.chrome.runtime.sendMessage({ action: "documentsUpdated" });
+        }
       } catch (error) {
         console.log("Chrome extension storage not available:", error);
       }
@@ -187,12 +210,14 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
     
     // Safely check for Chrome extension API
-    if (typeof window !== 'undefined' && window.chrome && 'storage' in window.chrome) {
+    if (typeof window !== 'undefined' && window.chrome && window.chrome.storage && window.chrome.storage.local) {
       try {
         const updatedDocuments = documents.filter((doc) => doc.id !== id);
-        window.chrome.storage?.local?.set({ documents: updatedDocuments });
+        window.chrome.storage.local.set({ documents: updatedDocuments });
         // Notify extension of update
-        window.chrome.runtime?.sendMessage?.({ action: "documentsUpdated" });
+        if (window.chrome.runtime && window.chrome.runtime.sendMessage) {
+          window.chrome.runtime.sendMessage({ action: "documentsUpdated" });
+        }
       } catch (error) {
         console.log("Chrome extension storage not available:", error);
       }
@@ -237,16 +262,18 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
       
       // Safely check for Chrome extension API
-      if (typeof window !== 'undefined' && window.chrome && 'storage' in window.chrome) {
+      if (typeof window !== 'undefined' && window.chrome && window.chrome.storage && window.chrome.storage.local) {
         try {
           const updatedDocuments = documents.map((doc) =>
             doc.id === id
               ? { ...doc, dueDate: newDate, daysRemaining }
               : doc
           );
-          window.chrome.storage?.local?.set({ documents: updatedDocuments });
+          window.chrome.storage.local.set({ documents: updatedDocuments });
           // Notify extension of update
-          window.chrome.runtime?.sendMessage?.({ action: "documentsUpdated" });
+          if (window.chrome.runtime && window.chrome.runtime.sendMessage) {
+            window.chrome.runtime.sendMessage({ action: "documentsUpdated" });
+          }
         } catch (error) {
           console.log("Chrome extension storage not available:", error);
         }
@@ -264,14 +291,16 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
     
     // Safely check for Chrome extension API
-    if (typeof window !== 'undefined' && window.chrome && 'storage' in window.chrome) {
+    if (typeof window !== 'undefined' && window.chrome && window.chrome.storage && window.chrome.storage.local) {
       try {
         const updatedDocuments = documents.map((doc) =>
           doc.id === id ? { ...doc, customReminderDays: days } : doc
         );
-        window.chrome.storage?.local?.set({ documents: updatedDocuments });
+        window.chrome.storage.local.set({ documents: updatedDocuments });
         // Notify extension of update
-        window.chrome.runtime?.sendMessage?.({ action: "documentsUpdated" });
+        if (window.chrome.runtime && window.chrome.runtime.sendMessage) {
+          window.chrome.runtime.sendMessage({ action: "documentsUpdated" });
+        }
       } catch (error) {
         console.log("Chrome extension storage not available:", error);
       }

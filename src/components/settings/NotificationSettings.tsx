@@ -5,6 +5,7 @@ import BlurContainer from "@/components/ui/BlurContainer";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
 
 interface NotificationSettingsProps {
   settings: {
@@ -33,6 +34,10 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
   
   const handleSave = () => {
     saveSettings(localSettings);
+    toast({
+      title: "Settings Saved",
+      description: "Your notification preferences have been updated successfully.",
+    });
   };
 
   const requestPushPermission = async () => {
@@ -43,6 +48,12 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
         new Notification("Push Notifications Enabled", { 
           body: "You'll now receive important document notifications" 
         });
+        
+        // Save settings immediately after permission is granted
+        saveSettings({
+          ...localSettings,
+          pushNotifications: true
+        });
       } else {
         handleChange('pushNotifications', false);
       }
@@ -50,7 +61,7 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
   };
 
   return (
-    <BlurContainer className="p-6 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+    <BlurContainer className="p-6 animate-fade-in dark:bg-slate-800/70 dark:border-slate-700" style={{ animationDelay: "0.2s" }}>
       <div className="mb-4 flex items-center gap-3">
         <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
           <Bell className="h-5 w-5 text-primary" />
@@ -61,8 +72,8 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-medium">Email Notifications</h3>
-            <p className="text-sm text-muted-foreground">Get notified when documents expire</p>
+            <h3 className="text-sm font-medium dark:text-white">Email Notifications</h3>
+            <p className="text-sm text-muted-foreground dark:text-slate-300">Get notified when documents expire</p>
           </div>
           <Switch 
             checked={localSettings.emailNotifications} 
@@ -72,8 +83,8 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
         
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-medium">Push Notifications</h3>
-            <p className="text-sm text-muted-foreground">Receive browser push notifications</p>
+            <h3 className="text-sm font-medium dark:text-white">Push Notifications</h3>
+            <p className="text-sm text-muted-foreground dark:text-slate-300">Receive browser push notifications</p>
           </div>
           <div className="flex items-center gap-2">
             <Switch 
@@ -91,8 +102,8 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
         
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-medium">Voice Reminders</h3>
-            <p className="text-sm text-muted-foreground">Audio alerts for important documents</p>
+            <h3 className="text-sm font-medium dark:text-white">Voice Reminders</h3>
+            <p className="text-sm text-muted-foreground dark:text-slate-300">Audio alerts for important documents</p>
           </div>
           <Switch 
             checked={localSettings.voiceReminders} 
@@ -101,16 +112,16 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
         </div>
         
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">Global Reminder Days</h3>
-          <p className="text-sm text-muted-foreground">Days before expiry to notify by default</p>
+          <h3 className="text-sm font-medium dark:text-white">Global Reminder Days</h3>
+          <p className="text-sm text-muted-foreground dark:text-slate-300">Days before expiry to notify by default</p>
           <Select 
             value={String(localSettings.reminderDays)} 
             onValueChange={(value) => handleChange('reminderDays', Number(value))}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full dark:bg-slate-700 dark:border-slate-600">
               <SelectValue placeholder="Select days" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="dark:bg-slate-800">
               <SelectItem value="1">1 day before</SelectItem>
               <SelectItem value="3">3 days before</SelectItem>
               <SelectItem value="7">7 days before</SelectItem>
@@ -118,23 +129,23 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
               <SelectItem value="30">30 days before</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground dark:text-slate-400 mt-1">
             This is your default setting. You can customize reminder days for each document individually.
           </p>
         </div>
         
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">Voice Type</h3>
-          <p className="text-sm text-muted-foreground">Choose voice type for audio alerts</p>
+          <h3 className="text-sm font-medium dark:text-white">Voice Type</h3>
+          <p className="text-sm text-muted-foreground dark:text-slate-300">Choose voice type for audio alerts</p>
           <Select 
             value={localSettings.voiceType} 
             onValueChange={(value) => handleChange('voiceType', value)}
             disabled={!localSettings.voiceReminders}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full dark:bg-slate-700 dark:border-slate-600">
               <SelectValue placeholder="Select voice type" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="dark:bg-slate-800">
               <SelectItem value="default">Default</SelectItem>
               <SelectItem value="female">Female</SelectItem>
               <SelectItem value="male">Male</SelectItem>

@@ -3,7 +3,7 @@ import React, { useState, useRef } from "react";
 import { Upload, Camera, ArrowRight, Loader2, ScanSearch } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { toast } from "@/hooks/use-toast";
-import { useDocuments } from "@/contexts/DocumentContext";
+import { useDocuments, Document } from "@/contexts/DocumentContext";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -109,27 +109,39 @@ const DocumentUpload = () => {
       }
       
       if (extractedInfo.dueDate) {
-        // Try to parse the date in various formats
-        let dateObj = null;
-        const dateFormats = [
-          'MMMM d, yyyy',
-          'MMM d, yyyy',
-          'yyyy-MM-dd',
-          'MM/dd/yyyy',
-          'dd/MM/yyyy'
-        ];
+        // Improved date parsing for multiple formats
+        let parsedDate: Date | null = null;
         
-        for (const format of dateFormats) {
-          try {
-            dateObj = parse(extractedInfo.dueDate, format, new Date());
-            if (isValid(dateObj)) break;
-          } catch (e) {
-            // Continue trying other formats
+        // Try direct Date parsing first
+        parsedDate = new Date(extractedInfo.dueDate);
+        
+        // If that didn't work, try various formats
+        if (isNaN(parsedDate.getTime())) {
+          const dateFormats = [
+            'MMMM d, yyyy', // May 15, 2025
+            'MMM d, yyyy',  // May 15, 2025
+            'yyyy-MM-dd',   // 2025-05-15
+            'MM/dd/yyyy',   // 05/15/2025
+            'dd/MM/yyyy'    // 15/05/2025
+          ];
+          
+          for (const dateFormat of dateFormats) {
+            try {
+              const tempDate = parse(extractedInfo.dueDate, dateFormat, new Date());
+              if (isValid(tempDate)) {
+                parsedDate = tempDate;
+                break;
+              }
+            } catch (e) {
+              // Continue trying other formats
+            }
           }
         }
         
-        if (dateObj && isValid(dateObj)) {
-          form.setValue('dueDate', format(dateObj, 'yyyy-MM-dd'));
+        // If we successfully parsed the date
+        if (parsedDate && isValid(parsedDate)) {
+          // Format as YYYY-MM-DD for the input
+          form.setValue('dueDate', format(parsedDate, 'yyyy-MM-dd'));
         }
       }
       
@@ -170,16 +182,19 @@ const DocumentUpload = () => {
     // Create file URL for preview
     const fileURL = URL.createObjectURL(selectedFile);
     
-    addDocument({
+    // Create document object with proper typing
+    const newDocument: Document = {
+      id: "", // This will be set in addDocument
       title: data.title,
       type: data.type,
       dueDate: format(dueDate, "MMMM d, yyyy"),
       daysRemaining: diffDays,
-      file: selectedFile,
-      fileURL,
+      fileURL: fileURL,
       description: data.description,
-      customReminderDays: customReminderDays // Add custom reminder days
-    });
+      customReminderDays: customReminderDays
+    };
+    
+    addDocument(newDocument);
     
     toast({
       title: "Document uploaded",

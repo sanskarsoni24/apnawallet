@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import BlurContainer from '@/components/ui/BlurContainer';
 import { Download, Check, Chrome, AlertCircle, ExternalLink } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import JSZip from 'jszip';
 
 const ChromeExtensionDownload = () => {
   const [downloading, setDownloading] = useState(false);
@@ -16,17 +17,20 @@ const ChromeExtensionDownload = () => {
     setChromeDetected(isChrome);
     
     // Check if extension is potentially installed
-    // This is a basic check - in reality we'd use chrome.runtime.sendMessage
+    const hasExtensionDownloaded = localStorage.getItem("docuninja-extension-installed") === "true";
+    setInstalled(hasExtensionDownloaded);
+    
+    // Check for Chrome extension API
     if (typeof window !== 'undefined' && window.chrome && window.chrome.runtime) {
       try {
         // We can try to detect if our extension is installed
-        // But this is limited by browser security
-        // A more reliable method would be to have the extension
-        // add a specific DOM element or set a cookie we can check
-        const extensionId = "our-extension-id"; // You would replace this with your actual extension ID
-        if (window.localStorage.getItem("docuninja-extension-installed") === "true") {
-          setInstalled(true);
-        }
+        const extensionId = "our-extension-id"; 
+        chrome.runtime.sendMessage(extensionId, { action: 'ping' }, function(response) {
+          if (response && response.action === 'pong') {
+            setInstalled(true);
+            localStorage.setItem("docuninja-extension-installed", "true");
+          }
+        });
       } catch (e) {
         // Extension not installed or error checking
       }
@@ -38,90 +42,65 @@ const ChromeExtensionDownload = () => {
     setDownloading(true);
     
     // Create a ZIP folder with all necessary files
-    import('jszip').then((JSZip) => {
-      const zip = new JSZip.default();
+    const zip = new JSZip();
       
-      // Add the manifest file to the ZIP
-      fetch('/chrome-extension/manifest.json')
-        .then(response => response.json())
-        .then(manifest => {
-          // Add manifest.json to the zip
-          zip.file("manifest.json", JSON.stringify(manifest, null, 2));
-          
-          // Add popup.html to the zip
-          return fetch('/chrome-extension/popup.html');
-        })
-        .then(response => response.text())
-        .then(content => {
-          zip.file("popup.html", content);
-          
-          // Add popup.js to the zip
-          return fetch('/chrome-extension/popup.js');
-        })
-        .then(response => response.text())
-        .then(content => {
-          zip.file("popup.js", content);
-          
-          // Add background.js to the zip
-          return fetch('/chrome-extension/background.js');
-        })
-        .then(response => response.text())
-        .then(content => {
-          zip.file("background.js", content);
-          
-          // Add the icons to the zip
-          const iconPromises = [16, 32, 48, 128].map(size => {
-            return fetch(`/chrome-extension/icon-${size}.png`)
-              .then(response => response.blob())
-              .then(blob => {
-                zip.file(`icon-${size}.png`, blob);
-              });
+    // Fetch all required files in parallel
+    Promise.all([
+      fetch('/chrome-extension/manifest.json').then(res => res.json()),
+      fetch('/chrome-extension/popup.html').then(res => res.text()),
+      fetch('/chrome-extension/popup.js').then(res => res.text()),
+      fetch('/chrome-extension/background.js').then(res => res.text()),
+      fetch('/chrome-extension/content.js').then(res => res.text())
+    ])
+    .then(([manifest, popupHtml, popupJs, backgroundJs, contentJs]) => {
+      // Add files to zip
+      zip.file("manifest.json", JSON.stringify(manifest, null, 2));
+      zip.file("popup.html", popupHtml);
+      zip.file("popup.js", popupJs);
+      zip.file("background.js", backgroundJs);
+      zip.file("content.js", contentJs);
+      
+      // Add the icons to the zip
+      return Promise.all([16, 32, 48, 128].map(size => {
+        return fetch(`/chrome-extension/icon-${size}.png`)
+          .then(response => response.blob())
+          .then(blob => {
+            zip.file(`icon-${size}.png`, blob);
           });
-          
-          return Promise.all(iconPromises);
-        })
-        .then(() => {
-          // Generate the zip file
-          return zip.generateAsync({type: "blob"});
-        })
-        .then(content => {
-          // Create a download link
-          const url = URL.createObjectURL(content);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = "docuninja-chrome-extension.zip";
-          document.body.appendChild(link);
-          link.click();
-          URL.revokeObjectURL(url);
-          document.body.removeChild(link);
-          
-          // Show success message
-          setDownloading(false);
-          setInstalled(true);
-          
-          // Store in localStorage that we've downloaded the extension
-          window.localStorage.setItem("docuninja-extension-installed", "true");
-          
-          toast({
-            title: "Chrome Extension Downloaded",
-            description: "Follow the instructions below to install the extension."
-          });
-        })
-        .catch(error => {
-          console.error("Error generating extension ZIP:", error);
-          setDownloading(false);
-          toast({
-            title: "Download Failed",
-            description: "Could not download extension. Please try again.",
-            variant: "destructive"
-          });
-        });
-    }).catch(error => {
-      console.error("Error loading JSZip:", error);
+      })).then(() => {
+        // Generate the zip file
+        return zip.generateAsync({type: "blob"});
+      });
+    })
+    .then(content => {
+      // Create a download link
+      const url = URL.createObjectURL(content);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "docuninja-chrome-extension.zip";
+      document.body.appendChild(link);
+      link.click();
+      URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      
+      // Show success message
+      setDownloading(false);
+      setInstalled(true);
+      
+      // Store in localStorage that we've downloaded the extension
+      window.localStorage.setItem("docuninja-extension-installed", "true");
+      
+      toast({
+        title: "Chrome Extension Downloaded",
+        description: "Follow the instructions below to install the extension."
+      });
+    })
+    .catch(error => {
+      console.error("Error generating extension ZIP:", error);
       setDownloading(false);
       toast({
         title: "Download Failed",
-        description: "Could not load ZIP generator. Please try again.",
+        description: "Could not download extension. Please try again.",
         variant: "destructive"
       });
     });
@@ -151,9 +130,13 @@ const ChromeExtensionDownload = () => {
           onClick={downloadExtension}
           className="gap-2 whitespace-nowrap min-w-[140px] bg-gradient-to-r from-indigo-500 to-blue-500 hover:shadow-md hover:from-indigo-600 hover:to-blue-600"
           disabled={downloading}
-          loading={downloading}
         >
-          {installed ? (
+          {downloading ? (
+            <>
+              <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+              <span>Downloading...</span>
+            </>
+          ) : installed ? (
             <>
               <Check className="h-4 w-4" />
               <span>Downloaded</span>

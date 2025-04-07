@@ -1,3 +1,4 @@
+
 // Background script for DocuNinja Chrome Extension
 
 // Check for document deadlines and send notifications
@@ -51,8 +52,11 @@ chrome.alarms.onAlarm.addListener(function(alarm) {
 
 // Check immediately when the extension is installed or updated
 chrome.runtime.onInstalled.addListener(function() {
-  // Create extension icons if they don't exist
-  chrome.storage.local.set({ lastSyncTime: null });
+  // Initialize sync data on install
+  chrome.storage.local.set({
+    lastSyncTime: new Date().toISOString(),
+    initialSync: true
+  });
   
   // Create a welcome notification
   chrome.notifications.create({
@@ -67,23 +71,43 @@ chrome.runtime.onInstalled.addListener(function() {
   checkForDocumentDeadlines();
 });
 
-// Listen for messages from popup
+// Listen for messages from popup or content scripts
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
   if (message.action === 'syncDocuments') {
-    // This would fetch documents from the web app in a real implementation
-    // For now, just check local storage
-    checkForDocumentDeadlines();
+    // Start syncing process
+    syncWithWebApp();
     sendResponse({ success: true });
+    return true; // Keep the messaging channel open for async response
+  } else if (message.action === 'getDocuments') {
+    // Return documents directly
+    chrome.storage.local.get(['documents'], function(data) {
+      sendResponse({ documents: data.documents || [] });
+    });
+    return true; // Keep the messaging channel open for async response
   }
 });
 
-// Sync with web app periodically (mock implementation)
+// Sync with web app periodically
 function syncWithWebApp() {
   console.log('Syncing with web app...');
-  // In a real extension, this would make API calls to your web app 
-  // to get the latest documents
   
-  // For demo purposes, we'll keep the existing documents
+  // For demo purposes, we'll check if data exists in localStorage via the content script
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    if (tabs[0]) {
+      chrome.tabs.sendMessage(tabs[0].id, {action: "getLocalStorage"}, function(response) {
+        if (response && response.documents) {
+          chrome.storage.local.set({
+            documents: response.documents,
+            userSettings: response.userSettings || {},
+            lastSyncTime: new Date().toISOString()
+          });
+          
+          // Check for due documents after sync
+          checkForDocumentDeadlines();
+        }
+      });
+    }
+  });
 }
 
 // Set up periodic sync (every 30 minutes)

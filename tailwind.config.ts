@@ -52,6 +52,7 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Enhanced color palette
         indigo: {
           50: "#eef2ff",
           100: "#e0e7ff",
@@ -91,6 +92,14 @@ export default {
           900: "#0f172a",
           950: "#020617",
         },
+        dark: {
+          bg: "#121212",
+          card: "#1E1E1E",
+          popup: "#252525",
+          border: "#333333",
+          text: "#E0E0E0",
+          muted: "#888888"
+        }
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -101,6 +110,7 @@ export default {
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
         'glow': '0 0 20px rgba(99, 102, 241, 0.2)',
         'dark': '0 2px 15px -3px rgba(0, 0, 0, 0.2), 0 10px 20px -2px rgba(0, 0, 0, 0.15)',
+        'color': '0 0 15px var(--shadow-color)',
       },
       keyframes: {
         "accordion-down": {
@@ -160,6 +170,13 @@ export default {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: 'none',
+          },
+        },
       },
     },
   },

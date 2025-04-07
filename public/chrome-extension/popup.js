@@ -107,10 +107,13 @@ document.addEventListener('DOMContentLoaded', function() {
           reminderText = `<span class="text-xs text-indigo-500">Custom reminder: ${doc.customReminderDays} days</span>`;
         }
         
+        // Format category/type display
+        const typeDisplay = doc.customCategory ? doc.customCategory : doc.type;
+        
         card.innerHTML = `
           <div class="flex justify-between items-center">
             <h3 class="font-medium text-sm">${doc.title}</h3>
-            <span class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">${doc.type}</span>
+            <span class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">${typeDisplay}</span>
           </div>
           <div class="flex justify-between items-center mt-1">
             <p class="text-xs text-gray-500 dark:text-gray-400">${doc.description || ''}</p>
@@ -166,7 +169,8 @@ document.addEventListener('DOMContentLoaded', function() {
         type: "Invoice",
         dueDate: "April 10, 2025",
         daysRemaining: -2,
-        description: "County property tax"
+        description: "County property tax",
+        customCategory: "Tax Documents"
       }
     ];
     
@@ -183,8 +187,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Initialize app
-  loadMockData(); // For testing
+  // Try to get data from extension storage
+  chrome.storage.local.get(['documents', 'userEmail'], function(data) {
+    if (data.documents && data.userEmail) {
+      showContent();
+      displayDocuments(data.documents);
+    } else {
+      // If no data in storage, load mock data
+      loadMockData();
+    }
+  });
   
   // Listen for sync messages
   chrome.runtime.onMessage.addListener(function(message) {
@@ -192,4 +204,31 @@ document.addEventListener('DOMContentLoaded', function() {
       checkLoginStatus();
     }
   });
+  
+  // Force sync with web app
+  chrome.runtime.sendMessage({action: 'syncDocuments'}, function(response) {
+    console.log('Sync triggered', response);
+  });
+});
+
+// Add content script to enable communication with web page
+chrome.tabs.executeScript({
+  code: `
+    chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+      if (message.action === "getLocalStorage") {
+        try {
+          const documents = JSON.parse(localStorage.getItem("documents") || "[]");
+          const userSettings = JSON.parse(localStorage.getItem("userSettings") || "{}");
+          sendResponse({documents, userSettings});
+        } catch (e) {
+          sendResponse({error: e.toString()});
+        }
+        return true;
+      }
+    });
+  `
+}, function() {
+  if (chrome.runtime.lastError) {
+    console.log('Content script injection failed:', chrome.runtime.lastError.message);
+  }
 });

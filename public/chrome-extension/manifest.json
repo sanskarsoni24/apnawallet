@@ -19,11 +19,23 @@
       "128": "icon-128.png"
     }
   },
-  "permissions": ["storage", "notifications", "alarms"],
+  "permissions": [
+    "storage", 
+    "notifications", 
+    "alarms", 
+    "activeTab", 
+    "scripting"
+  ],
   "host_permissions": [
     "https://*.lovableproject.com/*"
   ],
   "background": {
     "service_worker": "background.js"
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.lovableproject.com/*"],
+      "js": ["content.js"]
+    }
+  ]
 }

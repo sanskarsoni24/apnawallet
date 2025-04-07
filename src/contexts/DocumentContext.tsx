@@ -5,6 +5,7 @@ export interface Document {
   id: string;
   title: string;
   type: string;
+  customCategory?: string;
   dueDate: string;
   daysRemaining: number;
   description?: string;
@@ -12,16 +13,22 @@ export interface Document {
   importance?: "low" | "medium" | "high" | "critical";
   customReminderDays?: number;
   userId?: string;
+  isProtected?: boolean;
 }
 
 interface DocumentContextType {
   documents: Document[];
+  categories: string[];
   addDocument: (document: Document) => void;
   updateDocument: (id: string, updates: Partial<Document>) => void;
   deleteDocument: (id: string) => void;
   updateDueDate: (id: string, newDate: string) => void;
   setCustomReminderDays: (id: string, days: number) => void;
   filterDocumentsByType: (type: string) => Document[];
+  addCustomCategory: (category: string) => void;
+  removeCategory: (category: string) => void;
+  getProtectedDocuments: () => Document[];
+  setDocumentProtection: (id: string, isProtected: boolean) => void;
 }
 
 // Define global chrome interface for TypeScript
@@ -43,23 +50,43 @@ declare global {
 
 const DocumentContext = createContext<DocumentContextType>({
   documents: [],
+  categories: [],
   addDocument: () => {},
   updateDocument: () => {},
   deleteDocument: () => {},
   updateDueDate: () => {},
   setCustomReminderDays: () => {},
   filterDocumentsByType: () => [],
+  addCustomCategory: () => {},
+  removeCategory: () => {},
+  getProtectedDocuments: () => [],
+  setDocumentProtection: () => {},
 });
 
 export const useDocuments = () => useContext(DocumentContext);
 
 export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const { email } = useUser();
 
   useEffect(() => {
     // Load documents from localStorage
     const storedDocuments = localStorage.getItem("documents");
+    const storedCategories = localStorage.getItem("customCategories");
+    
+    // Load categories
+    if (storedCategories) {
+      try {
+        const parsedCategories = JSON.parse(storedCategories);
+        setCategories(parsedCategories);
+      } catch (e) {
+        console.error("Error parsing stored categories:", e);
+        setCategories([]);
+      }
+    }
+    
+    // Load documents
     if (storedDocuments) {
       try {
         const parsedDocs = JSON.parse(storedDocuments);
@@ -112,6 +139,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         description: "Annual property tax payment due.",
         importance: "critical",
         userId: email,
+        customCategory: "Tax Documents",
       },
       {
         id: "4",
@@ -134,8 +162,14 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         userId: email,
       },
     ];
+    
+    // Extract unique categories from sample documents
+    const initialCategories = ["Tax Documents", "Personal", "Financial"];
+    
     setDocuments(sampleDocuments);
+    setCategories(initialCategories);
     localStorage.setItem("documents", JSON.stringify(sampleDocuments));
+    localStorage.setItem("customCategories", JSON.stringify(initialCategories));
   };
 
   // Save documents to localStorage whenever they change
@@ -155,6 +189,11 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     }
   }, [documents]);
+  
+  // Save categories to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("customCategories", JSON.stringify(categories));
+  }, [categories]);
 
   const addDocument = (document: Document) => {
     const newDocument = {
@@ -307,23 +346,64 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const addCustomCategory = (category: string) => {
+    if (category && !categories.includes(category)) {
+      setCategories(prev => [...prev, category]);
+    }
+  };
+
+  const removeCategory = (category: string) => {
+    // Remove the category from the list
+    setCategories(prev => prev.filter(cat => cat !== category));
+    
+    // Update documents that use this category
+    setDocuments(prevDocs => prevDocs.map(doc => 
+      doc.customCategory === category 
+        ? { ...doc, customCategory: undefined } 
+        : doc
+    ));
+  };
+
   const filterDocumentsByType = (type: string) => {
     if (type === "All") {
       return documents;
     }
-    return documents.filter(doc => doc.type === type);
+    
+    // Check if it's a standard type or custom category
+    if (categories.includes(type)) {
+      return documents.filter(doc => doc.customCategory === type);
+    } else {
+      return documents.filter(doc => doc.type === type);
+    }
+  };
+  
+  const setDocumentProtection = (id: string, isProtected: boolean) => {
+    setDocuments((prevDocuments) =>
+      prevDocuments.map((doc) =>
+        doc.id === id ? { ...doc, isProtected } : doc
+      )
+    );
+  };
+  
+  const getProtectedDocuments = () => {
+    return documents.filter(doc => doc.isProtected === true);
   };
 
   return (
     <DocumentContext.Provider
       value={{
         documents,
+        categories,
         addDocument,
         updateDocument,
         deleteDocument,
         updateDueDate,
         setCustomReminderDays,
         filterDocumentsByType,
+        addCustomCategory,
+        removeCategory,
+        getProtectedDocuments,
+        setDocumentProtection,
       }}
     >
       {children}

@@ -5,6 +5,9 @@ import { Document } from "@/contexts/DocumentContext";
 // Speech synthesis for voice reminders
 const speakNotification = (text: string, voiceType: string = 'default') => {
   if ('speechSynthesis' in window) {
+    // Cancel any previous speech
+    window.speechSynthesis.cancel();
+    
     const utterance = new SpeechSynthesisUtterance(text);
     
     // Get available voices
@@ -29,6 +32,11 @@ const speakNotification = (text: string, voiceType: string = 'default') => {
 
 // Helper function to set voice based on type
 const setVoiceBasedOnType = (utterance: SpeechSynthesisUtterance, voices: SpeechSynthesisVoice[], voiceType: string) => {
+  // Set some basic properties
+  utterance.rate = 1.0;  // Speed of speech (1.0 is normal)
+  utterance.pitch = 1.0; // Pitch (1.0 is normal)
+  utterance.volume = 0.8; // Volume (0.0 to 1.0)
+  
   switch(voiceType) {
     case "male":
       // Find first male voice (usually deeper voices)
@@ -39,7 +47,9 @@ const setVoiceBasedOnType = (utterance: SpeechSynthesisUtterance, voices: Speech
         voice.name.includes("Tom")
       );
       if (maleVoice) utterance.voice = maleVoice;
+      utterance.pitch = 0.9; // Deeper pitch for male voice
       break;
+      
     case "female":
       // Find first female voice
       const femaleVoice = voices.find(voice => 
@@ -49,18 +59,35 @@ const setVoiceBasedOnType = (utterance: SpeechSynthesisUtterance, voices: Speech
         voice.name.includes("Karen")
       );
       if (femaleVoice) utterance.voice = femaleVoice;
+      utterance.pitch = 1.1; // Slightly higher pitch for female voice
       break;
+      
     case "robot":
       const robotVoice = voices.find(voice =>
         voice.name.includes("Google") ||
         voice.name.toLowerCase().includes("robot")
       );
       if (robotVoice) utterance.voice = robotVoice;
+      utterance.rate = 0.9; // Slower for robot voice
+      utterance.pitch = 0.7; // Much lower pitch for robot-like effect
       break;
+      
     default:
-      // Use default voice
+      // Try to use a neutral voice or system default
+      const neutralVoice = voices.find(voice => 
+        voice.default || 
+        voice.name.includes("Default") ||
+        voice.name.includes("Daniel") ||
+        voice.name.includes("Google US English")
+      );
+      if (neutralVoice) utterance.voice = neutralVoice;
       break;
   }
+  
+  // Log available voices for debugging
+  console.log("Available voices:", voices.map(v => v.name));
+  console.log("Selected voice type:", voiceType);
+  console.log("Selected voice:", utterance.voice?.name || "Default system voice");
 };
 
 // Send email notification (mock implementation)

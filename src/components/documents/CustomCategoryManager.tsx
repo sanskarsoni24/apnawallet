@@ -4,7 +4,7 @@ import { useDocuments } from "@/contexts/DocumentContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tag, Plus, Trash2, Save, X } from "lucide-react";
+import { Tag, Plus, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface CustomCategoryManagerProps {
@@ -17,9 +17,11 @@ const CustomCategoryManager = ({ isOpen, onClose }: CustomCategoryManagerProps) 
   const [newCategory, setNewCategory] = useState("");
   const [localCategories, setLocalCategories] = useState<string[]>([]);
   
+  // Initialize local categories with existing categories when dialog opens
   useEffect(() => {
-    // Initialize local categories with existing categories
-    setLocalCategories([...categories]);
+    if (isOpen) {
+      setLocalCategories([...categories]);
+    }
   }, [categories, isOpen]);
   
   const handleAddCategory = () => {
@@ -43,6 +45,12 @@ const CustomCategoryManager = ({ isOpen, onClose }: CustomCategoryManagerProps) 
     
     setLocalCategories([...localCategories, newCategory]);
     setNewCategory("");
+  };
+  
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' && newCategory.trim()) {
+      handleAddCategory();
+    }
   };
   
   const handleRemoveCategory = (category: string) => {
@@ -77,7 +85,7 @@ const CustomCategoryManager = ({ isOpen, onClose }: CustomCategoryManagerProps) 
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Manage Document Categories</DialogTitle>
@@ -92,6 +100,7 @@ const CustomCategoryManager = ({ isOpen, onClose }: CustomCategoryManagerProps) 
               placeholder="Enter new category"
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="flex-1"
             />
             <Button onClick={handleAddCategory} className="bg-indigo-600 hover:bg-indigo-700">
@@ -110,6 +119,7 @@ const CustomCategoryManager = ({ isOpen, onClose }: CustomCategoryManagerProps) 
                     <Tag className="h-3.5 w-3.5 text-indigo-600" />
                     <span className="text-sm">{category}</span>
                     <button
+                      type="button"
                       onClick={() => handleRemoveCategory(category)}
                       className="ml-1 text-slate-500 hover:text-red-500"
                     >
@@ -132,7 +142,7 @@ const CustomCategoryManager = ({ isOpen, onClose }: CustomCategoryManagerProps) 
             Cancel
           </Button>
           <Button onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-700">
-            <Save className="h-4 w-4 mr-2" /> Save Categories
+            Save Categories
           </Button>
         </DialogFooter>
       </DialogContent>

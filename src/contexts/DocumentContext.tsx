@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
@@ -27,6 +28,7 @@ interface DocumentContextType {
   removeCategory: (category: string) => void;
   updateDueDate: (id: string, newDueDate: string) => void;
   setCustomReminderDays: (id: string, days: number) => void;
+  sortDocuments: (documents: Document[], sortBy: string) => Document[];
 }
 
 const DocumentContext = createContext<DocumentContextType>({
@@ -40,6 +42,7 @@ const DocumentContext = createContext<DocumentContextType>({
   removeCategory: () => {},
   updateDueDate: () => {},
   setCustomReminderDays: () => {},
+  sortDocuments: () => [],
 });
 
 export const useDocuments = () => useContext(DocumentContext);
@@ -92,10 +95,8 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   // Save categories to localStorage whenever they change
   useEffect(() => {
-    if (email && categories.length > 0) {
+    if (email) {
       localStorage.setItem(`categories_${email}`, JSON.stringify(categories));
-    } else if (email) {
-      localStorage.setItem(`categories_${email}`, JSON.stringify([]));
     }
   }, [categories, email]);
   
@@ -138,8 +139,79 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
     } else {
       return documents.filter(
-        doc => doc.userId === email && (doc.type === type || categories.includes(type) && doc.type === type)
+        doc => doc.userId === email && doc.type === type
       );
+    }
+  };
+  
+  // Sort documents by various criteria
+  const sortDocuments = (docs: Document[], sortBy: string): Document[] => {
+    const sortedDocs = [...docs];
+    
+    switch (sortBy) {
+      case "date-asc":
+        // Sort by due date (ascending)
+        return sortedDocs.sort((a, b) => {
+          return a.daysRemaining - b.daysRemaining;
+        });
+      
+      case "date-desc":
+        // Sort by due date (descending)
+        return sortedDocs.sort((a, b) => {
+          return b.daysRemaining - a.daysRemaining;
+        });
+        
+      case "importance-asc":
+        // Sort by importance (ascending)
+        return sortedDocs.sort((a, b) => {
+          const importanceValues = { low: 1, medium: 2, high: 3, critical: 4 };
+          const aValue = a.importance ? importanceValues[a.importance] : 2;
+          const bValue = b.importance ? importanceValues[b.importance] : 2;
+          return aValue - bValue;
+        });
+        
+      case "importance-desc":
+        // Sort by importance (descending)
+        return sortedDocs.sort((a, b) => {
+          const importanceValues = { low: 1, medium: 2, high: 3, critical: 4 };
+          const aValue = a.importance ? importanceValues[a.importance] : 2;
+          const bValue = b.importance ? importanceValues[b.importance] : 2;
+          return bValue - aValue;
+        });
+        
+      case "title-asc":
+        // Sort alphabetically by title (A-Z)
+        return sortedDocs.sort((a, b) => {
+          return a.title.localeCompare(b.title);
+        });
+        
+      case "title-desc":
+        // Sort alphabetically by title (Z-A)
+        return sortedDocs.sort((a, b) => {
+          return b.title.localeCompare(a.title);
+        });
+        
+      case "newest":
+        // Sort by creation date (newest first)
+        return sortedDocs.sort((a, b) => {
+          const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return bDate - aDate;
+        });
+        
+      case "oldest":
+        // Sort by creation date (oldest first)
+        return sortedDocs.sort((a, b) => {
+          const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return aDate - bDate;
+        });
+        
+      default:
+        // Default: sort by due date (soonest first)
+        return sortedDocs.sort((a, b) => {
+          return a.daysRemaining - b.daysRemaining;
+        });
     }
   };
   
@@ -202,7 +274,8 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addCategory,
         removeCategory,
         updateDueDate,
-        setCustomReminderDays
+        setCustomReminderDays,
+        sortDocuments,
       }}
     >
       {children}

@@ -1,9 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { useDocuments } from "@/contexts/DocumentContext";
 import BlurContainer from "../ui/BlurContainer";
-import { format, isToday, isSameDay } from "date-fns";
+import { format, isToday, isSameDay, parseISO } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { FileText, Bell, Clock } from "lucide-react";
 import { Badge } from "../ui/badge";
@@ -12,6 +12,62 @@ import { Link } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import DocumentReminderSettings from "../documents/DocumentReminderSettings";
 
+// Helper function to parse date strings
+const parseDocumentDate = (dateString: string): Date | null => {
+  try {
+    // Try standard ISO format first
+    let parsedDate = new Date(dateString);
+    
+    // If invalid, try parsing as ISO
+    if (isNaN(parsedDate.getTime())) {
+      try {
+        parsedDate = parseISO(dateString);
+      } catch (e) {
+        // If that fails, try manual parsing
+        const formats = [
+          // Format: "May 15, 2023"
+          (str: string) => {
+            const months = {
+              Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+              Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+            };
+            const parts = str.split(" ");
+            if (parts.length === 3) {
+              const month = Object.entries(months).find(([key]) => 
+                parts[0].includes(key)
+              )?.[1] as number;
+              const day = parseInt(parts[1].replace(",", ""));
+              const year = parseInt(parts[2]);
+              
+              if (!isNaN(month) && !isNaN(day) && !isNaN(year)) {
+                return new Date(year, month, day);
+              }
+            }
+            return null;
+          },
+          
+          // Add more format parsers if needed
+        ];
+        
+        // Try each format parser until one works
+        for (const formatParser of formats) {
+          const result = formatParser(dateString);
+          if (result && !isNaN(result.getTime())) {
+            parsedDate = result;
+            break;
+          }
+        }
+      }
+    }
+    
+    // Final validation
+    return !isNaN(parsedDate.getTime()) ? parsedDate : null;
+  } catch (error) {
+    console.error("Error parsing date:", dateString, error);
+    return null;
+  }
+};
+
 const DocumentCalendar = () => {
   const { documents } = useDocuments();
   const { email } = useUser();
@@ -19,38 +75,19 @@ const DocumentCalendar = () => {
   const [showDocuments, setShowDocuments] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
   const [showReminderSettings, setShowReminderSettings] = useState(false);
+  const [documentDates, setDocumentDates] = useState<Array<any>>([]);
   
-  // Parse dates from documents for highlighting in the calendar
-  const documentDates = documents.map(doc => {
-    // Convert string dates like "May 15, 2023" to Date objects
-    try {
-      // First try direct parsing
-      let dateObj = new Date(doc.dueDate);
-      
-      // If invalid, try parsing with a format like "May 15, 2023"
-      if (isNaN(dateObj.getTime())) {
-        // Simple parsing for date strings in "Month Day, Year" format
-        const parts = doc.dueDate.split(" ");
-        if (parts.length === 3) {
-          const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-            .findIndex(m => parts[0].includes(m)) + 1;
-          const day = parseInt(parts[1].replace(",", ""));
-          const year = parseInt(parts[2]);
-          if (!isNaN(month) && !isNaN(day) && !isNaN(year)) {
-            dateObj = new Date(year, month - 1, day);
-          }
-        }
-      }
-      
+  // Process documents and parse their dates
+  useEffect(() => {
+    const processedDocs = documents.map(doc => {
+      const dateObj = parseDocumentDate(doc.dueDate);
       return { ...doc, dateObj };
-    } catch (error) {
-      console.error("Error parsing date:", doc.dueDate, error);
-      return { ...doc, dateObj: null };
-    }
-  }).filter(doc => doc.dateObj && !isNaN(doc.dateObj.getTime()));
+    }).filter(doc => doc.dateObj !== null);
+    
+    setDocumentDates(processedDocs);
+  }, [documents]);
   
   // Function to find documents due on a selected date
-  // Only show documents belonging to the current user
   const getDocumentsForDate = (selectedDate: Date) => {
     return documentDates.filter(doc => 
       doc.dateObj && isSameDay(doc.dateObj, selectedDate) && doc.userId === email

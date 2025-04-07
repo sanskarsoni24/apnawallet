@@ -24,10 +24,14 @@ interface DocumentReminderSettingsProps {
 const DocumentReminderSettings = ({ document, isOpen, onClose }: DocumentReminderSettingsProps) => {
   const { setCustomReminderDays } = useDocuments();
   const { userSettings } = useUser();
+  
+  // Ensure we have a default value even if userSettings is undefined
+  const defaultReminderDays = userSettings?.reminderDays ?? 3;
+  
   const [reminderDays, setReminderDays] = useState<number>(
     document.customReminderDays !== undefined 
       ? document.customReminderDays 
-      : (userSettings?.reminderDays || 3)
+      : defaultReminderDays
   );
 
   const handleSave = () => {

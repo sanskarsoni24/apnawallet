@@ -5,12 +5,15 @@ import { Download, Check, Chrome, AlertCircle, ExternalLink } from 'lucide-react
 import { toast } from '@/hooks/use-toast';
 import JSZip from 'jszip';
 
-interface Window {
-  chrome?: {
-    runtime?: {
-      sendMessage?: (extensionId: string, message: any, callback: (response?: any) => void) => void;
+// Properly define the Chrome extension interface for TypeScript
+declare global {
+  interface Window {
+    chrome?: {
+      runtime?: {
+        sendMessage?: (extensionId: string, message: any, callback: (response?: any) => void) => void;
+      };
     };
-  };
+  }
 }
 
 const ChromeExtensionDownload = () => {

@@ -21,7 +21,7 @@ const ChromeExtensionDownload = () => {
     setInstalled(hasExtensionDownloaded);
     
     // Check for Chrome extension API
-    if (typeof window !== 'undefined' && window.chrome && window.chrome.runtime) {
+    if (typeof window !== 'undefined' && window.chrome && 'runtime' in window.chrome) {
       try {
         // We can try to detect if our extension is installed
         const extensionId = "our-extension-id"; 

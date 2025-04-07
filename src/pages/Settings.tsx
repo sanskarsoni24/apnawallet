@@ -19,13 +19,13 @@ const Settings = () => {
   const [localEmail, setLocalEmail] = useState(email || "");
   
   // Theme settings
-  const [theme, setTheme] = useState(userSettings.theme || "system");
+  const [theme, setTheme] = useState(userSettings?.theme || "system");
   
   useEffect(() => {
     // Update local state when user data changes
     setLocalDisplayName(displayName || "");
     setLocalEmail(email || "");
-    setTheme(userSettings.theme || "system");
+    setTheme(userSettings?.theme || "system");
   }, [displayName, email, userSettings]);
   
   // Save account settings
@@ -62,11 +62,11 @@ const Settings = () => {
   
   // Prepare notification settings object with default values if properties are undefined
   const notificationSettings = {
-    emailNotifications: userSettings.emailNotifications !== undefined ? userSettings.emailNotifications : true,
-    pushNotifications: userSettings.pushNotifications !== undefined ? userSettings.pushNotifications : false,
-    voiceReminders: userSettings.voiceReminders !== undefined ? userSettings.voiceReminders : false,
-    reminderDays: userSettings.reminderDays !== undefined ? userSettings.reminderDays : 3,
-    voiceType: userSettings.voiceType || "default"
+    emailNotifications: userSettings?.emailNotifications !== undefined ? userSettings.emailNotifications : true,
+    pushNotifications: userSettings?.pushNotifications !== undefined ? userSettings.pushNotifications : false,
+    voiceReminders: userSettings?.voiceReminders !== undefined ? userSettings.voiceReminders : false,
+    reminderDays: userSettings?.reminderDays !== undefined ? userSettings.reminderDays : 3,
+    voiceType: userSettings?.voiceType || "default"
   };
   
   return (

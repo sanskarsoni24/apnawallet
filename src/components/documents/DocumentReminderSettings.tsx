@@ -27,7 +27,7 @@ const DocumentReminderSettings = ({ document, isOpen, onClose }: DocumentReminde
   const [reminderDays, setReminderDays] = useState<number>(
     document.customReminderDays !== undefined 
       ? document.customReminderDays 
-      : (userSettings.reminderDays || 3)
+      : (userSettings?.reminderDays || 3)
   );
 
   const handleSave = () => {

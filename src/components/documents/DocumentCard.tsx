@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell, AlertTriangle, Clock } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
@@ -175,6 +174,18 @@ const DocumentCard = ({
         variant: "destructive"
       });
     }
+  };
+
+  // Fix for DocumentReminderSettings - ensure document always has fileURL property
+  const documentWithFileURL: Document = {
+    id,
+    title,
+    type,
+    dueDate,
+    daysRemaining,
+    description: description || "",
+    customReminderDays,
+    fileURL: fileURL || "",
   };
 
   return (
@@ -452,17 +463,9 @@ const DocumentCard = ({
         </DialogContent>
       </Dialog>
 
-      {/* Document Reminder Settings Dialog */}
+      {/* Document Reminder Settings Dialog - Fix the document passed to it */}
       <DocumentReminderSettings 
-        document={{
-          id,
-          title,
-          type,
-          dueDate,
-          daysRemaining,
-          description,
-          customReminderDays
-        }}
+        document={documentWithFileURL}
         isOpen={showReminderSettings}
         onClose={() => setShowReminderSettings(false)}
       />

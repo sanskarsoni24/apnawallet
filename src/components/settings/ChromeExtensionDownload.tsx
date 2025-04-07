@@ -1,10 +1,17 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import BlurContainer from '@/components/ui/BlurContainer';
 import { Download, Check, Chrome, AlertCircle, ExternalLink } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import JSZip from 'jszip';
+
+interface Window {
+  chrome?: {
+    runtime?: {
+      sendMessage?: (extensionId: string, message: any, callback: (response?: any) => void) => void;
+    };
+  };
+}
 
 const ChromeExtensionDownload = () => {
   const [downloading, setDownloading] = useState(false);
@@ -21,19 +28,21 @@ const ChromeExtensionDownload = () => {
     setInstalled(hasExtensionDownloaded);
     
     // Check for Chrome extension API
-    if (typeof window !== 'undefined' && window.chrome && 'runtime' in window.chrome) {
+    if (typeof window !== 'undefined' && window.chrome && window.chrome.runtime) {
       try {
         // We can try to detect if our extension is installed
         const extensionId = "our-extension-id"; 
-        // Using type assertion to handle Chrome API
-        (window.chrome as any).runtime.sendMessage(extensionId, { action: 'ping' }, function(response: any) {
-          if (response && response.action === 'pong') {
-            setInstalled(true);
-            localStorage.setItem("docuninja-extension-installed", "true");
-          }
-        });
+        if (window.chrome.runtime.sendMessage) {
+          window.chrome.runtime.sendMessage(extensionId, { action: 'ping' }, function(response) {
+            if (response && response.action === 'pong') {
+              setInstalled(true);
+              localStorage.setItem("docuninja-extension-installed", "true");
+            }
+          });
+        }
       } catch (e) {
         // Extension not installed or error checking
+        console.log("Error checking extension:", e);
       }
     }
   }, []);

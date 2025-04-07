@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
@@ -26,6 +25,8 @@ interface DocumentContextType {
   filterDocumentsByType: (type: string) => Document[];
   addCategory: (category: string) => void;
   removeCategory: (category: string) => void;
+  updateDueDate: (id: string, newDueDate: string) => void;
+  setCustomReminderDays: (id: string, days: number) => void;
 }
 
 const DocumentContext = createContext<DocumentContextType>({
@@ -37,6 +38,8 @@ const DocumentContext = createContext<DocumentContextType>({
   filterDocumentsByType: () => [],
   addCategory: () => {},
   removeCategory: () => {},
+  updateDueDate: () => {},
+  setCustomReminderDays: () => {},
 });
 
 export const useDocuments = () => useContext(DocumentContext);
@@ -156,6 +159,37 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCategories(prev => prev.filter(c => c !== category));
   };
   
+  // Update document due date
+  const updateDueDate = (id: string, newDueDate: string) => {
+    setDocuments(prev => 
+      prev.map(doc => {
+        if (doc.id === id) {
+          // Calculate new days remaining based on the new due date
+          const dueDate = new Date(newDueDate);
+          const today = new Date();
+          const diffTime = dueDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          return { 
+            ...doc, 
+            dueDate: newDueDate,
+            daysRemaining: diffDays
+          };
+        }
+        return doc;
+      })
+    );
+  };
+  
+  // Set custom reminder days for a document
+  const setCustomReminderDays = (id: string, days: number) => {
+    setDocuments(prev => 
+      prev.map(doc => 
+        doc.id === id ? { ...doc, customReminderDays: days } : doc
+      )
+    );
+  };
+  
   return (
     <DocumentContext.Provider 
       value={{ 
@@ -166,7 +200,9 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deleteDocument, 
         filterDocumentsByType,
         addCategory,
-        removeCategory
+        removeCategory,
+        updateDueDate,
+        setCustomReminderDays
       }}
     >
       {children}

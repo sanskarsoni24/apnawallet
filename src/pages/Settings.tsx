@@ -12,7 +12,7 @@ import { useUser } from "@/contexts/UserContext";
 
 const Settings = () => {
   const [currentTab, setCurrentTab] = useState("account");
-  const { email, displayName, userSettings, updateUserSettings, updateUserProfile } = useUser();
+  const { email, displayName, userSettings, updateUserSettings, updateProfile } = useUser();
   
   // Account settings state
   const [localDisplayName, setLocalDisplayName] = useState(displayName || "");
@@ -30,10 +30,7 @@ const Settings = () => {
   
   // Save account settings
   const saveAccountSettings = () => {
-    updateUserProfile({
-      displayName: localDisplayName,
-      email: localEmail
-    });
+    updateProfile(localDisplayName, localEmail);
     
     toast({
       title: "Account Updated",
@@ -61,6 +58,15 @@ const Settings = () => {
       ...userSettings,
       ...settings
     });
+  };
+  
+  // Prepare notification settings object with default values if properties are undefined
+  const notificationSettings = {
+    emailNotifications: userSettings.emailNotifications !== undefined ? userSettings.emailNotifications : true,
+    pushNotifications: userSettings.pushNotifications !== undefined ? userSettings.pushNotifications : false,
+    voiceReminders: userSettings.voiceReminders !== undefined ? userSettings.voiceReminders : false,
+    reminderDays: userSettings.reminderDays !== undefined ? userSettings.reminderDays : 3,
+    voiceType: userSettings.voiceType || "default"
   };
   
   return (
@@ -95,7 +101,7 @@ const Settings = () => {
         
         <TabsContent value="notifications" className="space-y-4">
           <NotificationSettings 
-            settings={userSettings} 
+            settings={notificationSettings}
             saveSettings={saveSettings} 
           />
         </TabsContent>

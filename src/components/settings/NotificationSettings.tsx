@@ -19,10 +19,25 @@ interface NotificationSettingsProps {
 }
 
 const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsProps) => {
-  const [localSettings, setLocalSettings] = useState(settings);
+  // Initialize localSettings with default values if props are undefined
+  const [localSettings, setLocalSettings] = useState({
+    emailNotifications: settings?.emailNotifications !== undefined ? settings.emailNotifications : true,
+    pushNotifications: settings?.pushNotifications !== undefined ? settings.pushNotifications : false,
+    voiceReminders: settings?.voiceReminders !== undefined ? settings.voiceReminders : false,
+    reminderDays: settings?.reminderDays !== undefined ? settings.reminderDays : 3,
+    voiceType: settings?.voiceType || "default"
+  });
   
   useEffect(() => {
-    setLocalSettings(settings);
+    if (settings) {
+      setLocalSettings({
+        emailNotifications: settings.emailNotifications !== undefined ? settings.emailNotifications : localSettings.emailNotifications,
+        pushNotifications: settings.pushNotifications !== undefined ? settings.pushNotifications : localSettings.pushNotifications,
+        voiceReminders: settings.voiceReminders !== undefined ? settings.voiceReminders : localSettings.voiceReminders,
+        reminderDays: settings.reminderDays !== undefined ? settings.reminderDays : localSettings.reminderDays,
+        voiceType: settings.voiceType || localSettings.voiceType
+      });
+    }
   }, [settings]);
 
   const handleChange = (key: string, value: any) => {

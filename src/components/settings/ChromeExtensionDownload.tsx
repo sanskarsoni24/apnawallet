@@ -25,7 +25,8 @@ const ChromeExtensionDownload = () => {
       try {
         // We can try to detect if our extension is installed
         const extensionId = "our-extension-id"; 
-        chrome.runtime.sendMessage(extensionId, { action: 'ping' }, function(response) {
+        // Using type assertion to handle Chrome API
+        (window.chrome as any).runtime.sendMessage(extensionId, { action: 'ping' }, function(response: any) {
           if (response && response.action === 'pong') {
             setInstalled(true);
             localStorage.setItem("docuninja-extension-installed", "true");

@@ -47,7 +47,7 @@ const DocumentTypeFilter = ({ selectedType, onTypeChange }: DocumentTypeFilterPr
           </Button>
         </div>
         
-        <ScrollArea className="w-full" orientation="horizontal">
+        <ScrollArea className="w-full">
           <div className="flex gap-2 pb-1">
             {documentTypes.map(type => (
               <Button

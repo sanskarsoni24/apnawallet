@@ -1,8 +1,8 @@
 
 {
   "manifest_version": 3,
-  "name": "DocuNinja Document Manager",
-  "description": "Manage and track your important documents with DocuNinja",
+  "name": "SurakshitLocker Document Manager",
+  "description": "Manage and track your important documents with SurakshitLocker",
   "version": "1.0",
   "icons": {
     "16": "icon-16.png",

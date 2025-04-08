@@ -9,6 +9,7 @@ import SurakshaLocker from "@/components/suraksha/SurakshaLocker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { useUser } from "@/contexts/UserContext";
+import { Shield, Bell, Palette, User, Chrome, Lock } from "lucide-react";
 
 const Settings = () => {
   const [currentTab, setCurrentTab] = useState("account");
@@ -71,50 +72,71 @@ const Settings = () => {
   
   return (
     <Container>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold dark:text-white">Settings</h1>
-        <p className="text-muted-foreground dark:text-slate-400">
-          Manage your account settings and preferences
-        </p>
+      <div className="mb-8 relative">
+        <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl -z-10" />
+        
+        <div className="pt-8 pb-4">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Settings</h1>
+          <p className="text-muted-foreground dark:text-slate-400 mt-2">
+            Customize your SurakshitLocker experience
+          </p>
+        </div>
       </div>
       
       <Tabs defaultValue="account" value={currentTab} onValueChange={setCurrentTab} className="w-full">
-        <TabsList className="grid grid-cols-4 w-full md:w-auto mb-6 bg-slate-100 dark:bg-slate-800/70">
-          <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
+        <TabsList className="grid grid-cols-5 w-full mb-8 bg-slate-100 dark:bg-slate-800/70 rounded-xl p-1">
+          <TabsTrigger value="account" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 dark:data-[state=active]:bg-slate-700">
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline">Account</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 dark:data-[state=active]:bg-slate-700">
+            <Bell className="h-4 w-4" />
+            <span className="hidden sm:inline">Notifications</span>
+          </TabsTrigger>
+          <TabsTrigger value="appearance" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 dark:data-[state=active]:bg-slate-700">
+            <Palette className="h-4 w-4" />
+            <span className="hidden sm:inline">Appearance</span>
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 dark:data-[state=active]:bg-slate-700">
+            <Lock className="h-4 w-4" />
+            <span className="hidden sm:inline">Security</span>
+          </TabsTrigger>
+          <TabsTrigger value="extension" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 dark:data-[state=active]:bg-slate-700">
+            <Chrome className="h-4 w-4" />
+            <span className="hidden sm:inline">Extension</span>
+          </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="account" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <AccountSettings 
-              localDisplayName={localDisplayName}
-              setLocalDisplayName={setLocalDisplayName}
-              localEmail={localEmail}
-              setLocalEmail={setLocalEmail}
-              saveAccountSettings={saveAccountSettings}
-            />
-            <ChromeExtensionDownload />
-          </div>
+        <TabsContent value="account" className="space-y-4 animate-fadeIn">
+          <AccountSettings 
+            localDisplayName={localDisplayName}
+            setLocalDisplayName={setLocalDisplayName}
+            localEmail={localEmail}
+            setLocalEmail={setLocalEmail}
+            saveAccountSettings={saveAccountSettings}
+          />
         </TabsContent>
         
-        <TabsContent value="notifications" className="space-y-4">
+        <TabsContent value="notifications" className="space-y-4 animate-fadeIn">
           <NotificationSettings 
             settings={notificationSettings}
             saveSettings={saveSettings} 
           />
         </TabsContent>
         
-        <TabsContent value="appearance" className="space-y-4">
+        <TabsContent value="appearance" className="space-y-4 animate-fadeIn">
           <AppearanceSettings 
             theme={theme}
             saveTheme={saveTheme}
           />
         </TabsContent>
         
-        <TabsContent value="security" className="space-y-4">
+        <TabsContent value="security" className="space-y-4 animate-fadeIn">
           <SurakshaLocker />
+        </TabsContent>
+
+        <TabsContent value="extension" className="space-y-4 animate-fadeIn">
+          <ChromeExtensionDownload />
         </TabsContent>
       </Tabs>
     </Container>

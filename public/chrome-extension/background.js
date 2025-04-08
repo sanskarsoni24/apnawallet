@@ -1,5 +1,5 @@
 
-// Background script for DocuNinja Chrome Extension
+// Background script for SurakshitLocker Chrome Extension
 
 // Check for document deadlines and send notifications
 function checkForDocumentDeadlines() {
@@ -20,19 +20,24 @@ function checkForDocumentDeadlines() {
       return doc.daysRemaining > 0 && doc.daysRemaining <= daysThreshold;
     });
     
-    if (dueSoonDocs.length > 0) {
+    const overdueDocs = documents.filter(doc => doc.daysRemaining < 0);
+    
+    // Calculate total docs to show in badge
+    const totalAlertDocs = dueSoonDocs.length + overdueDocs.length;
+    
+    if (totalAlertDocs > 0) {
       // Create a notification
       chrome.notifications.create({
         type: 'basic',
         iconUrl: 'icon-48.png',
-        title: 'DocuNinja Document Reminder',
-        message: `You have ${dueSoonDocs.length} document${dueSoonDocs.length > 1 ? 's' : ''} due soon`,
+        title: 'SurakshitLocker Document Reminder',
+        message: `You have ${totalAlertDocs} document${totalAlertDocs > 1 ? 's' : ''} that require attention`,
         priority: 2
       });
       
       // Update badge
-      chrome.action.setBadgeText({ text: dueSoonDocs.length.toString() });
-      chrome.action.setBadgeBackgroundColor({ color: '#ef4444' });
+      chrome.action.setBadgeText({ text: totalAlertDocs.toString() });
+      chrome.action.setBadgeBackgroundColor({ color: overdueDocs.length > 0 ? '#ef4444' : '#f59e0b' });
     } else {
       chrome.action.setBadgeText({ text: '' });
     }
@@ -62,8 +67,8 @@ chrome.runtime.onInstalled.addListener(function() {
   chrome.notifications.create({
     type: 'basic',
     iconUrl: 'icon-48.png',
-    title: 'DocuNinja Extension Installed',
-    message: 'DocuNinja is ready to help you manage your important documents',
+    title: 'SurakshitLocker Extension Installed',
+    message: 'SurakshitLocker is ready to help you manage your important documents',
     priority: 2
   });
   
@@ -76,7 +81,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
   if (message.action === 'syncDocuments') {
     // Start syncing process
     syncWithWebApp();
-    sendResponse({ success: true });
+    sendResponse({ success: true, message: 'Sync started' });
     return true; // Keep the messaging channel open for async response
   } else if (message.action === 'getDocuments') {
     // Return documents directly
@@ -87,28 +92,48 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
   }
 });
 
-// Sync with web app periodically
+// Sync with web app
 function syncWithWebApp() {
   console.log('Syncing with web app...');
   
   // For demo purposes, we'll check if data exists in localStorage via the content script
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    if (tabs[0]) {
+    if (tabs[0] && tabs[0].url && tabs[0].url.includes('lovableproject.com')) {
       chrome.tabs.sendMessage(tabs[0].id, {action: "getLocalStorage"}, function(response) {
         if (response && response.documents) {
           chrome.storage.local.set({
             documents: response.documents,
             userSettings: response.userSettings || {},
+            userEmail: response.userEmail || 'user@example.com',
             lastSyncTime: new Date().toISOString()
           });
           
           // Check for due documents after sync
           checkForDocumentDeadlines();
+          
+          // Notify popup that documents were updated
+          chrome.runtime.sendMessage({ action: 'documentsUpdated' });
+        } else {
+          console.log('No documents found or error getting local storage');
+          // Try using mock data if necessary in real deployment
         }
       });
+    } else {
+      console.log('No active tab with the web app');
+      // Try to use stored data or mock data
     }
   });
 }
 
 // Set up periodic sync (every 30 minutes)
 setInterval(syncWithWebApp, 30 * 60 * 1000);
+
+// Adding listeners for tab updates to sync when the web app is open
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+  if (changeInfo.status === 'complete' && tab.url && tab.url.includes('lovableproject.com')) {
+    // Wait a moment for the page to initialize localStorage
+    setTimeout(() => {
+      syncWithWebApp();
+    }, 2000);
+  }
+});

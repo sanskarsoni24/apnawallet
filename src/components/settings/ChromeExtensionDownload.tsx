@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import BlurContainer from '@/components/ui/BlurContainer';
-import { Download, Check, Chrome, AlertCircle, ExternalLink } from 'lucide-react';
+import { Download, Check, Chrome, AlertCircle, ExternalLink, RefreshCw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import JSZip from 'jszip';
 
@@ -27,7 +28,7 @@ const ChromeExtensionDownload = () => {
     setChromeDetected(isChrome);
     
     // Check if extension is potentially installed
-    const hasExtensionDownloaded = localStorage.getItem("docuninja-extension-installed") === "true";
+    const hasExtensionDownloaded = localStorage.getItem("surakshitlocker-extension-installed") === "true";
     setInstalled(hasExtensionDownloaded);
     
     // Check for Chrome extension API
@@ -39,7 +40,7 @@ const ChromeExtensionDownload = () => {
           window.chrome.runtime.sendMessage(extensionId, { action: 'ping' }, function(response) {
             if (response && response.action === 'pong') {
               setInstalled(true);
-              localStorage.setItem("docuninja-extension-installed", "true");
+              localStorage.setItem("surakshitlocker-extension-installed", "true");
             }
           });
         }
@@ -90,7 +91,7 @@ const ChromeExtensionDownload = () => {
       const url = URL.createObjectURL(content);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "docuninja-chrome-extension.zip";
+      link.download = "surakshitlocker-chrome-extension.zip";
       document.body.appendChild(link);
       link.click();
       URL.revokeObjectURL(url);
@@ -101,7 +102,7 @@ const ChromeExtensionDownload = () => {
       setInstalled(true);
       
       // Store in localStorage that we've downloaded the extension
-      window.localStorage.setItem("docuninja-extension-installed", "true");
+      window.localStorage.setItem("surakshitlocker-extension-installed", "true");
       
       toast({
         title: "Chrome Extension Downloaded",
@@ -120,75 +121,119 @@ const ChromeExtensionDownload = () => {
   };
 
   return (
-    <BlurContainer className="p-6 mb-6 col-span-2 dark:bg-slate-800/70 dark:border-slate-700">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white">
-          <Chrome className="h-7 w-7" />
+    <BlurContainer className="p-8 mb-6 col-span-2 dark:bg-slate-800/70 dark:border-slate-700 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900/80 dark:to-slate-800/80">
+      <div className="flex items-center gap-4 mb-6">
+        <div className="h-14 w-14 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-400/20">
+          <Chrome className="h-8 w-8" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold dark:text-white">Chrome Extension</h3>
+          <h3 className="text-xl font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent">Browser Extension</h3>
           <p className="text-muted-foreground text-sm dark:text-slate-300">Get document alerts and quick access right in your browser</p>
         </div>
       </div>
       
-      <div className="flex items-center justify-between my-6">
+      <div className="flex items-center justify-between my-6 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
         <div className="flex-1">
-          <h4 className="font-medium mb-1 dark:text-white">DocuNinja Browser Extension</h4>
-          <p className="text-sm text-muted-foreground dark:text-slate-300">
+          <h4 className="font-medium mb-1.5 text-lg dark:text-white">SurakshitLocker Browser Extension</h4>
+          <p className="text-sm text-muted-foreground dark:text-slate-300 max-w-md">
             Get notifications, view upcoming deadlines, and access your documents directly from your browser.
           </p>
+          
+          {installed && (
+            <div className="mt-3 flex items-center text-sm text-green-600 dark:text-green-400">
+              <Check className="h-4 w-4 mr-1.5" /> Extension downloaded
+            </div>
+          )}
         </div>
         
-        <Button
-          onClick={downloadExtension}
-          className="gap-2 whitespace-nowrap min-w-[140px] bg-gradient-to-r from-indigo-500 to-blue-500 hover:shadow-md hover:from-indigo-600 hover:to-blue-600"
-          disabled={downloading}
-        >
-          {downloading ? (
-            <>
-              <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-              <span>Downloading...</span>
-            </>
-          ) : installed ? (
-            <>
-              <Check className="h-4 w-4" />
-              <span>Downloaded</span>
-            </>
-          ) : (
-            <>
-              <Download className="h-4 w-4" />
-              <span>Download</span>
-            </>
+        <div className="flex gap-3">
+          {installed && (
+            <Button
+              variant="outline"
+              onClick={downloadExtension}
+              className="gap-2 whitespace-nowrap border-slate-200 dark:border-slate-700"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span>Re-download</span>
+            </Button>
           )}
-        </Button>
+          
+          <Button
+            onClick={downloadExtension}
+            className="gap-2 whitespace-nowrap min-w-[140px] bg-gradient-to-r from-blue-500 to-indigo-500 hover:shadow-md hover:from-blue-600 hover:to-indigo-600"
+            disabled={downloading}
+          >
+            {downloading ? (
+              <>
+                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                <span>Downloading...</span>
+              </>
+            ) : installed ? (
+              <>
+                <Download className="h-4 w-4" />
+                <span>Download Again</span>
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                <span>Download</span>
+              </>
+            )}
+          </Button>
+        </div>
       </div>
       
-      <div className="bg-muted/50 p-4 rounded-lg dark:bg-slate-900/70 dark:border dark:border-slate-700">
-        <h4 className="font-medium flex items-center mb-2 dark:text-white">
+      <div className="bg-slate-50 dark:bg-slate-800/70 p-6 rounded-xl dark:border dark:border-slate-700 shadow-sm">
+        <h4 className="font-medium flex items-center mb-4 dark:text-white">
           <AlertCircle className="h-4 w-4 mr-2 text-indigo-500" />
           Installation Instructions
         </h4>
-        <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground dark:text-slate-300 ml-1">
-          <li>Download and unzip the extension file</li>
-          <li>Open Chrome and navigate to <span className="font-mono bg-background dark:bg-slate-800 px-1 py-0.5 rounded">chrome://extensions</span></li>
-          <li>Enable "Developer mode" in the top-right corner</li>
-          <li>Click "Load unpacked" and select the unzipped folder</li>
-          <li>The DocuNinja extension icon will appear in your toolbar</li>
-        </ol>
         
-        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-          <h4 className="font-medium mb-2 dark:text-white">Troubleshooting</h4>
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground dark:text-slate-300 ml-1">
-            <li>Make sure all extension files were extracted properly</li>
-            <li>If you don't see notifications, check your browser notification permissions</li>
-            <li>For security reasons, you may need to reload your DocuNinja web app after installing</li>
-          </ul>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
+            <div className="flex justify-center items-center w-8 h-8 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full mb-3 font-medium">1</div>
+            <h5 className="font-medium mb-2 dark:text-white">Download & Extract</h5>
+            <p className="text-sm text-slate-600 dark:text-slate-400">Download the extension zip file and extract it to a folder on your computer</p>
+          </div>
+          
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
+            <div className="flex justify-center items-center w-8 h-8 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full mb-3 font-medium">2</div>
+            <h5 className="font-medium mb-2 dark:text-white">Open Extensions Page</h5>
+            <p className="text-sm text-slate-600 dark:text-slate-400">Navigate to <span className="font-mono bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-xs">chrome://extensions</span> and enable "Developer mode"</p>
+          </div>
+          
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
+            <div className="flex justify-center items-center w-8 h-8 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full mb-3 font-medium">3</div>
+            <h5 className="font-medium mb-2 dark:text-white">Load Extension</h5>
+            <p className="text-sm text-slate-600 dark:text-slate-400">Click "Load unpacked" and select the extracted folder to install</p>
+          </div>
+        </div>
+        
+        <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <h4 className="font-medium mb-3 dark:text-white flex items-center">
+            <AlertCircle className="h-4 w-4 mr-2 text-amber-500" />
+            Troubleshooting
+          </h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground dark:text-slate-300 ml-1">
+              <li>Make sure all extension files were extracted properly</li>
+              <li>If you don't see notifications, check your browser notification permissions</li>
+              <li>For security reasons, you may need to reload your SurakshitLocker web app after installing</li>
+            </ul>
+            
+            <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground dark:text-slate-300 ml-1">
+              <li>The extension needs access to save document data locally</li>
+              <li>If sync isn't working, try logging out and back into the web app</li>
+              <li>Ensure you're using a supported browser (Chrome or Chrome-based)</li>
+            </ul>
+          </div>
         </div>
         
         <div className="mt-4 flex justify-end">
           <Button 
             variant="link" 
-            className="text-indigo-600 dark:text-indigo-400 p-0 h-auto flex items-center gap-1 hover:text-indigo-700 dark:hover:text-indigo-300"
+            className="text-blue-600 dark:text-blue-400 p-0 h-auto flex items-center gap-1 hover:text-blue-700 dark:hover:text-blue-300"
             onClick={() => window.open('https://developer.chrome.com/docs/extensions/develop', '_blank')}
           >
             <span>Chrome Extensions Guide</span>

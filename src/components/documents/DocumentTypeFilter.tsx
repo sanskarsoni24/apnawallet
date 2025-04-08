@@ -106,7 +106,7 @@ const DocumentTypeFilter = ({ selectedType, onTypeChange }: DocumentTypeFilterPr
               All
             </Button>
             
-            {/* Document Types */}
+            {/* Document Types - Fixed to use a distinct visual style */}
             {documentTypes.map(type => (
               <Button
                 key={`type-${type}`}

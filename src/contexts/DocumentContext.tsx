@@ -161,7 +161,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setDocuments(prev => prev.filter(doc => doc.id !== id));
   };
   
-  // Filter documents by type
+  // Filter documents by type - IMPROVED to properly handle custom document types
   const filterDocumentsByType = (type: string): Document[] => {
     if (type === "All") {
       return documents.filter(doc => doc.userId === email);
@@ -175,16 +175,13 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         doc => doc.userId === email && doc.type === type
       );
     } else if (categories.includes(type)) {
-      // Filter by category
+      // Filter by custom category
       return documents.filter(
-        doc => doc.userId === email && 
-        (doc.categories?.includes(type) || (doc.type === type))
+        doc => doc.userId === email && doc.categories && doc.categories.includes(type)
       );
     } else {
-      // Fallback for any other case
-      return documents.filter(
-        doc => doc.userId === email && (doc.type === type || categories.includes(type))
-      );
+      // Fallback
+      return documents.filter(doc => doc.userId === email);
     }
   };
   

@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from "react";
-import { Upload, Camera, ArrowRight, Loader2, ScanSearch } from "lucide-react";
+import { Upload, Camera, ArrowRight, Loader2, ScanSearch, Plus } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { toast } from "@/hooks/use-toast";
 import { useDocuments, Document } from "@/contexts/DocumentContext";
@@ -13,8 +13,6 @@ import { useForm } from "react-hook-form";
 import { processDocument } from "@/services/DocumentProcessingService";
 import { format, parse, isValid } from "date-fns";
 
-const documentTypes = ["Invoice", "Warranty", "Subscription", "Boarding Pass", "Other"];
-
 const DocumentUpload = () => {
   const [dragging, setDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -23,9 +21,11 @@ const DocumentUpload = () => {
   const [isScannerActive, setIsScannerActive] = useState(false);
   const [scanStatus, setScanStatus] = useState("");
   const [customReminderDays, setCustomReminderDays] = useState<number>(3); // Default 3 days
+  const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
+  const [newDocumentType, setNewDocumentType] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { addDocument } = useDocuments();
+  const { addDocument, documentTypes, addDocumentType } = useDocuments();
   
   const form = useForm({
     defaultValues: {
@@ -294,6 +294,25 @@ const DocumentUpload = () => {
     }
   };
   
+  // Handle adding a new document type
+  const handleAddDocumentType = () => {
+    if (!newDocumentType.trim()) {
+      toast({
+        title: "Type Required",
+        description: "Please enter a document type name",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    addDocumentType(newDocumentType.trim());
+    setNewDocumentType("");
+    setIsTypeDialogOpen(false);
+    
+    // Set the newly added type as the current type in the form
+    form.setValue("type", newDocumentType.trim());
+  };
+  
   return (
     <>
       <BlurContainer 
@@ -403,6 +422,49 @@ const DocumentUpload = () => {
         </DialogContent>
       </Dialog>
       
+      {/* Add New Document Type Dialog */}
+      <Dialog open={isTypeDialogOpen} onOpenChange={setIsTypeDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Document Type</DialogTitle>
+            <DialogDescription>
+              Create a custom document type to better organize your documents
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Enter new document type"
+                value={newDocumentType}
+                onChange={(e) => setNewDocumentType(e.target.value)}
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newDocumentType.trim()) {
+                    handleAddDocumentType();
+                  }
+                }}
+              />
+              <Button 
+                onClick={handleAddDocumentType}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-1" /> Add
+              </Button>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsTypeDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       {/* Document Details Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -452,7 +514,18 @@ const DocumentUpload = () => {
                   name="type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Document Type</FormLabel>
+                      <div className="flex justify-between items-center">
+                        <FormLabel>Document Type</FormLabel>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 px-2 text-xs text-indigo-600"
+                          onClick={() => setIsTypeDialogOpen(true)}
+                        >
+                          <Plus className="h-3 w-3 mr-1" /> Add Type
+                        </Button>
+                      </div>
                       <FormControl>
                         <select
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"

@@ -6,6 +6,8 @@ import { Tag, Plus } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import CustomCategoryManager from "./CustomCategoryManager";
 import { toast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface DocumentTypeFilterProps {
   selectedType: string;
@@ -13,11 +15,10 @@ interface DocumentTypeFilterProps {
 }
 
 const DocumentTypeFilter = ({ selectedType, onTypeChange }: DocumentTypeFilterProps) => {
-  const { documents, categories } = useDocuments();
+  const { documents, categories, documentTypes, addDocumentType } = useDocuments();
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
-  
-  // Get unique document types from documents
-  const documentTypes = ["All", ...new Set(documents.map(doc => doc.type))];
+  const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
+  const [newDocumentType, setNewDocumentType] = useState("");
   
   // Handle category management
   const handleManageCategories = () => {
@@ -32,26 +33,71 @@ const DocumentTypeFilter = ({ selectedType, onTypeChange }: DocumentTypeFilterPr
     });
   };
   
+  // Handle adding a new document type
+  const handleAddDocumentType = () => {
+    if (!newDocumentType.trim()) {
+      toast({
+        title: "Type Required",
+        description: "Please enter a document type name",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    addDocumentType(newDocumentType.trim());
+    setNewDocumentType("");
+    setIsTypeDialogOpen(false);
+    
+    toast({
+      title: "Document Type Added",
+      description: `"${newDocumentType.trim()}" has been added as a document type.`
+    });
+  };
+  
   return (
     <>
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-semibold dark:text-white">Filter by Type</h3>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleManageCategories}
-            className="text-xs dark:bg-slate-800 dark:border-slate-700"
-          >
-            <Tag className="h-3.5 w-3.5 mr-1" /> Manage Categories
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsTypeDialogOpen(true)}
+              className="text-xs dark:bg-slate-800 dark:border-slate-700"
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" /> Add Type
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleManageCategories}
+              className="text-xs dark:bg-slate-800 dark:border-slate-700"
+            >
+              <Tag className="h-3.5 w-3.5 mr-1" /> Manage Categories
+            </Button>
+          </div>
         </div>
         
         <ScrollArea className="w-full">
           <div className="flex gap-2 pb-1">
+            <Button
+              key="All"
+              variant={selectedType === "All" ? "default" : "outline"}
+              size="sm"
+              onClick={() => onTypeChange("All")}
+              className={selectedType === "All" 
+                ? "bg-indigo-600 hover:bg-indigo-700 text-white" 
+                : "dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+              }
+            >
+              All
+            </Button>
+            
+            {/* Document Types */}
             {documentTypes.map(type => (
               <Button
-                key={type}
+                key={`type-${type}`}
                 variant={selectedType === type ? "default" : "outline"}
                 size="sm"
                 onClick={() => onTypeChange(type)}
@@ -89,6 +135,49 @@ const DocumentTypeFilter = ({ selectedType, onTypeChange }: DocumentTypeFilterPr
         isOpen={isCategoryDialogOpen} 
         onClose={handleCategoryDialogClose} 
       />
+      
+      {/* Add New Document Type Dialog */}
+      <Dialog open={isTypeDialogOpen} onOpenChange={setIsTypeDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Document Type</DialogTitle>
+            <DialogDescription>
+              Create a custom document type to better organize your documents
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Enter new document type"
+                value={newDocumentType}
+                onChange={(e) => setNewDocumentType(e.target.value)}
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newDocumentType.trim()) {
+                    handleAddDocumentType();
+                  }
+                }}
+              />
+              <Button 
+                onClick={handleAddDocumentType}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-1" /> Add
+              </Button>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsTypeDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

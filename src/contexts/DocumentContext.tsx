@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
@@ -20,6 +19,7 @@ export interface Document {
 interface DocumentContextType {
   documents: Document[];
   categories: string[];
+  documentTypes: string[];
   addDocument: (doc: Document) => string;
   updateDocument: (id: string, doc: Partial<Document>) => void;
   deleteDocument: (id: string) => void;
@@ -29,11 +29,14 @@ interface DocumentContextType {
   updateDueDate: (id: string, newDueDate: string) => void;
   setCustomReminderDays: (id: string, days: number) => void;
   sortDocuments: (documents: Document[], sortBy: string) => Document[];
+  addDocumentType: (type: string) => void;
+  removeDocumentType: (type: string) => void;
 }
 
 const DocumentContext = createContext<DocumentContextType>({
   documents: [],
   categories: [],
+  documentTypes: [],
   addDocument: () => "",
   updateDocument: () => {},
   deleteDocument: () => {},
@@ -43,6 +46,8 @@ const DocumentContext = createContext<DocumentContextType>({
   updateDueDate: () => {},
   setCustomReminderDays: () => {},
   sortDocuments: () => [],
+  addDocumentType: () => {},
+  removeDocumentType: () => {},
 });
 
 export const useDocuments = () => useContext(DocumentContext);
@@ -51,8 +56,11 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { email } = useUser();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [documentTypes, setDocumentTypes] = useState<string[]>([
+    "Invoice", "Warranty", "Subscription", "Boarding Pass", "Other"
+  ]);
   
-  // Load documents and categories from localStorage on initial load
+  // Load documents, categories and document types from localStorage on initial load
   useEffect(() => {
     const loadDocuments = () => {
       const savedDocs = localStorage.getItem(`documents_${email}`);
@@ -80,9 +88,23 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     };
     
+    const loadDocumentTypes = () => {
+      const savedDocumentTypes = localStorage.getItem(`document_types_${email}`);
+      if (savedDocumentTypes) {
+        try {
+          const parsedDocumentTypes = JSON.parse(savedDocumentTypes);
+          setDocumentTypes(parsedDocumentTypes);
+        } catch (err) {
+          console.error("Error parsing document types from localStorage:", err);
+          // Keep the default document types
+        }
+      }
+    };
+    
     if (email) {
       loadDocuments();
       loadCategories();
+      loadDocumentTypes();
     }
   }, [email]);
   
@@ -99,6 +121,13 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.setItem(`categories_${email}`, JSON.stringify(categories));
     }
   }, [categories, email]);
+  
+  // Save document types to localStorage whenever they change
+  useEffect(() => {
+    if (email) {
+      localStorage.setItem(`document_types_${email}`, JSON.stringify(documentTypes));
+    }
+  }, [documentTypes, email]);
   
   // Add a new document
   const addDocument = (doc: Document): string => {
@@ -139,7 +168,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
     } else {
       return documents.filter(
-        doc => doc.userId === email && doc.type === type
+        doc => doc.userId === email && (doc.type === type || categories.includes(type))
       );
     }
   };
@@ -231,6 +260,31 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCategories(prev => prev.filter(c => c !== category));
   };
   
+  // Add a new document type
+  const addDocumentType = (type: string) => {
+    if (!documentTypes.includes(type)) {
+      setDocumentTypes(prev => [...prev, type]);
+      toast({
+        title: "Document Type Added",
+        description: `"${type}" type has been added`,
+      });
+    }
+  };
+  
+  // Remove a document type
+  const removeDocumentType = (type: string) => {
+    // Don't allow removing the default document type "Other"
+    if (type === "Other") {
+      toast({
+        title: "Cannot Remove",
+        description: `The "Other" type cannot be removed`,
+        variant: "destructive"
+      });
+      return;
+    }
+    setDocumentTypes(prev => prev.filter(t => t !== type));
+  };
+  
   // Update document due date
   const updateDueDate = (id: string, newDueDate: string) => {
     setDocuments(prev => 
@@ -267,6 +321,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       value={{ 
         documents, 
         categories,
+        documentTypes,
         addDocument, 
         updateDocument, 
         deleteDocument, 
@@ -276,6 +331,8 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         updateDueDate,
         setCustomReminderDays,
         sortDocuments,
+        addDocumentType,
+        removeDocumentType
       }}
     >
       {children}

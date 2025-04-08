@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell, AlertTriangle, Clock } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
@@ -5,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { useDocuments, Document } from "@/contexts/DocumentContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import { Textarea } from "../ui/textarea";
@@ -116,6 +117,25 @@ const DocumentCard = ({
       window.open(fileURL, '_blank');
     }
   };
+  
+  // Handle file download
+  const handleDownload = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    
+    if (fileURL) {
+      const link = document.createElement('a');
+      link.href = fileURL;
+      link.download = title || 'document';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Download Started",
+        description: `${title} is being downloaded.`,
+      });
+    }
+  };
 
   // Parse the dueDate string to a Date object for the calendar
   const parseDueDate = () => {
@@ -158,7 +178,8 @@ const DocumentCard = ({
   };
 
   // Function to handle voice reminder
-  const handleVoiceReminder = () => {
+  const handleVoiceReminder = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const reminderText = `Reminder: ${title} is due in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}.`;
     const success = speakNotification(reminderText);
     
@@ -236,6 +257,17 @@ const DocumentCard = ({
         </div>
         
         <div className="mt-3 flex justify-end gap-2">
+          {fileURL && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 w-8 p-0 rounded-full bg-blue-100 text-blue-600 hover:text-blue-800 hover:bg-blue-200"
+              onClick={handleDownload}
+            >
+              <Download className="h-4 w-4" />
+              <span className="sr-only">Download</span>
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             size="sm" 
@@ -252,10 +284,7 @@ const DocumentCard = ({
             variant="ghost" 
             size="sm" 
             className="h-8 w-8 p-0 rounded-full bg-amber-100 text-amber-600 hover:text-amber-800 hover:bg-amber-200"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleVoiceReminder();
-            }}
+            onClick={handleVoiceReminder}
           >
             <Bell className="h-4 w-4" />
             <span className="sr-only">Voice Reminder</span>
@@ -368,16 +397,7 @@ const DocumentCard = ({
                         <Button 
                           variant="default" 
                           className="flex items-center gap-2"
-                          onClick={() => {
-                            if (fileURL) {
-                              const link = document.createElement('a');
-                              link.href = fileURL;
-                              link.download = title || 'document.pdf';
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
-                            }
-                          }}
+                          onClick={handleDownload}
                         >
                           <Download className="h-4 w-4" />
                           Download
@@ -385,16 +405,29 @@ const DocumentCard = ({
                       </div>
                     </div>
                   ) : isImageFile ? (
-                    <img 
-                      src={fileURL} 
-                      alt={title} 
-                      className="w-full h-auto object-contain max-h-[400px]"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = 'https://placehold.co/600x400?text=Image+Preview+Failed';
-                        target.onerror = null; // Prevent infinite loops
-                      }}
-                    />
+                    <div className="relative">
+                      <img 
+                        src={fileURL} 
+                        alt={title} 
+                        className="w-full h-auto object-contain max-h-[400px]"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://placehold.co/600x400?text=Image+Preview+Failed';
+                          target.onerror = null; // Prevent infinite loops
+                        }}
+                      />
+                      <div className="absolute bottom-2 right-2">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={handleDownload}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Download
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <div className="p-8 text-center">
                       <FileText className="h-16 w-16 mx-auto text-muted-foreground" />
@@ -408,6 +441,14 @@ const DocumentCard = ({
                         >
                           <ExternalLink className="h-4 w-4" />
                           Open File
+                        </Button>
+                        <Button 
+                          variant="default" 
+                          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                          onClick={handleDownload}
+                        >
+                          <Download className="h-4 w-4" />
+                          Download
                         </Button>
                       </div>
                     </div>

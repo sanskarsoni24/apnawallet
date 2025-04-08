@@ -1,211 +1,168 @@
-
 import { toast } from "@/hooks/use-toast";
-import { Document } from "@/contexts/DocumentContext";
 
-// Speech synthesis for voice reminders
-const speakNotification = (text: string, voiceType: string = 'default') => {
-  if ('speechSynthesis' in window) {
-    // Cancel any previous speech
-    window.speechSynthesis.cancel();
-    
+// Global speech synthesis settings
+let globalVoiceSettings = {
+  volume: 0.8,  // 0 to 1
+  rate: 1.0,    // 0.1 to 10
+  pitch: 1.0,   // 0 to 2
+  voiceName: "" // Empty string means default voice
+};
+
+/**
+ * Speak a notification message using the browser's speech synthesis API
+ * @param text The text to speak
+ * @param options Optional settings to override global settings
+ * @returns boolean indicating if speech synthesis is supported and started
+ */
+export const speakNotification = (
+  text: string,
+  options?: {
+    volume?: number;
+    rate?: number;
+    pitch?: number;
+    voiceName?: string;
+  }
+): boolean => {
+  // Check if speech synthesis is supported
+  if (typeof window === "undefined" || !window.speechSynthesis) {
+    console.error("Speech synthesis not supported in this browser");
+    return false;
+  }
+
+  try {
+    // Create a new utterance
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Get available voices
-    let voices = window.speechSynthesis.getVoices();
+    // Apply global settings with optional overrides
+    utterance.volume = options?.volume ?? globalVoiceSettings.volume;
+    utterance.rate = options?.rate ?? globalVoiceSettings.rate;
+    utterance.pitch = options?.pitch ?? globalVoiceSettings.pitch;
     
-    // If voices array is empty, wait for them to load
-    if (voices.length === 0) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        voices = window.speechSynthesis.getVoices();
-        setVoiceBasedOnType(utterance, voices, voiceType);
-        window.speechSynthesis.speak(utterance);
-      };
-    } else {
-      setVoiceBasedOnType(utterance, voices, voiceType);
-      window.speechSynthesis.speak(utterance);
+    // Set voice if specified
+    if (options?.voiceName || globalVoiceSettings.voiceName) {
+      const voices = window.speechSynthesis.getVoices();
+      const selectedVoice = voices.find(
+        voice => voice.name === (options?.voiceName || globalVoiceSettings.voiceName)
+      );
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
     }
     
+    // Speak the text
+    window.speechSynthesis.speak(utterance);
     return true;
+  } catch (error) {
+    console.error("Error speaking notification:", error);
+    return false;
   }
-  return false;
 };
 
-// Helper function to set voice based on type
-const setVoiceBasedOnType = (utterance: SpeechSynthesisUtterance, voices: SpeechSynthesisVoice[], voiceType: string) => {
-  // Set some basic properties
-  utterance.rate = 1.0;  // Speed of speech (1.0 is normal)
-  utterance.pitch = 1.0; // Pitch (1.0 is normal)
-  utterance.volume = 0.8; // Volume (0.0 to 1.0)
+/**
+ * Update the global voice settings
+ * @param settings New settings to apply
+ */
+export const updateVoiceSettings = (settings: {
+  volume?: number;
+  rate?: number;
+  pitch?: number;
+  voiceName?: string;
+}): void => {
+  globalVoiceSettings = {
+    ...globalVoiceSettings,
+    ...settings
+  };
   
-  switch(voiceType) {
-    case "male":
-      // Find first male voice (usually deeper voices)
-      const maleVoice = voices.find(voice => 
-        voice.name.toLowerCase().includes("male") || 
-        voice.name.includes("David") || 
-        voice.name.includes("Mark") || 
-        voice.name.includes("Tom")
-      );
-      if (maleVoice) utterance.voice = maleVoice;
-      utterance.pitch = 0.9; // Deeper pitch for male voice
-      break;
-      
-    case "female":
-      // Find first female voice
-      const femaleVoice = voices.find(voice => 
-        voice.name.toLowerCase().includes("female") || 
-        voice.name.includes("Samantha") || 
-        voice.name.includes("Victoria") || 
-        voice.name.includes("Karen")
-      );
-      if (femaleVoice) utterance.voice = femaleVoice;
-      utterance.pitch = 1.1; // Slightly higher pitch for female voice
-      break;
-      
-    case "robot":
-      const robotVoice = voices.find(voice =>
-        voice.name.includes("Google") ||
-        voice.name.toLowerCase().includes("robot")
-      );
-      if (robotVoice) utterance.voice = robotVoice;
-      utterance.rate = 0.9; // Slower for robot voice
-      utterance.pitch = 0.7; // Much lower pitch for robot-like effect
-      break;
-      
-    default:
-      // Try to use a neutral voice or system default
-      const neutralVoice = voices.find(voice => 
-        voice.default || 
-        voice.name.includes("Default") ||
-        voice.name.includes("Daniel") ||
-        voice.name.includes("Google US English")
-      );
-      if (neutralVoice) utterance.voice = neutralVoice;
-      break;
+  // Clamp values to valid ranges
+  globalVoiceSettings.volume = Math.max(0, Math.min(1, globalVoiceSettings.volume));
+  globalVoiceSettings.rate = Math.max(0.1, Math.min(10, globalVoiceSettings.rate));
+  globalVoiceSettings.pitch = Math.max(0, Math.min(2, globalVoiceSettings.pitch));
+  
+  // Save to localStorage for persistence
+  try {
+    localStorage.setItem('voice_settings', JSON.stringify(globalVoiceSettings));
+  } catch (e) {
+    console.error("Could not save voice settings to localStorage", e);
+  }
+};
+
+/**
+ * Load voice settings from localStorage
+ */
+export const loadVoiceSettings = (): void => {
+  try {
+    const savedSettings = localStorage.getItem('voice_settings');
+    if (savedSettings) {
+      globalVoiceSettings = {
+        ...globalVoiceSettings,
+        ...JSON.parse(savedSettings)
+      };
+    }
+  } catch (e) {
+    console.error("Could not load voice settings from localStorage", e);
+  }
+};
+
+/**
+ * Get the current voice settings
+ */
+export const getVoiceSettings = () => {
+  return { ...globalVoiceSettings };
+};
+
+/**
+ * Get all available voices
+ */
+export const getAvailableVoices = (): SpeechSynthesisVoice[] => {
+  if (typeof window === "undefined" || !window.speechSynthesis) {
+    return [];
   }
   
-  // Log available voices for debugging
-  console.log("Available voices:", voices.map(v => v.name));
-  console.log("Selected voice type:", voiceType);
-  console.log("Selected voice:", utterance.voice?.name || "Default system voice");
+  return window.speechSynthesis.getVoices();
 };
 
-// Send email notification (mock implementation)
-// In a real app, this would call your backend API
-const sendEmailNotification = async (email: string, subject: string, body: string) => {
-  console.log(`Email notification to ${email}: ${subject} - ${body}`);
-  
-  // This is a mock implementation
-  // In a real app, you would call your backend API
-  return new Promise<boolean>((resolve) => {
-    setTimeout(() => {
-      toast({
-        title: "Email Notification Sent",
-        description: `Sent to: ${email}`,
-      });
-      resolve(true);
-    }, 1000);
-  });
+/**
+ * Test the current voice settings with a sample text
+ */
+export const testVoiceSettings = (): boolean => {
+  return speakNotification("This is a test of your notification voice settings.");
 };
 
-// Create app notification
-const createAppNotification = (title: string, description: string) => {
-  // This would typically update the notification state in a real app
-  // For this mock implementation, we'll just show a toast
+/**
+ * Stop any currently speaking utterance
+ */
+export const stopSpeaking = (): void => {
+  if (typeof window !== "undefined" && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+};
+
+/**
+ * Create a notification with both toast and optional voice
+ */
+export const createNotification = (
+  title: string,
+  message: string,
+  options?: {
+    variant?: "default" | "destructive" | "success";
+    speak?: boolean;
+  }
+): void => {
+  // Show toast notification
   toast({
     title,
-    description,
+    description: message,
+    variant: options?.variant || "default",
   });
   
-  // Trigger an event so other components can update their notification state
-  const event = new CustomEvent('newNotification', { 
-    detail: { title, description, time: 'Just now', read: false } 
-  });
-  window.dispatchEvent(event);
-  
-  return true;
+  // Speak notification if requested
+  if (options?.speak) {
+    speakNotification(`${title}. ${message}`);
+  }
 };
 
-// Check for documents that need reminders
-// Modified to respect document-level reminder settings
-const checkForDueDocuments = (documents: Document[], userEmail: string, preferences: any) => {
-  const { emailNotifications, pushNotifications, voiceReminders, reminderDays, voiceType } = preferences;
-  
-  // Group by document-specific or global threshold
-  const documentsByThreshold: Record<string, Document[]> = {};
-  
-  // Filter documents that are due within their respective thresholds
-  documents.forEach(doc => {
-    // Use document-specific reminder days if available, otherwise use global setting
-    const daysThreshold = doc.customReminderDays !== undefined ? doc.customReminderDays : (parseInt(reminderDays) || 3);
-    
-    if (doc.daysRemaining > 0 && doc.daysRemaining <= daysThreshold) {
-      if (!documentsByThreshold[daysThreshold]) {
-        documentsByThreshold[daysThreshold] = [];
-      }
-      documentsByThreshold[daysThreshold].push(doc);
-    }
-  });
-  
-  // Exit if no documents match any threshold
-  if (Object.keys(documentsByThreshold).length === 0) return;
-  
-  // Process each threshold group separately
-  Object.entries(documentsByThreshold).forEach(([threshold, docs]) => {
-    // Create notification message for this threshold
-    let notificationTitle = `Document Reminder (${threshold} days)`;
-    let notificationText = '';
-    
-    if (docs.length === 1) {
-      notificationText = `${docs[0].title} is due in ${docs[0].daysRemaining} day${docs[0].daysRemaining !== 1 ? 's' : ''}`;
-    } else {
-      notificationText = `${docs.length} documents are due within ${docs[0].daysRemaining} days`;
-    }
-    
-    // App notification
-    createAppNotification(notificationTitle, notificationText);
-    
-    // Only send push notifications if enabled
-    if (pushNotifications && 'Notification' in window && Notification.permission === 'granted') {
-      new Notification(notificationTitle, {
-        body: notificationText,
-        icon: "/favicon.ico"
-      });
-    }
-    
-    // Voice reminder only for critical documents
-    if (voiceReminders) {
-      const criticalDocs = docs.filter(d => d.daysRemaining <= 3);
-      if (criticalDocs.length > 0) {
-        const criticalText = criticalDocs.length === 1 
-          ? `Urgent reminder: ${criticalDocs[0].title} is due in ${criticalDocs[0].daysRemaining} day${criticalDocs[0].daysRemaining !== 1 ? 's' : ''}`
-          : `Urgent reminder: ${criticalDocs.length} important documents are due soon`;
-        speakNotification(criticalText, voiceType || 'default');
-      }
-    }
-    
-    // Email notification (once per day)
-    if (emailNotifications && userEmail) {
-      const lastSentKey = `last_email_sent_${threshold}`;
-      const lastSent = localStorage.getItem(lastSentKey);
-      const today = new Date().toDateString();
-      
-      if (lastSent !== today) {
-        // Build email content
-        const docList = docs.map(d => 
-          `- ${d.title}: due in ${d.daysRemaining} day${d.daysRemaining !== 1 ? 's' : ''}`
-        ).join('\n');
-        
-        sendEmailNotification(
-          userEmail,
-          `DocuNinja: Document Reminders (${threshold} days)`,
-          `The following documents need your attention:\n\n${docList}`
-        );
-        
-        localStorage.setItem(lastSentKey, today);
-      }
-    }
-  });
-};
-
-export { speakNotification, sendEmailNotification, createAppNotification, checkForDueDocuments };
+// Initialize voice settings when imported
+if (typeof window !== "undefined") {
+  loadVoiceSettings();
+}

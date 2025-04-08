@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { Lock, Eye, EyeOff, Save, Plus, Trash2, FileText, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Lock, Eye, EyeOff, Save, Plus, Trash2, FileText, Check, Upload, Download } from 'lucide-react';
 import BlurContainer from '../ui/BlurContainer';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -14,6 +14,10 @@ interface SecureDocument {
   content: string;
   createdAt: string;
   updatedAt: string;
+  fileURL?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
 }
 
 const SurakshaLocker = () => {
@@ -29,6 +33,8 @@ const SurakshaLocker = () => {
   const [newContent, setNewContent] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Load stored password and documents from localStorage
   useEffect(() => {
@@ -144,6 +150,24 @@ const SurakshaLocker = () => {
     setCurrentDocument(null);
     setNewTitle('');
     setNewContent('');
+    setSelectedFile(null);
+  };
+  
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  // Create a URL for the selected file
+  const createFileURL = (file: File) => {
+    return URL.createObjectURL(file);
+  };
+
+  // Get file extension
+  const getFileExtension = (fileName: string) => {
+    return fileName.split('.').pop()?.toLowerCase() || '';
   };
   
   // Save a new document
@@ -166,6 +190,15 @@ const SurakshaLocker = () => {
       updatedAt: now,
     };
     
+    // Add file information if a file was selected
+    if (selectedFile) {
+      const fileURL = createFileURL(selectedFile);
+      newDoc.fileURL = fileURL;
+      newDoc.fileName = selectedFile.name;
+      newDoc.fileType = getFileExtension(selectedFile.name);
+      newDoc.fileSize = selectedFile.size;
+    }
+    
     const updatedDocs = [...secureDocuments, newDoc];
     setSecureDocuments(updatedDocs);
     saveSecureDocuments(updatedDocs);
@@ -173,6 +206,7 @@ const SurakshaLocker = () => {
     setIsCreating(false);
     setNewTitle('');
     setNewContent('');
+    setSelectedFile(null);
     
     toast({
       title: 'Document Saved',
@@ -214,6 +248,15 @@ const SurakshaLocker = () => {
       updatedAt: new Date().toISOString(),
     };
     
+    // Update file information if a file was selected
+    if (selectedFile) {
+      const fileURL = createFileURL(selectedFile);
+      updatedDoc.fileURL = fileURL;
+      updatedDoc.fileName = selectedFile.name;
+      updatedDoc.fileType = getFileExtension(selectedFile.name);
+      updatedDoc.fileSize = selectedFile.size;
+    }
+    
     const updatedDocs = secureDocuments.map(doc => 
       doc.id === currentDocument.id ? updatedDoc : doc
     );
@@ -222,6 +265,7 @@ const SurakshaLocker = () => {
     saveSecureDocuments(updatedDocs);
     setCurrentDocument(updatedDoc);
     setIsEditing(false);
+    setSelectedFile(null);
     
     toast({
       title: 'Document Updated',
@@ -254,6 +298,41 @@ const SurakshaLocker = () => {
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  // Download a document file if available
+  const downloadFile = (doc: SecureDocument) => {
+    if (doc.fileURL) {
+      const link = document.createElement('a');
+      link.href = doc.fileURL;
+      link.download = doc.fileName || doc.title;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: 'Document Downloaded',
+        description: `${doc.title} has been downloaded.`,
+      });
+    }
+  };
+
+  // Get file type icon or info
+  const getFileTypeInfo = (doc: SecureDocument) => {
+    if (!doc.fileType) return { icon: FileText, text: 'Document' };
+    
+    const type = doc.fileType.toLowerCase();
+    if (['pdf'].includes(type)) {
+      return { icon: FileText, text: 'PDF' };
+    } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(type)) {
+      return { icon: FileText, text: 'Image' };
+    } else if (['doc', 'docx'].includes(type)) {
+      return { icon: FileText, text: 'Word' };
+    } else if (['xls', 'xlsx'].includes(type)) {
+      return { icon: FileText, text: 'Excel' };
+    } else {
+      return { icon: FileText, text: 'File' };
+    }
   };
   
   return (
@@ -359,7 +438,7 @@ const SurakshaLocker = () => {
                   {secureDocuments.map((doc) => (
                     <li 
                       key={doc.id} 
-                      className={`px-3 py-2 rounded-md cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors flex justify-between items-center ${
+                      className={`px-3 py-2 rounded-md cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors flex justify-between items-center group ${
                         currentDocument?.id === doc.id ? 'bg-slate-100 dark:bg-slate-700/50' : ''
                       }`}
                       onClick={() => viewDocument(doc)}
@@ -369,18 +448,42 @@ const SurakshaLocker = () => {
                         <p className="text-xs text-muted-foreground">
                           {formatDate(doc.updatedAt)}
                         </p>
+                        {doc.fileURL && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <span className="bg-indigo-100 text-indigo-800 text-xs px-1.5 py-0.5 rounded-full">
+                              {getFileTypeInfo(doc).text}
+                            </span>
+                          </div>
+                        )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteDocument(doc.id);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        {doc.fileURL && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 rounded-full bg-blue-100 text-blue-600 hover:text-blue-800 hover:bg-blue-200"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              downloadFile(doc);
+                            }}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            <span className="sr-only">Download</span>
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 rounded-full opacity-0 group-hover:opacity-100 bg-red-100 text-red-600 hover:text-red-800 hover:bg-red-200"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteDocument(doc.id);
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -402,12 +505,66 @@ const SurakshaLocker = () => {
                     placeholder="Enter your secure content here..."
                     value={newContent}
                     onChange={(e) => setNewContent(e.target.value)}
-                    className="flex-1 resize-none"
+                    className="flex-1 resize-none mb-4"
                   />
-                  <div className="flex justify-end gap-2 mt-4">
+                  
+                  {/* File Upload Section */}
+                  <div className="mb-4 border border-dashed rounded-md p-4 bg-slate-50 dark:bg-slate-800/50">
+                    <div className="flex items-center justify-center">
+                      {selectedFile ? (
+                        <div className="text-center">
+                          <div className="flex items-center justify-center mb-2">
+                            <FileText className="h-8 w-8 text-indigo-500" />
+                          </div>
+                          <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {(selectedFile.size / 1024).toFixed(1)} KB
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-2"
+                            onClick={() => setSelectedFile(null)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <div className="flex flex-col items-center justify-center space-y-2">
+                            <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                              <Upload className="h-5 w-5 text-indigo-600" />
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-sm font-medium">Upload a document</p>
+                              <p className="text-xs text-muted-foreground">Drag and drop or click to browse</p>
+                            </div>
+                            <input 
+                              type="file" 
+                              ref={fileInputRef}
+                              onChange={handleFileChange}
+                              className="hidden" 
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => fileInputRef.current?.click()}
+                            >
+                              Select File
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end gap-2 mt-auto">
                     <Button
                       variant="outline"
-                      onClick={() => setIsCreating(false)}
+                      onClick={() => {
+                        setIsCreating(false);
+                        setSelectedFile(null);
+                      }}
                     >
                       Cancel
                     </Button>
@@ -433,15 +590,111 @@ const SurakshaLocker = () => {
                       <Textarea
                         value={newContent}
                         onChange={(e) => setNewContent(e.target.value)}
-                        className="flex-1 resize-none"
+                        className="flex-1 resize-none mb-4"
                       />
-                      <div className="flex justify-end gap-2 mt-4">
+                      
+                      {/* File Upload Section when Editing */}
+                      <div className="mb-4 border border-dashed rounded-md p-4 bg-slate-50 dark:bg-slate-800/50">
+                        <div className="flex items-center justify-center">
+                          {selectedFile ? (
+                            <div className="text-center">
+                              <div className="flex items-center justify-center mb-2">
+                                <FileText className="h-8 w-8 text-indigo-500" />
+                              </div>
+                              <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {(selectedFile.size / 1024).toFixed(1)} KB
+                              </p>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="mt-2"
+                                onClick={() => setSelectedFile(null)}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          ) : currentDocument.fileURL ? (
+                            <div className="text-center">
+                              <div className="flex items-center justify-center mb-2">
+                                <FileText className="h-8 w-8 text-indigo-500" />
+                              </div>
+                              <p className="text-sm font-medium truncate">{currentDocument.fileName || "Attached File"}</p>
+                              {currentDocument.fileSize && (
+                                <p className="text-xs text-muted-foreground">
+                                  {(currentDocument.fileSize / 1024).toFixed(1)} KB
+                                </p>
+                              )}
+                              <div className="flex justify-center gap-2 mt-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (currentDocument.fileURL) {
+                                      const updatedDoc = {...currentDocument};
+                                      delete updatedDoc.fileURL;
+                                      delete updatedDoc.fileName;
+                                      delete updatedDoc.fileType;
+                                      delete updatedDoc.fileSize;
+                                      
+                                      const updatedDocs = secureDocuments.map(doc => 
+                                        doc.id === currentDocument.id ? updatedDoc : doc
+                                      );
+                                      
+                                      setSecureDocuments(updatedDocs);
+                                      saveSecureDocuments(updatedDocs);
+                                      setCurrentDocument(updatedDoc);
+                                    }
+                                  }}
+                                >
+                                  Remove
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => downloadFile(currentDocument)}
+                                >
+                                  <Download className="h-4 w-4 mr-1" /> Download
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center">
+                              <div className="flex flex-col items-center justify-center space-y-2">
+                                <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                  <Upload className="h-5 w-5 text-indigo-600" />
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-sm font-medium">Upload a document</p>
+                                  <p className="text-xs text-muted-foreground">Drag and drop or click to browse</p>
+                                </div>
+                                <input 
+                                  type="file" 
+                                  ref={fileInputRef}
+                                  onChange={handleFileChange}
+                                  className="hidden" 
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => fileInputRef.current?.click()}
+                                >
+                                  Select File
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end gap-2 mt-auto">
                         <Button
                           variant="outline"
                           onClick={() => {
                             setIsEditing(false);
                             setNewTitle(currentDocument.title);
                             setNewContent(currentDocument.content);
+                            setSelectedFile(null);
                           }}
                         >
                           Cancel
@@ -458,18 +711,64 @@ const SurakshaLocker = () => {
                     <>
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="text-xl font-semibold">{currentDocument.title}</h3>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={startEditingDocument}
-                        >
-                          Edit
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {currentDocument.fileURL && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => downloadFile(currentDocument)}
+                              className="flex items-center gap-1.5"
+                            >
+                              <Download className="h-4 w-4" /> Download
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={startEditingDocument}
+                          >
+                            Edit
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex-1 overflow-y-auto whitespace-pre-wrap">
+                      <div className="flex-1 overflow-y-auto whitespace-pre-wrap mb-4">
                         {currentDocument.content}
                       </div>
-                      <div className="mt-4 text-xs text-muted-foreground">
+                      
+                      {/* Display file if available */}
+                      {currentDocument.fileURL && (
+                        <div className="mb-4 p-4 border rounded-md bg-slate-50 dark:bg-slate-800/50">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                              <FileText className="h-6 w-6 text-indigo-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{currentDocument.fileName || "Attached Document"}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">
+                                  {currentDocument.fileType ? currentDocument.fileType.toUpperCase() : "Document"}
+                                </span>
+                                {currentDocument.fileSize && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {(currentDocument.fileSize / 1024).toFixed(1)} KB
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="ml-auto">
+                              <Button
+                                size="sm"
+                                onClick={() => downloadFile(currentDocument)}
+                                className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white"
+                              >
+                                <Download className="h-3.5 w-3.5" /> Download
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="mt-auto text-xs text-muted-foreground">
                         <p>Last updated: {formatDate(currentDocument.updatedAt)}</p>
                         <p>Created: {formatDate(currentDocument.createdAt)}</p>
                       </div>

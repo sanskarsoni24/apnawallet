@@ -94,7 +94,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 
 // Sync with web app
 function syncWithWebApp() {
-  console.log('Syncing with web app...');
+  console.log('Syncing with SurakshitLocker web app...');
   
   // For demo purposes, we'll check if data exists in localStorage via the content script
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {

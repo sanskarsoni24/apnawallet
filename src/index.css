@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    --background: 250 100% 99%;
+    --background: 220 33% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -126,12 +126,28 @@
     @apply bg-white/50 dark:bg-slate-900/50 backdrop-blur-lg border border-white/20 dark:border-slate-700/30;
   }
   
+  .glass-panel {
+    @apply bg-white/80 dark:bg-slate-900/70 backdrop-blur-md border border-white/20 dark:border-slate-700/30 shadow-lg;
+  }
+  
+  .glass-panel-hover {
+    @apply hover:bg-white/90 dark:hover:bg-slate-900/80 hover:shadow-xl transition-all duration-300 hover:-translate-y-1;
+  }
+  
   .gradient-text {
     @apply bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent;
   }
   
   .gradient-bg {
     @apply bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700;
+  }
+  
+  .gradient-border {
+    @apply relative before:absolute before:inset-0 before:-z-10 before:p-[1px] before:bg-gradient-to-r before:from-indigo-500 before:via-purple-500 before:to-pink-500 before:rounded-[inherit] before:content-[''];
+  }
+  
+  .shimmer {
+    @apply relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-shine;
   }
   
   @keyframes pulse-subtle {

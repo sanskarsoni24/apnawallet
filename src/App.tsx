@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +21,25 @@ import StripeCheckout from "./pages/StripeCheckout";
 
 const queryClient = new QueryClient();
 
+// Set up theme based on localStorage or system preference
+const initializeTheme = () => {
+  // Check localStorage first
+  const storedTheme = localStorage.getItem('theme');
+  
+  // If value in localStorage, use that
+  if (storedTheme) {
+    document.documentElement.classList.toggle('dark', storedTheme === 'dark');
+    return;
+  }
+  
+  // If no value in localStorage, check system preference
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.classList.toggle('dark', prefersDark);
+  
+  // Store the inferred preference
+  localStorage.setItem('theme', prefersDark ? 'dark' : 'light');
+};
+
 // NotificationCheck component to handle notifications
 // This is a separate component to use the hooks inside the providers
 const NotificationCheck = () => {
@@ -33,8 +53,8 @@ const NotificationCheck = () => {
     if (firstVisit) {
       setTimeout(() => {
         toast({
-          title: "Welcome to DocuNinja",
-          description: "Upload and manage your important documents with ease.",
+          title: "Welcome to SurakshitLocker",
+          description: "Your secure vault for managing important documents.",
         });
         localStorage.setItem("firstVisit", "false");
       }, 1000);
@@ -72,8 +92,6 @@ const NotificationCheck = () => {
     // Set up checks every 2 hours
     const intervalId = setInterval(checkNotificationPreferences, 2 * 60 * 60 * 1000);
     
-    // Remove the demo notifications that were creating too much noise
-    
     return () => {
       clearTimeout(initialTimeout);
       clearInterval(intervalId);
@@ -84,6 +102,10 @@ const NotificationCheck = () => {
 };
 
 const App = () => {
+  useEffect(() => {
+    initializeTheme();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

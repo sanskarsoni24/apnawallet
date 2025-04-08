@@ -1,299 +1,219 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
-import { navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
-import {
-  NavigationMenu,
-  NavigationMenuList,
-  NavigationMenuItem,
-  NavigationMenuLink,
-} from "@/components/ui/navigation-menu";
-import { Bell, Menu, X } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Badge } from "../ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { useMediaQuery } from "@/hooks/use-mobile";
+import SurakshitLogo from "@/components/ui/SurakshitLogo";
+import { Menu, X, Settings, LayoutDashboard, FileText, Shield, LogOut, Sun, Moon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Header = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const isMobile = useIsMobile();
-  const { isLoggedIn, logout } = useUser();
+  const { isLoggedIn, logout, displayName } = useUser();
   const navigate = useNavigate();
-  
-  const [notifications, setNotifications] = useState<{ title: string; description: string; read: boolean }[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const location = useLocation();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDark, setIsDark] = useState(localStorage.getItem("theme") === "dark");
 
-  // Listen for custom notification events
-  useEffect(() => {
-    const handleNotification = (event: CustomEvent) => {
-      const { title, desc } = event.detail;
-      const newNotification = { title, description: desc, read: false };
-      setNotifications(prev => [newNotification, ...prev]);
-      updateUnreadCount([newNotification, ...notifications]);
-    };
-
-    // Create a type assertion for the event listener
-    window.addEventListener('app-notification' as any, handleNotification as EventListener);
-
-    return () => {
-      window.removeEventListener('app-notification' as any, handleNotification as EventListener);
-    };
-  }, [notifications]);
-
-  // Update unread count
-  const updateUnreadCount = (notifs: any[]) => {
-    const count = notifs.filter(n => !n.read).length;
-    setUnreadCount(count);
-    // Save to localStorage to persist across page loads
-    localStorage.setItem('notifications', JSON.stringify(notifs));
-    localStorage.setItem('unreadCount', count.toString());
+  const toggleTheme = () => {
+    const newTheme = isDark ? "light" : "dark";
+    setIsDark(!isDark);
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
 
-  // Load notifications from localStorage
-  useEffect(() => {
-    const savedNotifications = localStorage.getItem('notifications');
-    if (savedNotifications) {
-      try {
-        const parsed = JSON.parse(savedNotifications);
-        setNotifications(parsed);
-        setUnreadCount(parsed.filter((n: any) => !n.read).length);
-      } catch (e) {
-        console.error('Error parsing saved notifications:', e);
-      }
-    }
-  }, []);
-
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
-    setNotifications(updatedNotifications);
-    updateUnreadCount(updatedNotifications);
-  };
-
-  const markAsRead = (index: number) => {
-    const updatedNotifications = [...notifications];
-    updatedNotifications[index] = { ...updatedNotifications[index], read: true };
-    setNotifications(updatedNotifications);
-    updateUnreadCount(updatedNotifications);
-  };
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
-  const handleNavigation = (path: string) => {
-    navigate(path);
+  const handleLogout = () => {
+    logout();
+    navigate("/");
     setMobileMenuOpen(false);
   };
 
+  const navLinks = [
+    { name: "Dashboard", path: "/", icon: <LayoutDashboard className="h-4 w-4" /> },
+    { name: "Documents", path: "/documents", icon: <FileText className="h-4 w-4" /> },
+    { name: "Settings", path: "/settings", icon: <Settings className="h-4 w-4" /> },
+  ];
+
   return (
-    <header className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-30">
-      <div className="container flex h-16 items-center justify-between">
-        {/* Logo */}
-        <div 
-          className="flex items-center gap-2 cursor-pointer" 
-          onClick={() => handleNavigation("/")}
-        >
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-            <span className="text-white font-bold">DN</span>
-          </div>
-          <span className="font-bold text-xl hidden sm:inline">DocuNinja</span>
-        </div>
+    <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/" className="flex-shrink-0 flex items-center">
+            <SurakshitLogo variant="full" />
+          </Link>
 
-        {/* Mobile Menu Button */}
-        {isMobile && (
-          <button
-            onClick={toggleMobileMenu}
-            className="p-2 focus:outline-none"
-          >
-            {mobileMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
-          </button>
-        )}
-
-        {/* Desktop Navigation */}
-        {!isMobile && (
-          <div className="flex items-center gap-2">
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuLink
-                    className={navigationMenuTriggerStyle()}
-                    onClick={() => handleNavigation("/")}
-                  >
-                    Home
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-                {isLoggedIn && (
-                  <NavigationMenuItem>
-                    <NavigationMenuLink
-                      className={navigationMenuTriggerStyle()}
-                      onClick={() => handleNavigation("/documents")}
-                    >
-                      Documents
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                )}
-                <NavigationMenuItem>
-                  <NavigationMenuLink
-                    className={navigationMenuTriggerStyle()}
-                    onClick={() => handleNavigation("/pricing")}
-                  >
-                    Pricing
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-                {isLoggedIn && (
-                  <NavigationMenuItem>
-                    <NavigationMenuLink
-                      className={navigationMenuTriggerStyle()}
-                      onClick={() => handleNavigation("/settings")}
-                    >
-                      Settings
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                )}
-              </NavigationMenuList>
-            </NavigationMenu>
-
-            {/* Notifications */}
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-1">
             {isLoggedIn && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    {unreadCount > 0 && (
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white">
-                        {unreadCount}
-                      </Badge>
+              <div className="flex items-center space-x-1">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className={cn(
+                      "px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5",
+                      location.pathname === link.path
+                        ? "bg-primary text-white"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                     )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-0">
-                  <div className="p-3 border-b flex justify-between items-center">
-                    <h3 className="font-medium">Notifications</h3>
-                    {notifications.length > 0 && (
-                      <Button variant="ghost" size="sm" onClick={markAllAsRead}>
-                        Mark all as read
-                      </Button>
-                    )}
-                  </div>
-                  <div className="max-h-80 overflow-auto">
-                    {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-muted-foreground">
-                        No notifications
-                      </div>
-                    ) : (
-                      notifications.map((notification, i) => (
-                        <div 
-                          key={i}
-                          className={`p-3 border-b cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 ${!notification.read ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
-                          onClick={() => markAsRead(i)}
-                        >
-                          <p className="font-medium text-sm">{notification.title}</p>
-                          <p className="text-sm text-muted-foreground">{notification.description}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
-
-            {/* Auth Buttons */}
-            {isLoggedIn ? (
-              <Button variant="outline" onClick={logout}>
-                Sign out
-              </Button>
-            ) : (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => handleNavigation("/sign-in")}
-                >
-                  Sign in
-                </Button>
-                <Button onClick={() => handleNavigation("/sign-up")}>
-                  Sign up
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Mobile Navigation */}
-        {isMobile && mobileMenuOpen && (
-          <div className="fixed inset-0 top-16 z-50 bg-background/95 backdrop-blur-sm p-4">
-            <div className="flex flex-col space-y-4">
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => handleNavigation("/")}
-              >
-                Home
-              </Button>
-              {isLoggedIn && (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => handleNavigation("/documents")}
-                >
-                  Documents
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => handleNavigation("/pricing")}
-              >
-                Pricing
-              </Button>
-              {isLoggedIn && (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => handleNavigation("/settings")}
-                >
-                  Settings
-                </Button>
-              )}
-
-              <div className="border-t pt-4 mt-4">
-                {isLoggedIn ? (
-                  <Button
-                    variant="destructive"
-                    className="w-full"
-                    onClick={() => {
-                      logout();
-                      setMobileMenuOpen(false);
-                    }}
                   >
-                    Sign out
-                  </Button>
-                ) : (
-                  <div className="flex flex-col space-y-2">
+                    {link.icon}
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </nav>
+
+          {/* Right side items */}
+          <div className="hidden md:flex items-center space-x-4">
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="rounded-full"
+              aria-label="Toggle theme"
+            >
+              {isDark ? (
+                <Sun className="h-5 w-5 text-amber-500" />
+              ) : (
+                <Moon className="h-5 w-5 text-indigo-700" />
+              )}
+            </Button>
+
+            {isLoggedIn ? (
+              <div className="flex items-center space-x-4">
+                {/* User Status */}
+                <div className="hidden lg:flex items-center gap-2 text-sm px-3 py-1 rounded-full bg-secondary dark:bg-slate-800">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{displayName || "User"}</span>
+                </div>
+
+                {/* Logout button */}
+                <Button variant="outline" onClick={handleLogout} className="gap-1.5">
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-x-2">
+                <Button variant="outline" asChild>
+                  <Link to="/sign-in">Sign In</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/sign-up">Sign Up</Link>
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="flex md:hidden">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="rounded-full"
+            >
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden">
+          <div className="px-4 py-3 space-y-3 bg-white dark:bg-slate-900 shadow-lg border-t border-gray-200 dark:border-slate-700">
+            {isLoggedIn && (
+              <div className="space-y-2">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium",
+                      location.pathname === link.path
+                        ? "bg-primary/10 text-primary dark:bg-primary/20"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                    )}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.icon}
+                    {link.name}
+                  </Link>
+                ))}
+
+                <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      <span className="text-sm">{displayName || "User"}</span>
+                    </div>
                     <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => handleNavigation("/sign-in")}
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleTheme}
+                      className="rounded-full"
                     >
-                      Sign in
-                    </Button>
-                    <Button
-                      className="w-full"
-                      onClick={() => handleNavigation("/sign-up")}
-                    >
-                      Sign up
+                      {isDark ? (
+                        <Sun className="h-4 w-4 text-amber-500" />
+                      ) : (
+                        <Moon className="h-4 w-4 text-indigo-700" />
+                      )}
                     </Button>
                   </div>
-                )}
+
+                  <Button 
+                    variant="outline" 
+                    onClick={handleLogout} 
+                    className="w-full justify-center mt-2"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
+            
+            {!isLoggedIn && (
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Switch theme</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleTheme}
+                    className="rounded-full"
+                  >
+                    {isDark ? (
+                      <Sun className="h-4 w-4 text-amber-500" />
+                    ) : (
+                      <Moon className="h-4 w-4 text-indigo-700" />
+                    )}
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <Button variant="outline" asChild className="w-full justify-center">
+                    <Link to="/sign-in" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
+                  </Button>
+                  <Button asChild className="w-full justify-center">
+                    <Link to="/sign-up" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </header>
   );
 };

@@ -14,6 +14,7 @@ export interface Document {
   userId?: string;
   importance?: 'low' | 'medium' | 'high' | 'critical';
   createdAt?: string;
+  categories?: string[];
 }
 
 interface DocumentContextType {
@@ -137,7 +138,9 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       id,
       userId: email,
       createdAt: new Date().toISOString(),
-      importance: doc.importance || 'medium'
+      importance: doc.importance || 'medium',
+      // Initialize categories array if it doesn't exist
+      categories: doc.categories || []
     };
     
     setDocuments(prev => [...prev, newDoc]);
@@ -166,7 +169,19 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return documents.filter(
         doc => doc.userId === email && doc.daysRemaining >= 0 && doc.daysRemaining <= 7
       );
+    } else if (documentTypes.includes(type)) {
+      // Filter by document type
+      return documents.filter(
+        doc => doc.userId === email && doc.type === type
+      );
+    } else if (categories.includes(type)) {
+      // Filter by category
+      return documents.filter(
+        doc => doc.userId === email && 
+        (doc.categories?.includes(type) || (doc.type === type))
+      );
     } else {
+      // Fallback for any other case
       return documents.filter(
         doc => doc.userId === email && (doc.type === type || categories.includes(type))
       );
@@ -267,6 +282,12 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       toast({
         title: "Document Type Added",
         description: `"${type}" type has been added`,
+      });
+    } else {
+      toast({
+        title: "Type Already Exists",
+        description: `"${type}" is already in your document types`,
+        variant: "destructive"
       });
     }
   };

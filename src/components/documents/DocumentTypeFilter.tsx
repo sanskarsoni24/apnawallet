@@ -15,7 +15,7 @@ interface DocumentTypeFilterProps {
 }
 
 const DocumentTypeFilter = ({ selectedType, onTypeChange }: DocumentTypeFilterProps) => {
-  const { documents, categories, documentTypes, addDocumentType } = useDocuments();
+  const { documents, categories, documentTypes, addDocumentType, addCategory } = useDocuments();
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
   const [newDocumentType, setNewDocumentType] = useState("");
@@ -44,6 +44,15 @@ const DocumentTypeFilter = ({ selectedType, onTypeChange }: DocumentTypeFilterPr
       return;
     }
     
+    if (documentTypes.includes(newDocumentType.trim())) {
+      toast({
+        title: "Type Already Exists",
+        description: `"${newDocumentType.trim()}" already exists as a document type.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     addDocumentType(newDocumentType.trim());
     setNewDocumentType("");
     setIsTypeDialogOpen(false);
@@ -52,6 +61,9 @@ const DocumentTypeFilter = ({ selectedType, onTypeChange }: DocumentTypeFilterPr
       title: "Document Type Added",
       description: `"${newDocumentType.trim()}" has been added as a document type.`
     });
+    
+    // Automatically select the newly added type
+    onTypeChange(newDocumentType.trim());
   };
   
   return (
@@ -80,7 +92,7 @@ const DocumentTypeFilter = ({ selectedType, onTypeChange }: DocumentTypeFilterPr
         </div>
         
         <ScrollArea className="w-full">
-          <div className="flex gap-2 pb-1">
+          <div className="flex gap-2 pb-1 flex-wrap">
             <Button
               key="All"
               variant={selectedType === "All" ? "default" : "outline"}
@@ -138,7 +150,7 @@ const DocumentTypeFilter = ({ selectedType, onTypeChange }: DocumentTypeFilterPr
       
       {/* Add New Document Type Dialog */}
       <Dialog open={isTypeDialogOpen} onOpenChange={setIsTypeDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md dark:bg-slate-900">
           <DialogHeader>
             <DialogTitle>Add New Document Type</DialogTitle>
             <DialogDescription>
@@ -152,7 +164,7 @@ const DocumentTypeFilter = ({ selectedType, onTypeChange }: DocumentTypeFilterPr
                 placeholder="Enter new document type"
                 value={newDocumentType}
                 onChange={(e) => setNewDocumentType(e.target.value)}
-                className="flex-1"
+                className="flex-1 dark:bg-slate-800 dark:border-slate-700"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && newDocumentType.trim()) {
                     handleAddDocumentType();
@@ -172,6 +184,7 @@ const DocumentTypeFilter = ({ selectedType, onTypeChange }: DocumentTypeFilterPr
             <Button 
               variant="outline" 
               onClick={() => setIsTypeDialogOpen(false)}
+              className="dark:bg-slate-800 dark:border-slate-700"
             >
               Cancel
             </Button>

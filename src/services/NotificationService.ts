@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 import { Document } from "@/contexts/DocumentContext";
 
@@ -147,7 +146,7 @@ export const createNotification = (
   title: string,
   message: string,
   options?: {
-    variant?: "default" | "destructive";  // Removed 'success' as it's not a valid variant
+    variant?: "default" | "destructive";
     speak?: boolean;
   }
 ): void => {
@@ -163,8 +162,6 @@ export const createNotification = (
     speakNotification(`${title}. ${message}`);
   }
 };
-
-// Creating the missing functions
 
 /**
  * Create an application notification
@@ -194,10 +191,10 @@ export const checkForDueDocuments = (
   // Find documents that are due soon
   const dueSoonDocs = documents.filter(doc => {
     // Skip if no expiry date
-    if (!doc.expiryDate) return false;
+    if (!doc.dueDate) return false;
     
     // Calculate days remaining
-    const expiryDate = new Date(doc.expiryDate);
+    const expiryDate = new Date(doc.dueDate);
     const timeDiff = expiryDate.getTime() - today.getTime();
     const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
     

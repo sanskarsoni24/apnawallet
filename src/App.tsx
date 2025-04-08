@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,7 +14,7 @@ import SignUp from "./pages/SignUp";
 import { DocumentProvider, useDocuments } from "./contexts/DocumentContext";
 import { UserProvider, useUser } from "./contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
-import { checkForDueDocuments, createAppNotification } from "./services/NotificationService";
+import { checkForDueDocuments, createNotification } from "./services/NotificationService";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import StripeCheckout from "./pages/StripeCheckout";
 

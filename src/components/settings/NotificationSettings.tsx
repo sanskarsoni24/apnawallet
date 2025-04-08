@@ -79,7 +79,13 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
   
   const previewVoice = () => {
     const previewText = "This is a preview of your voice reminder. Your documents are due soon!";
-    const success = speakNotification(previewText, localSettings.voiceType);
+    
+    // Fixed: Pass proper voice options instead of just the string
+    const voiceOptions = {
+      voiceName: localSettings.voiceType || "default"
+    };
+    
+    const success = speakNotification(previewText, voiceOptions);
     
     if (!success) {
       toast({

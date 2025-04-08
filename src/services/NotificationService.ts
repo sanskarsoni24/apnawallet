@@ -1,4 +1,6 @@
+
 import { toast } from "@/hooks/use-toast";
+import { Document } from "@/contexts/DocumentContext";
 
 // Global speech synthesis settings
 let globalVoiceSettings = {
@@ -145,7 +147,7 @@ export const createNotification = (
   title: string,
   message: string,
   options?: {
-    variant?: "default" | "destructive" | "success";
+    variant?: "default" | "destructive";  // Removed 'success' as it's not a valid variant
     speak?: boolean;
   }
 ): void => {
@@ -159,6 +161,78 @@ export const createNotification = (
   // Speak notification if requested
   if (options?.speak) {
     speakNotification(`${title}. ${message}`);
+  }
+};
+
+// Creating the missing functions
+
+/**
+ * Create an application notification
+ * This is an alias for createNotification for backward compatibility
+ */
+export const createAppNotification = createNotification;
+
+/**
+ * Check for documents due soon and send notifications
+ */
+export const checkForDueDocuments = (
+  documents: Document[], 
+  userEmail: string,
+  preferences: { 
+    emailNotifications?: boolean;
+    pushNotifications?: boolean;
+    voiceReminders?: boolean;
+    reminderDays?: number;
+    voiceType?: string;
+  }
+): void => {
+  if (!documents || documents.length === 0) return;
+  
+  const today = new Date();
+  const daysThreshold = preferences.reminderDays || 3;
+  
+  // Find documents that are due soon
+  const dueSoonDocs = documents.filter(doc => {
+    // Skip if no expiry date
+    if (!doc.expiryDate) return false;
+    
+    // Calculate days remaining
+    const expiryDate = new Date(doc.expiryDate);
+    const timeDiff = expiryDate.getTime() - today.getTime();
+    const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    
+    // Check if within threshold and greater than 0 (not expired)
+    return daysRemaining > 0 && daysRemaining <= daysThreshold;
+  });
+  
+  // Send notifications if there are documents due soon
+  if (dueSoonDocs.length > 0) {
+    // Create notification message
+    const title = "Documents Due Soon";
+    const message = `You have ${dueSoonDocs.length} document${dueSoonDocs.length > 1 ? 's' : ''} expiring soon.`;
+    
+    // Show toast notification
+    createNotification(title, message);
+    
+    // If voice reminders enabled, speak the notification
+    if (preferences.voiceReminders) {
+      const voiceOptions = preferences.voiceType ? { voiceName: preferences.voiceType } : undefined;
+      speakNotification(`${title}. ${message}`, voiceOptions);
+    }
+    
+    // If push notifications are enabled and supported by the browser
+    if (preferences.pushNotifications && 'Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, {
+        body: message,
+        icon: '/favicon.ico'
+      });
+    }
+    
+    // For email notifications, we would normally call an API here
+    // This is just a placeholder since actual email sending would require backend integration
+    if (preferences.emailNotifications && userEmail) {
+      console.log(`Would send email to ${userEmail} about ${dueSoonDocs.length} documents due soon.`);
+    }
   }
 };
 

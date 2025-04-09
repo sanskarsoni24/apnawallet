@@ -1,3 +1,4 @@
+
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
@@ -22,15 +23,24 @@ console.log(
   "font-size: 14px;"
 );
 
-// Device detection for better user experience
+// Enhanced device detection for better user experience
 const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
   navigator.userAgent
 );
 
 if (isMobileDevice) {
-  console.log("Mobile device detected. Optimizing experience...");
+  console.log("Mobile device detected. Optimizing mobile experience...");
   // Store device information in localStorage for responsive adjustments
   localStorage.setItem("device_type", "mobile");
+  
+  // Add mobile-specific meta tags programmatically
+  const viewportMeta = document.querySelector('meta[name="viewport"]');
+  if (viewportMeta) {
+    viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+  }
+  
+  // Add mobile app banner class to body
+  document.body.classList.add('mobile-view');
 } else {
   console.log("Desktop device detected. Optimizing experience...");
   localStorage.setItem("device_type", "desktop");

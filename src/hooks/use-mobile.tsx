@@ -1,7 +1,4 @@
-
 import { useState, useEffect } from 'react';
-import { Capacitor } from '@capacitor/core';
-import { Device } from '@capacitor/device';
 import { isMobileApp } from '../utils/capacitor';
 
 // Custom hook to detect mobile browser
@@ -62,8 +59,9 @@ export function usePlatform() {
   useEffect(() => {
     const detectPlatform = async () => {
       // Check if native mobile app
-      if (Capacitor.isNativePlatform()) {
+      if (isMobileApp()) {
         try {
+          const { Device } = await import('@capacitor/device');
           const info = await Device.getInfo();
           setPlatform(info.platform as 'android' | 'ios');
         } catch (err) {

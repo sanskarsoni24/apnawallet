@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Lock, Eye, EyeOff, Save, Plus, Trash2, FileText, Check, Upload, Download, KeyRound, Calendar } from 'lucide-react';
+import { Lock, Eye, EyeOff, Save, Plus, Trash2, FileText, Check, Upload, Download, KeyRound } from 'lucide-react';
 import BlurContainer from '../ui/BlurContainer';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -17,8 +16,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from '../ui/label';
-import { format } from 'date-fns';
 
+// Document types and interfaces
 interface SecureDocument {
   id: string;
   title: string;
@@ -29,8 +28,6 @@ interface SecureDocument {
   fileName?: string;
   fileType?: string;
   fileSize?: number;
-  dueDate?: string;
-  category?: string;
 }
 
 const SurakshaLocker = () => {
@@ -48,8 +45,6 @@ const SurakshaLocker = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [dueDate, setDueDate] = useState<string>('');
-  const [category, setCategory] = useState<string>('');
   
   // Password change dialog states
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
@@ -97,95 +92,136 @@ const SurakshaLocker = () => {
     }
   };
   
-  // Handle password setup or validation
-  const handleUnlock = () => {
-    if (!storedPassword) {
-      if (password.length < 6) {
-        toast({
-          title: 'Password Too Short',
-          description: 'Password must be at least 6 characters long.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      if (password !== confirmPassword) {
-        toast({
-          title: 'Passwords Do Not Match',
-          description: 'Please make sure your passwords match.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      localStorage.setItem(`suraksha_password_${email}`, password);
-      setStoredPassword(password);
-      setIsLocked(false);
-      toast({
-        title: 'Locker Created',
-        description: 'Your secure locker has been created.',
-      });
-    } else {
-      if (password === storedPassword) {
-        setIsLocked(false);
-        toast({
-          title: 'Locker Unlocked',
-          description: 'Your secure locker has been unlocked.',
-        });
-      } else {
-        toast({
-          title: 'Incorrect Password',
-          description: 'Please enter the correct password.',
-          variant: 'destructive',
-        });
-      }
-    }
-    setPassword('');
-    setConfirmPassword('');
-  };
-  
-  // Handle password change
+  // Enhanced password change function with proper validation
   const handleChangePassword = () => {
+    // Validate current password
     if (currentPassword !== storedPassword) {
       toast({
-        title: 'Incorrect Current Password',
-        description: 'Please enter your current password correctly.',
+        title: 'Incorrect Password',
+        description: 'The current password you entered is incorrect.',
         variant: 'destructive',
       });
       return;
     }
+    
+    // Validate new password
     if (newPassword.length < 6) {
       toast({
-        title: 'New Password Too Short',
-        description: 'New password must be at least 6 characters long.',
+        title: 'Password Too Short',
+        description: 'New password must be at least 6 characters.',
         variant: 'destructive',
       });
       return;
     }
+    
+    // Validate password confirmation
     if (newPassword !== confirmNewPassword) {
       toast({
-        title: 'New Passwords Do Not Match',
-        description: 'Please make sure your new passwords match.',
+        title: 'Password Mismatch',
+        description: 'New password and confirmation do not match.',
         variant: 'destructive',
       });
       return;
     }
+    
+    // Password strength validation (optional but recommended)
+    const hasUpperCase = /[A-Z]/.test(newPassword);
+    const hasLowerCase = /[a-z]/.test(newPassword);
+    const hasNumbers = /\d/.test(newPassword);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
+    
+    if (!(hasUpperCase && hasLowerCase && hasNumbers) && newPassword.length < 8) {
+      toast({
+        title: 'Weak Password',
+        description: 'Consider using a stronger password with uppercase, lowercase, numbers, and special characters.',
+        variant: 'warning',
+      });
+      // Continue anyway - this is just a warning
+    }
+    
+    // Update password in localStorage
     localStorage.setItem(`suraksha_password_${email}`, newPassword);
     setStoredPassword(newPassword);
-    setIsLocked(true);
+    
+    // Reset form fields
     setCurrentPassword('');
     setNewPassword('');
     setConfirmNewPassword('');
+    
+    // Close dialog
     setIsChangePasswordOpen(false);
+    
     toast({
       title: 'Password Updated',
-      description: 'Your locker password has been updated.',
+      description: 'Your Suraksha Locker password has been changed successfully.',
     });
+  };
+  
+  // Handle password setup or validation
+  const handleUnlock = () => {
+    if (!storedPassword) {
+      // First time setup - create password
+      if (password !== confirmPassword) {
+        toast({
+          title: 'Password Mismatch',
+          description: 'Passwords do not match. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (password.length < 6) {
+        toast({
+          title: 'Password Too Short',
+          description: 'Password must be at least 6 characters.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // In a real app, you would hash the password
+      localStorage.setItem(`suraksha_password_${email}`, password);
+      setStoredPassword(password);
+      setIsLocked(false);
+      
+      toast({
+        title: 'Suraksha Locker Created',
+        description: 'Your secure locker is now set up and unlocked.',
+      });
+    } else {
+      // Validate existing password
+      if (password !== storedPassword) {
+        toast({
+          title: 'Incorrect Password',
+          description: 'The password you entered is incorrect.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      setIsLocked(false);
+      loadSecureDocuments();
+      
+      toast({
+        title: 'Suraksha Locker Unlocked',
+        description: 'You now have access to your secure documents.',
+      });
+    }
+    
+    // Reset password fields
+    setPassword('');
+    setConfirmPassword('');
   };
   
   // Lock the secure locker
   const handleLock = () => {
     setIsLocked(true);
+    setCurrentDocument(null);
+    setIsCreating(false);
+    setIsEditing(false);
+    
     toast({
-      title: 'Locker Locked',
+      title: 'Suraksha Locker Locked',
       description: 'Your secure locker has been locked.',
     });
   };
@@ -198,56 +234,12 @@ const SurakshaLocker = () => {
     setNewTitle('');
     setNewContent('');
     setSelectedFile(null);
-    setDueDate('');
-    setCategory('');
   };
   
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      
-      // Try to detect document type and due date from the file name
-      detectDocumentInfo(file);
-    }
-  };
-
-  // Detect document info from file name or content
-  const detectDocumentInfo = (file: File) => {
-    // Extract document category from filename
-    const fileName = file.name.toLowerCase();
-    
-    // Detect category based on file name
-    if (fileName.includes('invoice') || fileName.includes('receipt')) {
-      setCategory('Invoice');
-    } else if (fileName.includes('passport') || fileName.includes('visa')) {
-      setCategory('Travel Document');
-    } else if (fileName.includes('license') || fileName.includes('permit')) {
-      setCategory('License');
-    } else if (fileName.includes('tax') || fileName.includes('return')) {
-      setCategory('Tax Document');
-    } else if (fileName.includes('insurance') || fileName.includes('policy')) {
-      setCategory('Insurance');
-    } else if (fileName.includes('id') || fileName.includes('card')) {
-      setCategory('ID Card');
-    }
-    
-    // Try to detect due date from file name
-    // Look for date patterns like YYYY-MM-DD or DD-MM-YYYY
-    const datePattern = /(\d{4}[-/]\d{2}[-/]\d{2}|\d{2}[-/]\d{2}[-/]\d{4})/;
-    const dateMatch = fileName.match(datePattern);
-    
-    if (dateMatch) {
-      try {
-        // Attempt to parse and format the date
-        const extractedDate = new Date(dateMatch[0]);
-        if (!isNaN(extractedDate.getTime())) {
-          setDueDate(extractedDate.toISOString().split('T')[0]);
-        }
-      } catch (error) {
-        console.error('Error parsing detected date:', error);
-      }
+      setSelectedFile(e.target.files[0]);
     }
   };
 
@@ -281,16 +273,6 @@ const SurakshaLocker = () => {
       updatedAt: now,
     };
     
-    // Add due date if set
-    if (dueDate) {
-      newDoc.dueDate = dueDate;
-    }
-    
-    // Add category if set
-    if (category) {
-      newDoc.category = category;
-    }
-    
     // Add file information if a file was selected
     if (selectedFile) {
       const fileURL = createFileURL(selectedFile);
@@ -308,8 +290,6 @@ const SurakshaLocker = () => {
     setNewTitle('');
     setNewContent('');
     setSelectedFile(null);
-    setDueDate('');
-    setCategory('');
     
     toast({
       title: 'Document Saved',
@@ -322,8 +302,6 @@ const SurakshaLocker = () => {
     setCurrentDocument(doc);
     setNewTitle(doc.title);
     setNewContent(doc.content);
-    setDueDate(doc.dueDate || '');
-    setCategory(doc.category || '');
     setIsEditing(false);
     setIsCreating(false);
   };
@@ -351,8 +329,6 @@ const SurakshaLocker = () => {
       title: newTitle,
       content: newContent,
       updatedAt: new Date().toISOString(),
-      dueDate: dueDate || undefined,
-      category: category || undefined,
     };
     
     // Update file information if a file was selected
@@ -509,6 +485,7 @@ const SurakshaLocker = () => {
         </div>
       ) : (
         <div>
+          {/* Important: Change Password button in the header actions */}
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-base font-medium">Your Secure Documents</h3>
             <div className="flex gap-2">
@@ -625,6 +602,7 @@ const SurakshaLocker = () => {
             </div>
           </div>
           
+          {/* ... keep existing code (document grid and other UI components) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1 border rounded-lg h-[500px] overflow-y-auto p-2">
               {secureDocuments.length === 0 ? (
@@ -650,24 +628,13 @@ const SurakshaLocker = () => {
                         <p className="text-xs text-muted-foreground">
                           {formatDate(doc.updatedAt)}
                         </p>
-                        <div className="flex flex-wrap items-center gap-1 mt-1">
-                          {doc.fileURL && (
+                        {doc.fileURL && (
+                          <div className="flex items-center gap-1 mt-1">
                             <span className="bg-indigo-100 text-indigo-800 text-xs px-1.5 py-0.5 rounded-full">
                               {getFileTypeInfo(doc).text}
                             </span>
-                          )}
-                          {doc.category && (
-                            <span className="bg-purple-100 text-purple-800 text-xs px-1.5 py-0.5 rounded-full">
-                              {doc.category}
-                            </span>
-                          )}
-                          {doc.dueDate && (
-                            <span className="bg-amber-100 text-amber-800 text-xs px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                              <Calendar className="h-2.5 w-2.5" />
-                              {formatDate(doc.dueDate)}
-                            </span>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                       <div className="flex gap-1">
                         {doc.fileURL && (
@@ -714,31 +681,6 @@ const SurakshaLocker = () => {
                       className="font-medium"
                     />
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <Label htmlFor="due-date">Due Date (Optional)</Label>
-                      <Input
-                        id="due-date"
-                        type="date"
-                        value={dueDate}
-                        onChange={(e) => setDueDate(e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="category">Category (Optional)</Label>
-                      <Input
-                        id="category"
-                        type="text"
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        className="mt-1"
-                        placeholder="e.g. Tax, Passport, ID"
-                      />
-                    </div>
-                  </div>
-                  
                   <Textarea
                     placeholder="Enter your secure content here..."
                     value={newContent}
@@ -802,8 +744,6 @@ const SurakshaLocker = () => {
                       onClick={() => {
                         setIsCreating(false);
                         setSelectedFile(null);
-                        setDueDate('');
-                        setCategory('');
                       }}
                     >
                       Cancel
@@ -827,31 +767,6 @@ const SurakshaLocker = () => {
                           className="font-medium"
                         />
                       </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <Label htmlFor="edit-due-date">Due Date (Optional)</Label>
-                          <Input
-                            id="edit-due-date"
-                            type="date"
-                            value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
-                            className="mt-1"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="edit-category">Category (Optional)</Label>
-                          <Input
-                            id="edit-category"
-                            type="text"
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            className="mt-1"
-                            placeholder="e.g. Tax, Passport, ID"
-                          />
-                        </div>
-                      </div>
-                      
                       <Textarea
                         value={newContent}
                         onChange={(e) => setNewContent(e.target.value)}
@@ -914,20 +829,14 @@ const SurakshaLocker = () => {
                                 >
                                   Remove
                                 </Button>
-                                <Button 
+                                <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => fileInputRef.current?.click()}
+                                  onClick={() => downloadFile(currentDocument)}
                                 >
-                                  Replace
+                                  <Download className="h-4 w-4 mr-1" /> Download
                                 </Button>
                               </div>
-                              <input 
-                                type="file" 
-                                ref={fileInputRef}
-                                onChange={handleFileChange}
-                                className="hidden" 
-                              />
                             </div>
                           ) : (
                             <div className="text-center">
@@ -936,7 +845,7 @@ const SurakshaLocker = () => {
                                   <Upload className="h-5 w-5 text-indigo-600" />
                                 </div>
                                 <div className="space-y-1">
-                                  <p className="text-sm font-medium">Add a file</p>
+                                  <p className="text-sm font-medium">Upload a document</p>
                                   <p className="text-xs text-muted-foreground">Drag and drop or click to browse</p>
                                 </div>
                                 <input 
@@ -965,8 +874,6 @@ const SurakshaLocker = () => {
                             setIsEditing(false);
                             setNewTitle(currentDocument.title);
                             setNewContent(currentDocument.content);
-                            setDueDate(currentDocument.dueDate || '');
-                            setCategory(currentDocument.category || '');
                             setSelectedFile(null);
                           }}
                         >
@@ -982,9 +889,19 @@ const SurakshaLocker = () => {
                     </>
                   ) : (
                     <>
-                      <div className="mb-6">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-xl font-semibold">{currentDocument.title}</h3>
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-semibold">{currentDocument.title}</h3>
+                        <div className="flex items-center gap-2">
+                          {currentDocument.fileURL && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => downloadFile(currentDocument)}
+                              className="flex items-center gap-1.5"
+                            >
+                              <Download className="h-4 w-4" /> Download
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
@@ -993,83 +910,13 @@ const SurakshaLocker = () => {
                             Edit
                           </Button>
                         </div>
-                        <div className="flex items-center text-sm text-muted-foreground mt-1">
-                          <p>Updated {formatDate(currentDocument.updatedAt)}</p>
-                          <span className="mx-2">•</span>
-                          <p>Created {formatDate(currentDocument.createdAt)}</p>
-                        </div>
-                        
-                        {/* Document Metadata Section */}
-                        <div className="flex flex-wrap items-center gap-2 mt-3">
-                          {currentDocument.category && (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 rounded-md">
-                              <span className="text-xs font-medium">{currentDocument.category}</span>
-                            </div>
-                          )}
-                          {currentDocument.dueDate && (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-md">
-                              <Calendar className="h-3 w-3" />
-                              <span className="text-xs font-medium">Due: {formatDate(currentDocument.dueDate)}</span>
-                            </div>
-                          )}
-                        </div>
+                      </div>
+                      <div className="flex-1 overflow-y-auto whitespace-pre-wrap mb-4">
+                        {currentDocument.content}
                       </div>
                       
-                      {/* Document Content */}
-                      <div className="flex-1 overflow-y-auto mb-4">
-                        <p className="whitespace-pre-wrap">{currentDocument.content}</p>
-                      </div>
-                      
-                      {/* Attached File Section */}
+                      {/* Display file if available */}
                       {currentDocument.fileURL && (
-                        <div className="border rounded-md p-4 mb-4 bg-slate-50 dark:bg-slate-800/50">
+                        <div className="mb-4 p-4 border rounded-md bg-slate-50 dark:bg-slate-800/50">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                              <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{currentDocument.fileName || "Attached File"}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {currentDocument.fileType?.toUpperCase()} File
-                                {currentDocument.fileSize && ` • ${(currentDocument.fileSize / 1024).toFixed(1)} KB`}
-                              </p>
-                            </div>
-                            <Button
-                              onClick={() => downloadFile(currentDocument)}
-                              size="sm"
-                              className="bg-blue-600 hover:bg-blue-700 text-white"
-                            >
-                              <Download className="h-4 w-4 mr-1" /> Download
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center p-4">
-                  <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
-                    <FileText className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-medium mb-2">No Document Selected</h3>
-                  <p className="text-sm text-muted-foreground max-w-md">
-                    Select a document from the list to view it, or create a new one by clicking "New Document".
-                  </p>
-                  <Button 
-                    onClick={startCreatingDocument}
-                    className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white"
-                  >
-                    <Plus className="h-4 w-4 mr-1" /> Create New Document
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </BlurContainer>
-  );
-};
-
-export default SurakshaLocker;
+                            <div className="h-10 w-10 bg-indigo-100 rounded-lg flex items-center

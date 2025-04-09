@@ -1,16 +1,16 @@
 
-import { Capacitor } from '@capacitor/core';
+import { isPlatform } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
 import { App } from '@capacitor/app';
 import { Device } from '@capacitor/device';
 import { Filesystem, Directory } from '@capacitor/filesystem';
-import { PushNotifications } from '@capacitor/push-notifications';
 import { toast } from '@/hooks/use-toast';
 
 /**
  * Utility to check if running on mobile device via Capacitor
  */
 export const isMobileApp = (): boolean => {
-  return Capacitor.isNativePlatform() && (Capacitor.getPlatform() === 'ios' || Capacitor.getPlatform() === 'android');
+  return isPlatform('ios') || isPlatform('android');
 };
 
 /**
@@ -134,7 +134,7 @@ export const getOfflineDocuments = async (): Promise<any[]> => {
           directory: Directory.Documents
         });
         
-        documents.push(JSON.parse(content.data as string));
+        documents.push(JSON.parse(content.data));
       }
     }
     
@@ -172,7 +172,6 @@ export const checkAppUpdate = async (): Promise<{hasUpdate: boolean, updateUrl?:
   
   try {
     const appInfo = await App.getInfo();
-    const deviceInfo = await Device.getInfo();
     
     // In a real app, you'd check against a server endpoint
     // This is a simplified example
@@ -184,7 +183,7 @@ export const checkAppUpdate = async (): Promise<{hasUpdate: boolean, updateUrl?:
       body: JSON.stringify({
         version: appInfo.version,
         build: appInfo.build,
-        platform: deviceInfo.platform
+        platform: (await Device.getInfo()).platform
       })
     });
     

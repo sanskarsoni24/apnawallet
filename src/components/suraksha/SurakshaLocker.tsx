@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Lock, Eye, EyeOff, Save, Plus, Trash2, FileText, Check, Upload, Download, KeyRound, Calendar } from 'lucide-react';
 import BlurContainer from '../ui/BlurContainer';
@@ -906,4 +907,169 @@ const SurakshaLocker = () => {
                                       );
                                       
                                       setSecureDocuments(updatedDocs);
-                                      saveSecure
+                                      saveSecureDocuments(updatedDocs);
+                                      setCurrentDocument(updatedDoc);
+                                    }
+                                  }}
+                                >
+                                  Remove
+                                </Button>
+                                <Button 
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => fileInputRef.current?.click()}
+                                >
+                                  Replace
+                                </Button>
+                              </div>
+                              <input 
+                                type="file" 
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                className="hidden" 
+                              />
+                            </div>
+                          ) : (
+                            <div className="text-center">
+                              <div className="flex flex-col items-center justify-center space-y-2">
+                                <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                  <Upload className="h-5 w-5 text-indigo-600" />
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-sm font-medium">Add a file</p>
+                                  <p className="text-xs text-muted-foreground">Drag and drop or click to browse</p>
+                                </div>
+                                <input 
+                                  type="file" 
+                                  ref={fileInputRef}
+                                  onChange={handleFileChange}
+                                  className="hidden" 
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => fileInputRef.current?.click()}
+                                >
+                                  Select File
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end gap-2 mt-auto">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setIsEditing(false);
+                            setNewTitle(currentDocument.title);
+                            setNewContent(currentDocument.content);
+                            setDueDate(currentDocument.dueDate || '');
+                            setCategory(currentDocument.category || '');
+                            setSelectedFile(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={saveEditedDocument}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                        >
+                          <Save className="h-4 w-4 mr-1" /> Save Changes
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="mb-6">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-xl font-semibold">{currentDocument.title}</h3>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={startEditingDocument}
+                          >
+                            Edit
+                          </Button>
+                        </div>
+                        <div className="flex items-center text-sm text-muted-foreground mt-1">
+                          <p>Updated {formatDate(currentDocument.updatedAt)}</p>
+                          <span className="mx-2">•</span>
+                          <p>Created {formatDate(currentDocument.createdAt)}</p>
+                        </div>
+                        
+                        {/* Document Metadata Section */}
+                        <div className="flex flex-wrap items-center gap-2 mt-3">
+                          {currentDocument.category && (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 rounded-md">
+                              <span className="text-xs font-medium">{currentDocument.category}</span>
+                            </div>
+                          )}
+                          {currentDocument.dueDate && (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-md">
+                              <Calendar className="h-3 w-3" />
+                              <span className="text-xs font-medium">Due: {formatDate(currentDocument.dueDate)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Document Content */}
+                      <div className="flex-1 overflow-y-auto mb-4">
+                        <p className="whitespace-pre-wrap">{currentDocument.content}</p>
+                      </div>
+                      
+                      {/* Attached File Section */}
+                      {currentDocument.fileURL && (
+                        <div className="border rounded-md p-4 mb-4 bg-slate-50 dark:bg-slate-800/50">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                              <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{currentDocument.fileName || "Attached File"}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {currentDocument.fileType?.toUpperCase()} File
+                                {currentDocument.fileSize && ` • ${(currentDocument.fileSize / 1024).toFixed(1)} KB`}
+                              </p>
+                            </div>
+                            <Button
+                              onClick={() => downloadFile(currentDocument)}
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                            >
+                              <Download className="h-4 w-4 mr-1" /> Download
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                  <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
+                    <FileText className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No Document Selected</h3>
+                  <p className="text-sm text-muted-foreground max-w-md">
+                    Select a document from the list to view it, or create a new one by clicking "New Document".
+                  </p>
+                  <Button 
+                    onClick={startCreatingDocument}
+                    className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Create New Document
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </BlurContainer>
+  );
+};
+
+export default SurakshaLocker;

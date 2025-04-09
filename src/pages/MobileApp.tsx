@@ -18,7 +18,7 @@ const MobileApp = () => {
   const isMobile = useMediaQuery('(max-width: 768px)');
   
   useEffect(() => {
-    // Set absolute download page URL for QR code
+    // Set direct APK download URL for QR code on Android
     const domain = window.location.origin;
     const downloadPage = `${domain}/download-app`;
     setDownloadUrl(downloadPage);
@@ -37,7 +37,7 @@ const MobileApp = () => {
   const handleDirectDownload = () => {
     if (isMobile) {
       // Navigate to download page on mobile
-      window.location.href = downloadUrl;
+      window.location.href = "/download-app";
       
       toast({
         title: "Redirecting to download page",
@@ -177,7 +177,7 @@ const MobileApp = () => {
                   {isMobile && (
                     <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg text-center">
                       <p className="text-indigo-700 dark:text-indigo-300 mb-3">
-                        Go to the download page for direct installation:
+                        Tap below for direct installation:
                       </p>
                       <Link 
                         to="/download-app" 

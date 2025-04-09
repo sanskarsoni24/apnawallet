@@ -26,7 +26,8 @@ const DownloadApp = () => {
     }
 
     // Set the direct download URL
-    setDownloadUrl(`${window.location.origin}/downloads/surakshitlocker.apk`);
+    const origin = window.location.origin;
+    setDownloadUrl(`${origin}/downloads/surakshitlocker.apk`);
   }, []);
 
   const handleDownload = () => {
@@ -34,22 +35,31 @@ const DownloadApp = () => {
     
     try {
       if (platform === "android") {
-        // Create an iframe to trigger download
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = downloadUrl;
-        document.body.appendChild(iframe);
+        // For Android, create and trigger a download link
+        const downloadLink = document.createElement('a');
+        downloadLink.href = downloadUrl;
+        downloadLink.download = 'surakshitlocker.apk';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
         
-        // Also try direct link method
-        window.location.href = downloadUrl;
+        // Fallback to direct navigation if the above doesn't work
+        setTimeout(() => {
+          window.location.href = downloadUrl;
+        }, 100);
         
         toast({
           title: "Download Started",
-          description: "The app is downloading now. Check your notifications and install when complete."
+          description: "The app is downloading now. Check your downloads and install when complete."
         });
       } else if (platform === "ios") {
         // For iOS, redirect to TestFlight
         window.location.href = "https://testflight.apple.com/join/surakshitlocker";
+        
+        toast({
+          title: "Redirecting to iOS Download",
+          description: "You'll be redirected to download the app via TestFlight."
+        });
       }
     } catch (error) {
       console.error("Download error:", error);
@@ -117,10 +127,11 @@ const DownloadApp = () => {
               <div className="flex flex-col gap-4">
                 <a 
                   href={downloadUrl}
+                  download="surakshitlocker.apk"
                   className="bg-indigo-600 text-white rounded-md px-4 py-3 inline-flex items-center justify-center gap-2 hover:bg-indigo-700"
                 >
                   <Download className="h-4 w-4" />
-                  Direct APK Download
+                  Download APK File
                 </a>
                 
                 <a 

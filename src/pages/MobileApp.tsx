@@ -19,6 +19,7 @@ const MobileApp = () => {
     // Get current domain for QR code
     const domain = window.location.origin;
     setAppLink(`${domain}/download-app`);
+    console.log("App download link:", `${domain}/download-app`);
   }, []);
 
   const handleCopyLink = () => {

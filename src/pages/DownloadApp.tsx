@@ -6,10 +6,12 @@ import { Download, Smartphone, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import BlurContainer from "@/components/ui/BlurContainer";
 import SurakshitLogo from "@/components/ui/SurakshitLogo";
+import { toast } from "@/hooks/use-toast";
 
 const DownloadApp = () => {
   const [platform, setPlatform] = useState<"android" | "ios" | "unknown">("unknown");
   const [appLink, setAppLink] = useState("");
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     // Detect the user's platform
@@ -17,16 +19,41 @@ const DownloadApp = () => {
     
     if (/android/i.test(userAgent)) {
       setPlatform("android");
-      // This would be the actual link to your Android APK file once uploaded
       setAppLink("/downloads/surakshitlocker.apk");
     } else if (/iPad|iPhone|iPod/.test(userAgent)) {
       setPlatform("ios");
-      // This would be the actual link to your iOS app store or TestFlight
       setAppLink("https://testflight.apple.com/join/surakshitlocker");
     } else {
       setPlatform("unknown");
     }
   }, []);
+
+  const handleDownload = () => {
+    setDownloading(true);
+    
+    if (platform === "android") {
+      // Create a link element and simulate a click to download the APK
+      const link = document.createElement('a');
+      link.href = appLink;
+      link.download = "surakshitlocker.apk";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Show a toast message after a delay to simulate download starting
+      setTimeout(() => {
+        toast({
+          title: "Download Started",
+          description: "The APK file is downloading to your device."
+        });
+        setDownloading(false);
+      }, 1000);
+    } else if (platform === "ios") {
+      // For iOS, we redirect to the TestFlight or App Store link
+      window.location.href = appLink;
+      setDownloading(false);
+    }
+  };
 
   const renderDownloadButton = () => {
     if (platform === "unknown") {
@@ -55,13 +82,16 @@ const DownloadApp = () => {
         <Button 
           size="lg" 
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-7 h-auto text-lg font-semibold"
-          onClick={() => window.location.href = appLink}
+          onClick={handleDownload}
+          disabled={downloading}
         >
           <Download className="mr-2 h-5 w-5" />
-          Download for {platform === "android" ? "Android" : "iOS"}
+          {downloading ? "Starting Download..." : `Download for ${platform === "android" ? "Android" : "iOS"}`}
         </Button>
         <p className="text-sm text-muted-foreground mt-4">
-          This will download the SurakshitLocker app to your device.
+          {platform === "android" 
+            ? "This will download the SurakshitLocker APK to your device."
+            : "This will redirect you to TestFlight to download the app."}
         </p>
       </div>
     );

@@ -16,6 +16,20 @@ const config: CapacitorConfig = {
       showSpinner: true,
       spinnerColor: "#5f5cff"
     }
+  },
+  android: {
+    buildOptions: {
+      keystorePath: null,
+      keystoreAlias: null,
+      keystorePassword: null,
+      keystoreAliasPassword: null,
+      releaseType: "APK"
+    }
+  },
+  ios: {
+    contentInset: "always",
+    scheme: "SurakshitLocker",
+    backgroundColor: "#ffffff"
   }
 };
 

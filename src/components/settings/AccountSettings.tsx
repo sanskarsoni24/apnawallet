@@ -1,10 +1,21 @@
 
 import React from "react";
-import { User, Save, Mail, Shield } from "lucide-react";
+import { User, Save, Mail, Shield, KeyRound } from "lucide-react";
 import BlurContainer from "@/components/ui/BlurContainer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useUser } from "@/contexts/UserContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { toast } from "@/hooks/use-toast";
 
 interface AccountSettingsProps {
   localDisplayName: string;
@@ -21,6 +32,54 @@ const AccountSettings = ({
   setLocalEmail, 
   saveAccountSettings 
 }: AccountSettingsProps) => {
+  const { email } = useUser();
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = React.useState(false);
+  const [currentPassword, setCurrentPassword] = React.useState("");
+  const [newPassword, setNewPassword] = React.useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = React.useState("");
+  
+  const handlePasswordChange = () => {
+    // Basic validation
+    if (!currentPassword) {
+      toast({
+        title: "Error",
+        description: "Please enter your current password",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (newPassword !== confirmNewPassword) {
+      toast({
+        title: "Error",
+        description: "New passwords don't match",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (newPassword.length < 8) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 8 characters long",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // In a real app, you would send this to your backend
+    toast({
+      title: "Success",
+      description: "Your password has been updated successfully"
+    });
+    
+    // Reset form and close dialog
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmNewPassword("");
+    setIsChangePasswordDialogOpen(false);
+  };
+  
   return (
     <BlurContainer className="p-8 animate-fade-in bg-gradient-to-br from-white to-slate-50 dark:from-slate-900/80 dark:to-slate-800/80" style={{ animationDelay: "0.1s" }}>
       <div className="mb-6 flex items-center gap-3">
@@ -91,13 +150,86 @@ const AccountSettings = ({
           
           <div className="space-y-4">
             <div>
-              <Button 
-                variant="outline"
-                size="sm"
-                className="border-indigo-200 hover:border-indigo-300 dark:border-indigo-800 dark:hover:border-indigo-700"
-              >
-                Change Password
-              </Button>
+              <Dialog open={isChangePasswordDialogOpen} onOpenChange={setIsChangePasswordDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="border-indigo-200 hover:border-indigo-300 dark:border-indigo-800 dark:hover:border-indigo-700 flex items-center gap-2"
+                  >
+                    <KeyRound className="h-3.5 w-3.5" />
+                    Change Password
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <KeyRound className="h-5 w-5 text-indigo-500" />
+                      Change Password
+                    </DialogTitle>
+                    <DialogDescription>
+                      Update your account password to maintain security
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <label htmlFor="current-password" className="text-sm font-medium">
+                        Current Password
+                      </label>
+                      <Input 
+                        id="current-password" 
+                        type="password" 
+                        placeholder="Enter current password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <label htmlFor="new-password" className="text-sm font-medium">
+                        New Password
+                      </label>
+                      <Input 
+                        id="new-password" 
+                        type="password"
+                        placeholder="Enter new password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <label htmlFor="confirm-password" className="text-sm font-medium">
+                        Confirm New Password
+                      </label>
+                      <Input 
+                        id="confirm-password" 
+                        type="password"
+                        placeholder="Confirm new password"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setCurrentPassword("");
+                        setNewPassword("");
+                        setConfirmNewPassword("");
+                        setIsChangePasswordDialogOpen(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handlePasswordChange}
+                      className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+                    >
+                      Update Password
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
             
             <Separator className="my-4 dark:bg-slate-700" />

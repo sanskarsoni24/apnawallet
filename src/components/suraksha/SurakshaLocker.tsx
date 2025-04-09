@@ -1,12 +1,21 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Lock, Eye, EyeOff, Save, Plus, Trash2, FileText, Check, Upload, Download } from 'lucide-react';
+import { Lock, Eye, EyeOff, Save, Plus, Trash2, FileText, Check, Upload, Download, KeyRound } from 'lucide-react';
 import BlurContainer from '../ui/BlurContainer';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { useUser } from '@/contexts/UserContext';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from '../ui/label';
 
 interface SecureDocument {
   id: string;
@@ -35,6 +44,14 @@ const SurakshaLocker = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Password change dialog states
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   
   // Load stored password and documents from localStorage
   useEffect(() => {
@@ -128,6 +145,56 @@ const SurakshaLocker = () => {
     // Reset password fields
     setPassword('');
     setConfirmPassword('');
+  };
+  
+  // Handle password change
+  const handleChangePassword = () => {
+    // Validate current password
+    if (currentPassword !== storedPassword) {
+      toast({
+        title: 'Incorrect Password',
+        description: 'The current password you entered is incorrect.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validate new password
+    if (newPassword.length < 6) {
+      toast({
+        title: 'Password Too Short',
+        description: 'New password must be at least 6 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validate password confirmation
+    if (newPassword !== confirmNewPassword) {
+      toast({
+        title: 'Password Mismatch',
+        description: 'New password and confirmation do not match.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Update password in localStorage
+    localStorage.setItem(`suraksha_password_${email}`, newPassword);
+    setStoredPassword(newPassword);
+    
+    // Reset form fields
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmNewPassword('');
+    
+    // Close dialog
+    setIsChangePasswordOpen(false);
+    
+    toast({
+      title: 'Password Updated',
+      description: 'Your Suraksha Locker password has been changed successfully.',
+    });
   };
   
   // Lock the secure locker
@@ -405,6 +472,101 @@ const SurakshaLocker = () => {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-base font-medium">Your Secure Documents</h3>
             <div className="flex gap-2">
+              <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    <KeyRound className="h-3.5 w-3.5 mr-1" /> Change Password
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <KeyRound className="h-5 w-5 text-indigo-600" /> Change Locker Password
+                    </DialogTitle>
+                    <DialogDescription>
+                      Update the password that protects your Suraksha Locker
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="current-password">Current Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="current-password"
+                          type={showCurrentPassword ? "text" : "password"}
+                          placeholder="Enter your current password"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        >
+                          {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password">New Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="new-password"
+                          type={showNewPassword ? "text" : "password"}
+                          placeholder="Enter your new password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        >
+                          {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                      <Input
+                        id="confirm-new-password"
+                        type={showNewPassword ? "text" : "password"}
+                        placeholder="Confirm your new password"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setCurrentPassword('');
+                        setNewPassword('');
+                        setConfirmNewPassword('');
+                        setIsChangePasswordOpen(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleChangePassword}
+                      className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+                    >
+                      Update Password
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              
               <Button
                 variant="outline"
                 size="sm"
@@ -759,43 +921,4 @@ const SurakshaLocker = () => {
                               <Button
                                 size="sm"
                                 onClick={() => downloadFile(currentDocument)}
-                                className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white"
-                              >
-                                <Download className="h-3.5 w-3.5" /> Download
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="mt-auto text-xs text-muted-foreground">
-                        <p>Last updated: {formatDate(currentDocument.updatedAt)}</p>
-                        <p>Created: {formatDate(currentDocument.createdAt)}</p>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center p-4">
-                  <FileText className="h-16 w-16 text-muted-foreground/30 mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Select or Create a Document</h3>
-                  <p className="text-muted-foreground max-w-md">
-                    Select an existing document from the list or create a new one to securely store your personal information.
-                  </p>
-                  <Button
-                    onClick={startCreatingDocument}
-                    className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white"
-                  >
-                    <Plus className="h-4 w-4 mr-1" /> Create New Document
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </BlurContainer>
-  );
-};
-
-export default SurakshaLocker;
+                                className="flex items

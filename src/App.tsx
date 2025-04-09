@@ -18,6 +18,7 @@ import { toast } from "@/hooks/use-toast";
 import { checkForDueDocuments, createNotification } from "./services/NotificationService";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import StripeCheckout from "./pages/StripeCheckout";
+import UserProfile from "./pages/UserProfile";
 
 const queryClient = new QueryClient();
 
@@ -116,7 +117,9 @@ const App = () => {
             <NotificationCheck />
             <BrowserRouter>
               <Routes>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<Index defaultTab="dashboard" />} />
+                <Route path="/locker" element={<Index defaultTab="locker" />} />
                 <Route path="/sign-in" element={<SignIn />} />
                 <Route path="/sign-up" element={<SignUp />} />
                 <Route 
@@ -137,6 +140,14 @@ const App = () => {
                 />
                 <Route path="/pricing" element={<Monetization />} />
                 <Route path="/checkout" element={<StripeCheckout />} />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <UserProfile />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

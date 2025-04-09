@@ -19,11 +19,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     return true; // Keep message channel open for async response
   }
+  
+  if (message.action === "navigateToProfile") {
+    // Redirect to profile page
+    window.location.href = "/profile";
+    sendResponse({success: true});
+    return true;
+  }
 });
 
 // Inform extension when document data changes in the web app
 window.addEventListener("storage", function(e) {
-  if (e.key === "documents" || e.key === "userSettings" || e.key === "backup_history") {
+  if (e.key === "documents" || e.key === "userSettings" || e.key === "backup_history" || e.key === "user_profile") {
     chrome.runtime.sendMessage({
       action: "webAppDataChanged",
       key: e.key,
@@ -36,4 +43,15 @@ window.addEventListener("storage", function(e) {
 chrome.runtime.sendMessage({
   action: "contentScriptLoaded",
   url: window.location.href
+});
+
+// Add event listener for test user profile click
+document.addEventListener('DOMContentLoaded', () => {
+  // This will be handled by the router but adding extra handler for extension context
+  const profileElements = document.querySelectorAll('[data-profile-link="true"]');
+  profileElements.forEach(el => {
+    el.addEventListener('click', () => {
+      window.location.href = "/profile";
+    });
+  });
 });

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Container from "@/components/layout/Container";
 import Dashboard from "@/components/dashboard/Dashboard";
 import LandingPage from "@/components/landing/LandingPage";
@@ -11,9 +11,20 @@ import { Button } from "@/components/ui/button";
 import SurakshitLogo from "@/components/ui/SurakshitLogo";
 import BlurContainer from "@/components/ui/BlurContainer";
 
-const Index = () => {
+interface IndexProps {
+  defaultTab?: "dashboard" | "locker";
+}
+
+const Index = ({ defaultTab = "locker" }: IndexProps) => {
   const { isLoggedIn } = useUser();
-  const [activeTab, setActiveTab] = useState("locker");
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  
+  // Set the active tab when defaultTab changes
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
   
   if (!isLoggedIn) {
     return (
@@ -68,16 +79,16 @@ const Index = () => {
       
       <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto mb-8 bg-slate-100 dark:bg-slate-800/70 rounded-lg overflow-hidden">
-          <TabsTrigger value="locker" className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white py-3 rounded-none">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-indigo-600 group-data-[state=active]:text-white" />
-              <span>Security Vault</span>
-            </div>
-          </TabsTrigger>
           <TabsTrigger value="dashboard" className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white py-3 rounded-none">
             <div className="flex items-center gap-2">
               <LayoutDashboard className="h-4 w-4 text-indigo-600 group-data-[state=active]:text-white" />
               <span>Dashboard</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="locker" className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white py-3 rounded-none">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-indigo-600 group-data-[state=active]:text-white" />
+              <span>Security Vault</span>
             </div>
           </TabsTrigger>
         </TabsList>

@@ -1,216 +1,312 @@
-
 import React, { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useUser } from "@/contexts/UserContext";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
-import SurakshitLogo from "@/components/ui/SurakshitLogo";
-import { Menu, X, Settings, LayoutDashboard, FileText, Shield, LogOut, Sun, Moon } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ModeToggle } from "@/components/ui/mode-toggle";
+import { useUser } from "@/contexts/UserContext";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  FileText,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  Home,
+  Shield,
+  CreditCard,
+  User,
+} from "lucide-react";
+import SurakshitLogo from "../ui/SurakshitLogo";
 
 const Header = () => {
-  const { isLoggedIn, logout, displayName } = useUser();
-  const navigate = useNavigate();
+  const { isLoggedIn, logout, displayName, email } = useUser();
   const location = useLocation();
-  const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isDark, setIsDark] = useState(localStorage.getItem("theme") === "dark");
 
-  const toggleTheme = () => {
-    const newTheme = isDark ? "light" : "dark";
-    setIsDark(!isDark);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   const handleLogout = () => {
     logout();
-    navigate("/");
-    setMobileMenuOpen(false);
+    closeMobileMenu();
   };
 
-  const navLinks = [
-    { name: "Dashboard", path: "/", icon: <LayoutDashboard className="h-4 w-4" /> },
-    { name: "Documents", path: "/documents", icon: <FileText className="h-4 w-4" /> },
-    { name: "Settings", path: "/settings", icon: <Settings className="h-4 w-4" /> },
-  ];
+  // Get initial letters for avatar
+  const getInitials = () => {
+    if (displayName) {
+      return displayName
+        .split(" ")
+        .map((name) => name[0])
+        .join("")
+        .toUpperCase()
+        .substring(0, 2);
+    }
+    return email ? email[0].toUpperCase() : "U";
+  };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200/50 dark:border-slate-700/50 shadow-sm">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex-shrink-0 flex items-center">
-            <SurakshitLogo variant="full" />
+    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
+            <SurakshitLogo />
+            <span className="hidden font-bold sm:inline-block">
+              SurakshitLocker
+            </span>
           </Link>
+        </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
-            {isLoggedIn && (
-              <div className="flex items-center space-x-1">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.path}
-                    to={link.path}
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex md:items-center md:gap-4">
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <Link to="/dashboard">
+                  <NavigationMenuLink
                     className={cn(
-                      "px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5",
-                      location.pathname === link.path
-                        ? "bg-primary text-white"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      navigationMenuTriggerStyle(),
+                      location.pathname === "/dashboard" && "bg-accent"
                     )}
                   >
-                    {link.icon}
-                    {link.name}
+                    <Home className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/locker">
+                  <NavigationMenuLink
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      location.pathname === "/locker" && "bg-accent"
+                    )}
+                  >
+                    <Shield className="mr-2 h-4 w-4" />
+                    Secure Vault
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/documents">
+                  <NavigationMenuLink
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      location.pathname === "/documents" && "bg-accent"
+                    )}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Documents
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/pricing">
+                  <NavigationMenuLink
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      location.pathname === "/pricing" && "bg-accent"
+                    )}
+                  >
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Pricing
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+
+          <ModeToggle />
+
+          {isLoggedIn ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="relative h-8 w-8 rounded-full"
+                  data-profile-link="true"
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="" alt={displayName || email} />
+                    <AvatarFallback>{getInitials()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {displayName || "Test User"}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {email || "user@example.com"}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
                   </Link>
-                ))}
-              </div>
-            )}
-          </nav>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" asChild>
+                <Link to="/sign-in">Sign In</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/sign-up">Sign Up</Link>
+              </Button>
+            </div>
+          )}
+        </div>
 
-          {/* Right side items */}
-          <div className="hidden md:flex items-center space-x-4">
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="rounded-full"
-              aria-label="Toggle theme"
-            >
-              {isDark ? (
-                <Sun className="h-5 w-5 text-amber-500" />
-              ) : (
-                <Moon className="h-5 w-5 text-indigo-700" />
-              )}
-            </Button>
-
-            {isLoggedIn ? (
-              <div className="flex items-center space-x-4">
-                {/* User Status */}
-                <div className="hidden lg:flex items-center gap-2 text-sm px-3 py-1 rounded-full bg-secondary dark:bg-slate-800">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{displayName || "User"}</span>
-                </div>
-
-                {/* Logout button */}
-                <Button variant="outline" onClick={handleLogout} className="gap-1.5">
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </Button>
-              </div>
+        {/* Mobile Menu Button */}
+        <div className="flex items-center gap-2 md:hidden">
+          <ModeToggle />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={toggleMobileMenu}
+          >
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6" />
             ) : (
-              <div className="space-x-2">
-                <Button variant="outline" asChild>
-                  <Link to="/sign-in">Sign In</Link>
-                </Button>
-                <Button asChild>
-                  <Link to="/sign-up">Sign Up</Link>
-                </Button>
-              </div>
+              <Menu className="h-6 w-6" />
             )}
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="flex md:hidden">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="rounded-full"
-            >
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </Button>
-          </div>
+          </Button>
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-4 py-3 space-y-3 bg-white dark:bg-slate-900 shadow-lg border-t border-gray-200 dark:border-slate-700">
-            {isLoggedIn && (
-              <div className="space-y-2">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium",
-                      location.pathname === link.path
-                        ? "bg-primary/10 text-primary dark:bg-primary/20"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                    )}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.icon}
-                    {link.name}
-                  </Link>
-                ))}
+        <div className="fixed inset-0 top-16 z-50 bg-background md:hidden">
+          <div className="container py-4">
+            <nav className="flex flex-col space-y-4">
+              <Link
+                to="/dashboard"
+                className="flex items-center px-2 py-3 text-lg"
+                onClick={closeMobileMenu}
+              >
+                <Home className="mr-2 h-5 w-5" />
+                Dashboard
+              </Link>
+              <Link
+                to="/locker"
+                className="flex items-center px-2 py-3 text-lg"
+                onClick={closeMobileMenu}
+              >
+                <Shield className="mr-2 h-5 w-5" />
+                Secure Vault
+              </Link>
+              <Link
+                to="/documents"
+                className="flex items-center px-2 py-3 text-lg"
+                onClick={closeMobileMenu}
+              >
+                <FileText className="mr-2 h-5 w-5" />
+                Documents
+              </Link>
+              <Link
+                to="/pricing"
+                className="flex items-center px-2 py-3 text-lg"
+                onClick={closeMobileMenu}
+              >
+                <CreditCard className="mr-2 h-5 w-5" />
+                Pricing
+              </Link>
 
-                <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                      <span className="text-sm">{displayName || "User"}</span>
+              <div className="border-t pt-4">
+                {isLoggedIn ? (
+                  <>
+                    <div className="mb-4 flex items-center gap-3 px-2">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src="" alt={displayName || email} />
+                        <AvatarFallback>{getInitials()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{displayName || "Test User"}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {email || "user@example.com"}
+                        </p>
+                      </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={toggleTheme}
-                      className="rounded-full"
+                    <Link
+                      to="/profile"
+                      className="flex items-center px-2 py-3 text-lg"
+                      onClick={closeMobileMenu}
                     >
-                      {isDark ? (
-                        <Sun className="h-4 w-4 text-amber-500" />
-                      ) : (
-                        <Moon className="h-4 w-4 text-indigo-700" />
-                      )}
+                      <User className="mr-2 h-5 w-5" />
+                      Profile
+                    </Link>
+                    <Link
+                      to="/settings"
+                      className="flex items-center px-2 py-3 text-lg"
+                      onClick={closeMobileMenu}
+                    >
+                      <Settings className="mr-2 h-5 w-5" />
+                      Settings
+                    </Link>
+                    <button
+                      className="flex w-full items-center px-2 py-3 text-lg text-red-600"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="mr-2 h-5 w-5" />
+                      Log out
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <Button asChild size="lg" variant="outline">
+                      <Link to="/sign-in" onClick={closeMobileMenu}>
+                        Sign In
+                      </Link>
+                    </Button>
+                    <Button asChild size="lg">
+                      <Link to="/sign-up" onClick={closeMobileMenu}>
+                        Sign Up
+                      </Link>
                     </Button>
                   </div>
-
-                  <Button 
-                    variant="outline" 
-                    onClick={handleLogout} 
-                    className="w-full justify-center mt-2"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
-                  </Button>
-                </div>
+                )}
               </div>
-            )}
-            
-            {!isLoggedIn && (
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Switch theme</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleTheme}
-                    className="rounded-full"
-                  >
-                    {isDark ? (
-                      <Sun className="h-4 w-4 text-amber-500" />
-                    ) : (
-                      <Moon className="h-4 w-4 text-indigo-700" />
-                    )}
-                  </Button>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2 pt-2">
-                  <Button variant="outline" asChild className="w-full justify-center">
-                    <Link to="/sign-in" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
-                  </Button>
-                  <Button asChild className="w-full justify-center">
-                    <Link to="/sign-up" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
-                  </Button>
-                </div>
-              </div>
-            )}
+            </nav>
           </div>
         </div>
       )}

@@ -1,16 +1,16 @@
 
-import { isPlatform } from '@capacitor/core';
-import { PushNotifications } from '@capacitor/push-notifications';
+import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Device } from '@capacitor/device';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { PushNotifications } from '@capacitor/push-notifications';
 import { toast } from '@/hooks/use-toast';
 
 /**
  * Utility to check if running on mobile device via Capacitor
  */
 export const isMobileApp = (): boolean => {
-  return isPlatform('ios') || isPlatform('android');
+  return Capacitor.isNativePlatform() && (Capacitor.getPlatform() === 'ios' || Capacitor.getPlatform() === 'android');
 };
 
 /**

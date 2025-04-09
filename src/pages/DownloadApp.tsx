@@ -33,16 +33,19 @@ const DownloadApp = () => {
     
     if (platform === "android") {
       try {
-        // Create an XHR request to fetch the file with proper binary handling
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', appLink, true);
-        xhr.responseType = 'blob';
-        
-        xhr.onload = function() {
-          if (this.status === 200) {
-            // Create a blob URL from the response
-            const blob = new Blob([this.response], { type: 'application/vnd.android.package-archive' });
-            const url = window.URL.createObjectURL(blob);
+        // For direct file download (better approach for binary files)
+        fetch(appLink)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.blob();
+          })
+          .then(blob => {
+            // Create a temporary URL for the blob
+            const url = window.URL.createObjectURL(
+              new Blob([blob], { type: 'application/vnd.android.package-archive' })
+            );
             
             // Create a link element and trigger download
             const link = document.createElement('a');
@@ -50,10 +53,10 @@ const DownloadApp = () => {
             link.download = "surakshitlocker.apk";
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
             
-            // Clean up the blob URL
+            // Clean up
             setTimeout(() => {
+              document.body.removeChild(link);
               window.URL.revokeObjectURL(url);
             }, 100);
             
@@ -61,26 +64,18 @@ const DownloadApp = () => {
               title: "Download Started",
               description: "The APK file is downloading to your device."
             });
-          } else {
+          })
+          .catch(error => {
+            console.error("Download failed:", error);
             toast({
               title: "Download Failed",
               description: "There was an error downloading the APK. Please try again.",
               variant: "destructive"
             });
-          }
-          setDownloading(false);
-        };
-        
-        xhr.onerror = function() {
-          toast({
-            title: "Download Failed",
-            description: "There was a network error. Please try again.",
-            variant: "destructive"
+          })
+          .finally(() => {
+            setDownloading(false);
           });
-          setDownloading(false);
-        };
-        
-        xhr.send();
       } catch (error) {
         console.error("Download error:", error);
         toast({

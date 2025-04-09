@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMediaQuery } from "@/hooks/use-mobile";
-import { Download, Smartphone, QrCode, Info } from "lucide-react";
+import { Download, Smartphone, Info } from "lucide-react";
 import BlurContainer from "@/components/ui/BlurContainer";
 import { toast } from "@/hooks/use-toast";
+import SurakshitLogo from "@/components/ui/SurakshitLogo";
 
 const MobileApp = () => {
   const [appLink, setAppLink] = useState("");
@@ -53,6 +54,7 @@ const MobileApp = () => {
       <div className="max-w-4xl mx-auto">
         <BlurContainer variant="elevated" className="p-8 mb-8">
           <div className="flex flex-col items-center text-center mb-8">
+            <SurakshitLogo size="lg" className="mb-4" />
             <div className="h-16 w-16 bg-indigo-100 dark:bg-indigo-900/50 rounded-full flex items-center justify-center mb-4">
               <Smartphone className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
             </div>

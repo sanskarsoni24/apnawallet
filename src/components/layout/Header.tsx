@@ -1,19 +1,8 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ModeToggle } from "@/components/ui/mode-toggle";
+import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,48 +12,78 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  FileText,
-  Settings,
-  LogOut,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+import {
   Menu,
   X,
+  User,
+  LogOut,
+  Settings,
+  FileText,
   Home,
   Shield,
   CreditCard,
-  User,
+  Smartphone,
 } from "lucide-react";
 import SurakshitLogo from "../ui/SurakshitLogo";
 
 const Header = () => {
-  const { isLoggedIn, logout, displayName, email } = useUser();
+  const { isLoggedIn, displayName, logout } = useUser();
   const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
+  const closeMenu = () => {
+    setIsMenuOpen(false);
   };
 
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false);
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
   };
 
-  const handleLogout = () => {
-    logout();
-    closeMobileMenu();
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
-  // Get initial letters for avatar
-  const getInitials = () => {
-    if (displayName) {
-      return displayName
-        .split(" ")
-        .map((name) => name[0])
-        .join("")
-        .toUpperCase()
-        .substring(0, 2);
-    }
-    return email ? email[0].toUpperCase() : "U";
-  };
+  const navLinks = [
+    {
+      name: "Dashboard",
+      path: "/dashboard",
+      icon: <Home className="h-4 w-4 mr-2" />,
+    },
+    {
+      name: "Documents",
+      path: "/documents",
+      icon: <FileText className="h-4 w-4 mr-2" />,
+    },
+    {
+      name: "Security Vault",
+      path: "/locker",
+      icon: <Shield className="h-4 w-4 mr-2" />,
+    },
+    {
+      name: "Pricing",
+      path: "/pricing",
+      icon: <CreditCard className="h-4 w-4 mr-2" />,
+    },
+    {
+      name: "Mobile App",
+      path: "/mobile-app",
+      icon: <Smartphone className="h-4 w-4 mr-2" />,
+    },
+  ];
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -72,71 +91,33 @@ const Header = () => {
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
             <SurakshitLogo />
-            <span className="hidden font-bold sm:inline-block">
+            <span className="font-bold text-xl hidden sm:inline-block">
               SurakshitLocker
             </span>
           </Link>
         </div>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex md:items-center md:gap-4">
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <Link to="/dashboard">
-                  <NavigationMenuLink
-                    className={cn(
-                      navigationMenuTriggerStyle(),
-                      location.pathname === "/dashboard" && "bg-accent"
-                    )}
-                  >
-                    <Home className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/locker">
-                  <NavigationMenuLink
-                    className={cn(
-                      navigationMenuTriggerStyle(),
-                      location.pathname === "/locker" && "bg-accent"
-                    )}
-                  >
-                    <Shield className="mr-2 h-4 w-4" />
-                    Secure Vault
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/documents">
-                  <NavigationMenuLink
-                    className={cn(
-                      navigationMenuTriggerStyle(),
-                      location.pathname === "/documents" && "bg-accent"
-                    )}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    Documents
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/pricing">
-                  <NavigationMenuLink
-                    className={cn(
-                      navigationMenuTriggerStyle(),
-                      location.pathname === "/pricing" && "bg-accent"
-                    )}
-                  >
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Pricing
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
+        {!isMobile && (
+          <nav className="hidden md:flex items-center gap-6">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={cn(
+                  "flex items-center text-sm font-medium transition-colors hover:text-primary",
+                  isActive(link.path)
+                    ? "text-primary"
+                    : "text-muted-foreground"
+                )}
+              >
+                {link.name}
+              </Link>
+            ))}
+          </nav>
+        )}
 
+        <div className="flex items-center gap-2">
           <ModeToggle />
 
           {isLoggedIn ? (
@@ -145,11 +126,10 @@ const Header = () => {
                 <Button
                   variant="ghost"
                   className="relative h-8 w-8 rounded-full"
-                  data-profile-link="true"
                 >
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="" alt={displayName || email} />
-                    <AvatarFallback>{getInitials()}</AvatarFallback>
+                    <AvatarImage src="/avatars/01.png" alt={displayName} />
+                    <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -157,28 +137,31 @@ const Header = () => {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {displayName || "Test User"}
+                      {displayName}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {email || "user@example.com"}
+                      User Account
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/profile" className="cursor-pointer">
+                  <Link to="/profile" className="flex cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/settings" className="cursor-pointer">
+                  <Link to="/settings" className="flex cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => logout()}
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
@@ -194,122 +177,60 @@ const Header = () => {
               </Button>
             </div>
           )}
-        </div>
 
-        {/* Mobile Menu Button */}
-        <div className="flex items-center gap-2 md:hidden">
-          <ModeToggle />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={toggleMobileMenu}
-          >
-            {mobileMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
-          </Button>
+          {/* Mobile Menu */}
+          {isMobile && (
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden"
+                  aria-label="Toggle Menu"
+                >
+                  {isMenuOpen ? (
+                    <X className="h-5 w-5" />
+                  ) : (
+                    <Menu className="h-5 w-5" />
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left">
+                <SheetHeader>
+                  <SheetTitle>
+                    <Link
+                      to="/"
+                      className="flex items-center gap-2"
+                      onClick={closeMenu}
+                    >
+                      <SurakshitLogo />
+                      <span className="font-bold text-xl">SurakshitLocker</span>
+                    </Link>
+                  </SheetTitle>
+                </SheetHeader>
+                <nav className="flex flex-col gap-4 mt-8">
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      className={cn(
+                        "flex items-center px-4 py-2 text-sm font-medium rounded-md",
+                        isActive(link.path)
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:bg-muted"
+                      )}
+                      onClick={closeMenu}
+                    >
+                      {link.icon}
+                      {link.name}
+                    </Link>
+                  ))}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          )}
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 top-16 z-50 bg-background md:hidden">
-          <div className="container py-4">
-            <nav className="flex flex-col space-y-4">
-              <Link
-                to="/dashboard"
-                className="flex items-center px-2 py-3 text-lg"
-                onClick={closeMobileMenu}
-              >
-                <Home className="mr-2 h-5 w-5" />
-                Dashboard
-              </Link>
-              <Link
-                to="/locker"
-                className="flex items-center px-2 py-3 text-lg"
-                onClick={closeMobileMenu}
-              >
-                <Shield className="mr-2 h-5 w-5" />
-                Secure Vault
-              </Link>
-              <Link
-                to="/documents"
-                className="flex items-center px-2 py-3 text-lg"
-                onClick={closeMobileMenu}
-              >
-                <FileText className="mr-2 h-5 w-5" />
-                Documents
-              </Link>
-              <Link
-                to="/pricing"
-                className="flex items-center px-2 py-3 text-lg"
-                onClick={closeMobileMenu}
-              >
-                <CreditCard className="mr-2 h-5 w-5" />
-                Pricing
-              </Link>
-
-              <div className="border-t pt-4">
-                {isLoggedIn ? (
-                  <>
-                    <div className="mb-4 flex items-center gap-3 px-2">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src="" alt={displayName || email} />
-                        <AvatarFallback>{getInitials()}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{displayName || "Test User"}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {email || "user@example.com"}
-                        </p>
-                      </div>
-                    </div>
-                    <Link
-                      to="/profile"
-                      className="flex items-center px-2 py-3 text-lg"
-                      onClick={closeMobileMenu}
-                    >
-                      <User className="mr-2 h-5 w-5" />
-                      Profile
-                    </Link>
-                    <Link
-                      to="/settings"
-                      className="flex items-center px-2 py-3 text-lg"
-                      onClick={closeMobileMenu}
-                    >
-                      <Settings className="mr-2 h-5 w-5" />
-                      Settings
-                    </Link>
-                    <button
-                      className="flex w-full items-center px-2 py-3 text-lg text-red-600"
-                      onClick={handleLogout}
-                    >
-                      <LogOut className="mr-2 h-5 w-5" />
-                      Log out
-                    </button>
-                  </>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    <Button asChild size="lg" variant="outline">
-                      <Link to="/sign-in" onClick={closeMobileMenu}>
-                        Sign In
-                      </Link>
-                    </Button>
-                    <Button asChild size="lg">
-                      <Link to="/sign-up" onClick={closeMobileMenu}>
-                        Sign Up
-                      </Link>
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </nav>
-          </div>
-        </div>
-      )}
     </header>
   );
 };

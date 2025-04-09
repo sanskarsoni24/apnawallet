@@ -1,13 +1,16 @@
-
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { defineCustomElements } from '@ionic/pwa-elements/loader';
 
 // Initialize the app
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Failed to find the root element");
 
 createRoot(rootElement).render(<App />);
+
+// Initialize PWA elements for Capacitor
+defineCustomElements(window);
 
 // Display a message in the console
 console.log(
@@ -32,6 +35,15 @@ if (isMobileDevice) {
   console.log("Desktop device detected. Optimizing experience...");
   localStorage.setItem("device_type", "desktop");
 }
+
+// Add information about the mobile app availability
+console.log(
+  "%cMobile App Available",
+  "color: #5f5cff; font-size: 18px; font-weight: bold;"
+);
+console.log(
+  "Scan the QR code from the Mobile App page to download the app."
+);
 
 // Set up automatic redirection to dashboard for returning users
 const isReturningUser = localStorage.getItem("returning_user") === "true";

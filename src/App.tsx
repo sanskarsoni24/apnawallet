@@ -9,6 +9,8 @@ import Index from "./pages/Index";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import Monetization from "./pages/Monetization";
+import MobileApp from "./pages/MobileApp";
+import DownloadApp from "./pages/DownloadApp";
 import NotFound from "./pages/NotFound";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
@@ -122,6 +124,8 @@ const App = () => {
                 <Route path="/locker" element={<Index defaultTab="locker" />} />
                 <Route path="/sign-in" element={<SignIn />} />
                 <Route path="/sign-up" element={<SignUp />} />
+                <Route path="/mobile-app" element={<MobileApp />} />
+                <Route path="/download-app" element={<DownloadApp />} />
                 <Route 
                   path="/documents" 
                   element={

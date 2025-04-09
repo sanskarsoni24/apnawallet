@@ -7,12 +7,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const userSettings = JSON.parse(localStorage.getItem("userSettings") || "{}");
       const userEmail = localStorage.getItem("userEmail") || "";
       const backupHistory = JSON.parse(localStorage.getItem("backup_history") || "[]");
+      const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
       
       sendResponse({
         documents,
         userSettings,
         userEmail,
         backupHistory,
+        isLoggedIn,
         success: true
       });
     } catch (e) {
@@ -45,6 +47,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           localStorage.setItem("extension_data", JSON.stringify(message.data.customData));
         }
         
+        // Handle user profile data
+        if (message.data.userProfile) {
+          localStorage.setItem("user_profile", JSON.stringify(message.data.userProfile));
+          if (message.data.userProfile.email) {
+            localStorage.setItem("userEmail", message.data.userProfile.email);
+          }
+        }
+        
+        // Sync login state
+        if (message.data.isLoggedIn !== undefined) {
+          localStorage.setItem("isLoggedIn", message.data.isLoggedIn);
+        }
+        
+        // Notify the page that data was updated
+        const event = new CustomEvent('DocuNinjaDataSync', {
+          detail: { source: 'extension', timestamp: new Date().toISOString() }
+        });
+        document.dispatchEvent(event);
+        
         sendResponse({success: true, message: "Data synced successfully"});
       }
     } catch (e) {
@@ -58,10 +79,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     try {
       const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
       const userSettings = JSON.parse(localStorage.getItem("userSettings") || "{}");
+      const userEmail = localStorage.getItem("userEmail") || "";
       
       sendResponse({
         isLoggedIn,
         userSettings,
+        userEmail,
         success: true
       });
     } catch (e) {
@@ -73,7 +96,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Inform extension when document data changes in the web app
 window.addEventListener("storage", function(e) {
-  if (e.key === "documents" || e.key === "userSettings" || e.key === "backup_history" || e.key === "user_profile") {
+  if (e.key === "documents" || e.key === "userSettings" || e.key === "backup_history" || e.key === "user_profile" || e.key === "isLoggedIn" || e.key === "userEmail") {
     chrome.runtime.sendMessage({
       action: "webAppDataChanged",
       key: e.key,
@@ -86,7 +109,8 @@ window.addEventListener("storage", function(e) {
 // Send a message to the extension that the content script is loaded
 chrome.runtime.sendMessage({
   action: "contentScriptLoaded",
-  url: window.location.href
+  url: window.location.href,
+  isLoggedIn: localStorage.getItem("isLoggedIn") === "true"
 });
 
 // Listen for custom events from the web application
@@ -94,7 +118,7 @@ document.addEventListener('DocuNinjaEvent', function(e) {
   const detail = e.detail || {};
   
   // Forward relevant events to the extension
-  if (detail.type === 'documentUpdate' || detail.type === 'userSettingsUpdate') {
+  if (detail.type === 'documentUpdate' || detail.type === 'userSettingsUpdate' || detail.type === 'userProfileUpdate') {
     chrome.runtime.sendMessage({
       action: "webAppEvent",
       eventType: detail.type,
@@ -158,11 +182,15 @@ window.exposeDataToExtension = function() {
   // This function can be called from the web app to manually trigger data sharing
   const documents = JSON.parse(localStorage.getItem("documents") || "[]");
   const userSettings = JSON.parse(localStorage.getItem("userSettings") || "{}");
+  const userEmail = localStorage.getItem("userEmail") || "";
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
   
   chrome.runtime.sendMessage({
     action: "manualDataSync",
     documents,
     userSettings,
+    userEmail,
+    isLoggedIn,
     timestamp: new Date().toISOString()
   });
   
@@ -175,6 +203,19 @@ setTimeout(() => {
   chrome.runtime.sendMessage({
     action: "initialSync",
     url: window.location.href,
-    isLoggedIn: localStorage.getItem("isLoggedIn") === "true"
+    isLoggedIn: localStorage.getItem("isLoggedIn") === "true",
+    userEmail: localStorage.getItem("userEmail") || ""
   });
 }, 2000);
+
+// Add a listener for when the user logs in or out
+document.addEventListener('userAuthChanged', function(e) {
+  const detail = e.detail || {};
+  
+  chrome.runtime.sendMessage({
+    action: "authStatusChanged",
+    isLoggedIn: detail.isLoggedIn,
+    userEmail: detail.userEmail || "",
+    timestamp: new Date().toISOString()
+  });
+});

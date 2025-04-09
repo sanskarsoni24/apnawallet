@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -151,7 +150,7 @@ const SurakshaMobileScanner = () => {
               <div className="flex items-center gap-3">
                 <Smartphone className="h-6 w-6 text-indigo-500" />
                 <div>
-                  <p className="font-medium">{userSettings?.deviceName || "Mobile Device"}</p>
+                  <p className="font-medium">{userSettings?.mobileDeviceName || "Mobile Device"}</p>
                   <p className="text-sm text-muted-foreground">
                     Last active: {new Date().toLocaleString()}
                   </p>

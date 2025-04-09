@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import BlurContainer from "@/components/ui/BlurContainer";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Bell, Clock, Volume, Check, Globe, Mail, DeviceTablet, Info } from "lucide-react";
+import { Bell, Clock, Volume, Check, Globe, Mail, Tablet, Info, Smartphone } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -12,6 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
 
 interface NotificationSettingsProps {
   settings: {
@@ -32,6 +32,7 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
   const [activeTab, setActiveTab] = useState('general');
   const [email, setEmail] = useState(settings.emailAddress || '');
   const [testSent, setTestSent] = useState<'success' | 'error' | null>(null);
+  const navigate = useNavigate();
   
   // Demo devices
   const [devices] = useState([
@@ -369,7 +370,7 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
         <TabsContent value="devices" className="space-y-6 mt-6">
           <div className="space-y-4">
             <h3 className="text-lg font-medium flex items-center gap-2">
-              <DeviceTablet className="h-5 w-5 text-indigo-500" />
+              <Tablet className="h-5 w-5 text-indigo-500" />
               Connected Devices
             </h3>
             

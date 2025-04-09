@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -80,38 +81,41 @@ const ChromeExtensionDownload = () => {
       const zip = new JSZip();
       
       // Fetch files from public/chrome-extension directory
-      const manifestResponse = await fetch('/chrome-extension/manifest.json');
-      const manifestJson = await manifestResponse.text();
-      zip.file("manifest.json", manifestJson);
+      const filesList = [
+        { name: "manifest.json", path: "/chrome-extension/manifest.json" },
+        { name: "popup.html", path: "/chrome-extension/popup.html" },
+        { name: "popup.js", path: "/chrome-extension/popup.js" },
+        { name: "background.js", path: "/chrome-extension/background.js" },
+        { name: "content.js", path: "/chrome-extension/content.js" },
+        { name: "icon-16.png", path: "/chrome-extension/icon-16.png" },
+        { name: "icon-32.png", path: "/chrome-extension/icon-32.png" },
+        { name: "icon-48.png", path: "/chrome-extension/icon-48.png" },
+        { name: "icon-128.png", path: "/chrome-extension/icon-128.png" }
+      ];
       
-      const popupHtmlResponse = await fetch('/chrome-extension/popup.html');
-      const popupHtml = await popupHtmlResponse.text();
-      zip.file("popup.html", popupHtml);
+      let completedFiles = 0;
+      const totalFiles = filesList.length;
       
-      const popupJsResponse = await fetch('/chrome-extension/popup.js');
-      const popupJs = await popupJsResponse.text();
-      zip.file("popup.js", popupJs);
-      
-      const backgroundJsResponse = await fetch('/chrome-extension/background.js');
-      const backgroundJs = await backgroundJsResponse.text();
-      zip.file("background.js", backgroundJs);
-      
-      const contentJsResponse = await fetch('/chrome-extension/content.js');
-      const contentJs = await contentJsResponse.text();
-      zip.file("content.js", contentJs);
-      
-      // Fetch icons (if available)
-      try {
-        const iconSizes = [16, 32, 48, 128];
-        for (const size of iconSizes) {
-          const iconResponse = await fetch(`/chrome-extension/icon-${size}.png`);
-          if (iconResponse.ok) {
-            const iconBlob = await iconResponse.blob();
-            zip.file(`icon-${size}.png`, iconBlob);
+      // Fetch each file and add it to the zip
+      for (const file of filesList) {
+        try {
+          const response = await fetch(file.path);
+          
+          if (response.ok) {
+            const content = file.name.endsWith('.png') 
+              ? await response.blob() 
+              : await response.text();
+              
+            zip.file(file.name, content);
+            
+            completedFiles++;
+            setDownloadProgress(Math.floor((completedFiles / totalFiles) * 100));
+          } else {
+            console.error(`Failed to fetch ${file.path}: ${response.status}`);
           }
+        } catch (error) {
+          console.error(`Error fetching ${file.path}:`, error);
         }
-      } catch (error) {
-        console.error("Error fetching icons:", error);
       }
       
       // Generate the zip file
@@ -121,8 +125,6 @@ const ChromeExtensionDownload = () => {
         compressionOptions: {
           level: 9
         }
-      }, (metadata) => {
-        setDownloadProgress(Math.floor(metadata.percent));
       });
       
       // Create download link

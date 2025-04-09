@@ -32,6 +32,11 @@
       "platform": "play",
       "url": "https://play.google.com/store/apps/details?id=app.surakshitlocker.secure",
       "id": "app.surakshitlocker.secure"
+    },
+    {
+      "platform": "chrome_web_store",
+      "url": "https://chrome.google.com/webstore/detail/surakshitlocker-extension/abcdefghijklmnopqrstuvwxyz",
+      "id": "abcdefghijklmnopqrstuvwxyz"
     }
   ],
   "prefer_related_applications": false,
@@ -57,5 +62,8 @@
       "url": "/documents?upload=true",
       "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     }
-  ]
+  ],
+  "chrome_settings_overrides": {
+    "homepage": "https://surakshitlocker.com/dashboard"
+  }
 }

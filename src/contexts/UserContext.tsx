@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 
@@ -21,6 +20,9 @@ interface UserSettings {
   backupKeyCreated?: boolean;
   backupKeyLocation?: string;
   lastKeyBackup?: string;
+  autoBackup?: boolean;
+  backupFrequency?: string;
+  cloudExportProviders?: string[];
 }
 
 interface UserContextType {
@@ -95,6 +97,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscriptionPlan: "free" as 'free', // Type assertion to ensure it's one of the allowed values
       twoFactorEnabled: false,
       backupKeyCreated: false,
+      autoBackup: false,
+      backupFrequency: "weekly",
+      cloudExportProviders: [],
       ...getDocumentLimits("free")
     };
     
@@ -258,6 +263,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       voiceType: "default",
       twoFactorEnabled: false,
       backupKeyCreated: false,
+      autoBackup: false,
+      backupFrequency: "weekly",
+      cloudExportProviders: [],
       ...getDocumentLimits("free")
     };
     
@@ -306,6 +314,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoggedIn: true,
       lastLogin: new Date().toISOString(),
       subscriptionPlan: plan,
+      autoBackup: userSettings.autoBackup || false,
+      backupFrequency: userSettings.backupFrequency || "weekly",
+      cloudExportProviders: userSettings.cloudExportProviders || [],
       ...getDocumentLimits(plan)
     };
     

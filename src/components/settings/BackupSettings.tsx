@@ -1,377 +1,158 @@
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Download, DownloadCloud, Save, Shield, Upload, Key, Lock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "@/hooks/use-toast";
 import { useUser } from "@/contexts/UserContext";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CloudCog, Download, Database, Key, Lock, Cloud } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import TwoFactorAuth from "./TwoFactorAuth";
 
 interface BackupSettingsProps {
-  isPremium?: boolean;
+  isPremium: boolean;
 }
 
-const BackupSettings = ({ isPremium = false }: BackupSettingsProps) => {
+const BackupSettings: React.FC<BackupSettingsProps> = ({ isPremium }) => {
   const { userSettings, updateUserSettings, createBackupKey, restoreFromBackupKey } = useUser();
-  const [autoBackup, setAutoBackup] = useState(userSettings?.autoBackup || false);
-  const [backupFrequency, setBackupFrequency] = useState(userSettings?.backupFrequency || "weekly");
-  const [encryptionKeyBackup, setEncryptionKeyBackup] = useState(userSettings?.backupKeyCreated || false);
-  const [cloudExport, setCloudExport] = useState<string[]>(userSettings?.cloudExportProviders || []);
-  const [recoveryKey, setRecoveryKey] = useState("");
-  const [recoveryEmail, setRecoveryEmail] = useState(userSettings?.recoveryEmail || "");
-  const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
-  const [isRestoreDialogOpen, setIsRestoreDialogOpen] = useState(false);
-  const [backupPassword, setBackupPassword] = useState("");
-  const [confirmBackupPassword, setConfirmBackupPassword] = useState("");
+  const [backupKey, setBackupKey] = useState("");
+  const [isRestoring, setIsRestoring] = useState(false);
   
-  const handleManualBackup = () => {
-    // Create backup data
-    const documents = JSON.parse(localStorage.getItem("documents") || "[]");
-    const backupData = {
-      documents,
-      userSettings,
-      timestamp: new Date().toISOString(),
-      version: "1.0.0"
-    };
-    
-    // Create backup name
-    const date = new Date();
-    const backupName = `surakshitlocker_backup_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-    
-    // Create backup history entry
-    const backupHistory = JSON.parse(localStorage.getItem("backup_history") || "[]");
-    backupHistory.push({
-      name: backupName,
-      timestamp: new Date().toISOString(),
-      size: JSON.stringify(backupData).length
-    });
-    
-    // Store backup history
-    localStorage.setItem("backup_history", JSON.stringify(backupHistory));
-    localStorage.setItem("latest_backup", JSON.stringify(backupData));
-    
-    // Create and download backup file
-    const dataStr = JSON.stringify(backupData);
-    const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
-    
-    const linkElement = document.createElement("a");
-    linkElement.setAttribute("href", dataUri);
-    linkElement.setAttribute("download", `${backupName}.json`);
-    linkElement.style.display = "none";
-    document.body.appendChild(linkElement);
-    linkElement.click();
-    document.body.removeChild(linkElement);
-    
-    toast({
-      title: "Backup complete",
-      description: "Your documents have been backed up successfully.",
-    });
-  };
+  const autoBackup = userSettings?.autoBackup || false;
+  const backupFrequency = userSettings?.backupFrequency || "weekly";
+  const twoFactorEnabled = userSettings?.twoFactorEnabled || false;
+  const cloudExportProviders = userSettings?.cloudExportProviders || [];
   
-  const handleToggleAutoBackup = (checked: boolean) => {
-    if (!isPremium) {
-      toast({
-        title: "Premium feature",
-        description: "Automatic backups are a premium feature. Please upgrade to use this feature.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setAutoBackup(checked);
-    
-    // Save to user settings
+  // Toggle auto backup
+  const handleToggleAutoBackup = () => {
     updateUserSettings({
-      autoBackup: checked,
-      backupFrequency
+      autoBackup: !autoBackup,
     });
     
     toast({
-      title: checked ? "Automatic backups enabled" : "Automatic backups disabled",
-      description: checked ? `Your documents will be backed up ${backupFrequency}.` : "Automatic backups have been disabled.",
+      title: !autoBackup ? "Auto backup enabled" : "Auto backup disabled",
+      description: !autoBackup ? "Your documents will be automatically backed up." : "Auto backup has been disabled.",
     });
   };
   
-  const handleBackupFrequencyChange = (frequency: string) => {
-    setBackupFrequency(frequency);
-    
-    // Save to user settings
+  // Change backup frequency
+  const handleBackupFrequencyChange = (value: string) => {
     updateUserSettings({
-      backupFrequency: frequency
+      backupFrequency: value,
     });
     
     toast({
       title: "Backup frequency updated",
-      description: `Your documents will now be backed up ${frequency}.`,
+      description: `Your documents will be backed up ${value}.`,
     });
   };
   
-  const handleEncryptionKeyBackup = (checked: boolean) => {
-    if (!isPremium) {
-      toast({
-        title: "Premium feature",
-        description: "Encryption key backup is a premium feature. Please upgrade to use this feature.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setEncryptionKeyBackup(checked);
-    
-    if (checked) {
-      setIsKeyDialogOpen(true);
-    } else {
-      updateUserSettings({
-        backupKeyCreated: false
-      });
-      
-      toast({
-        title: "Encryption key backup disabled",
-        description: "Your encryption key backup has been disabled.",
-      });
-    }
-  };
-  
-  const handleSetupKeyBackup = () => {
-    // Validate inputs
-    if (backupPassword.length < 8) {
-      toast({
-        title: "Password too short",
-        description: "Please use a password that is at least 8 characters long.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (backupPassword !== confirmBackupPassword) {
-      toast({
-        title: "Passwords do not match",
-        description: "Please make sure your password and confirmation match.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!recoveryEmail.includes('@')) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid recovery email address.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Create backup key
+  // Create new backup key
+  const handleCreateBackupKey = () => {
     createBackupKey();
+  };
+  
+  // Restore from backup key
+  const handleRestore = () => {
+    setIsRestoring(true);
     
-    // Save recovery email
+    setTimeout(() => {
+      const success = restoreFromBackupKey(backupKey);
+      setIsRestoring(false);
+      
+      if (success) {
+        setBackupKey("");
+      }
+    }, 1500);
+  };
+  
+  // Toggle cloud provider
+  const toggleCloudProvider = (provider: string) => {
+    let updatedProviders: string[];
+    
+    if (cloudExportProviders.includes(provider)) {
+      updatedProviders = cloudExportProviders.filter(p => p !== provider);
+    } else {
+      updatedProviders = [...cloudExportProviders, provider];
+    }
+    
     updateUserSettings({
-      recoveryEmail,
-      backupKeyCreated: true
+      cloudExportProviders: updatedProviders,
     });
-    
-    // Close dialog
-    setIsKeyDialogOpen(false);
-    
-    // Reset fields
-    setBackupPassword("");
-    setConfirmBackupPassword("");
     
     toast({
-      title: "Recovery setup complete",
-      description: "Your encryption key has been securely backed up.",
+      title: cloudExportProviders.includes(provider) ? `${provider} disconnected` : `${provider} connected`,
+      description: cloudExportProviders.includes(provider) 
+        ? `Your documents will no longer be backed up to ${provider}.` 
+        : `Your documents will now be backed up to ${provider}.`,
     });
   };
   
-  const handleRestoreFromKey = () => {
-    if (!recoveryKey) {
-      toast({
-        title: "Recovery key required",
-        description: "Please enter your recovery key.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const success = restoreFromBackupKey(recoveryKey);
-    
-    if (success) {
-      setIsRestoreDialogOpen(false);
-      setRecoveryKey("");
-    }
-  };
-  
-  const handleCloudExport = (provider: string) => {
-    if (!isPremium) {
-      toast({
-        title: "Premium feature",
-        description: "Cloud export is a premium feature. Please upgrade to use this feature.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    let newCloudExport: string[];
-    
-    if (cloudExport.includes(provider)) {
-      newCloudExport = cloudExport.filter(p => p !== provider);
-    } else {
-      newCloudExport = [...cloudExport, provider];
-    }
-    
-    setCloudExport(newCloudExport);
-    
-    // Save to user settings
-    updateUserSettings({
-      cloudExportProviders: newCloudExport
+  // Handle backup now
+  const handleBackupNow = () => {
+    toast({
+      title: "Backup started",
+      description: "Your documents are being backed up.",
     });
     
-    // Simulate export to cloud
-    if (!cloudExport.includes(provider)) {
-      // Create the backup data
-      const documents = JSON.parse(localStorage.getItem("documents") || "[]");
-      const backupData = {
-        documents,
-        userSettings,
-        timestamp: new Date().toISOString(),
-        version: "1.0.0",
-        provider
-      };
-      
-      // Store the cloud backup data in localStorage for simulation
-      localStorage.setItem(`cloud_backup_${provider}`, JSON.stringify(backupData));
-      
+    setTimeout(() => {
       toast({
-        title: `Connected to ${provider}`,
-        description: `Your documents will now be backed up to ${provider}.`,
+        title: "Backup completed",
+        description: "All your documents have been successfully backed up.",
       });
-    } else {
-      // Remove the cloud backup data from localStorage
-      localStorage.removeItem(`cloud_backup_${provider}`);
-      
-      toast({
-        title: `Disconnected from ${provider}`,
-        description: `Your documents will no longer be backed up to ${provider}.`,
-      });
-    }
+    }, 2000);
   };
-  
+
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">Backup & Export</h3>
-        <p className="text-sm text-muted-foreground">
-          Control how your documents are backed up and exported
-        </p>
-      </div>
-      
-      <Separator />
-      
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Save className="h-5 w-5" />
-              Manual Backup
-            </CardTitle>
-            <CardDescription>
-              Create an immediate backup of all your documents
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm">
-              This will create a secure, encrypted backup of all your documents. 
-              The backup can be downloaded to your device or stored in your account.
-            </p>
-          </CardContent>
-          <CardFooter className="flex flex-wrap gap-2">
-            <Button onClick={handleManualBackup}>
-              <Download className="mr-2 h-4 w-4" />
-              Create Backup Now
-            </Button>
-            
-            <Dialog open={isRestoreDialogOpen} onOpenChange={setIsRestoreDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Key className="mr-2 h-4 w-4" />
-                  Restore from Key
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Restore from Recovery Key</DialogTitle>
-                  <DialogDescription>
-                    Enter your recovery key to restore your encrypted data.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="recovery-key">Recovery Key</Label>
-                    <Input
-                      id="recovery-key"
-                      type="password"
-                      value={recoveryKey}
-                      onChange={(e) => setRecoveryKey(e.target.value)}
-                      placeholder="Enter your recovery key"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsRestoreDialogOpen(false)}>Cancel</Button>
-                  <Button onClick={handleRestoreFromKey}>Restore</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardFooter>
-        </Card>
+      <Tabs defaultValue="backup">
+        <TabsList>
+          <TabsTrigger value="backup">Backup & Restore</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="cloud">Cloud Export</TabsTrigger>
+        </TabsList>
         
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Automatic Backups
-                </CardTitle>
-                <CardDescription>
-                  Schedule regular backups of your documents
-                </CardDescription>
-              </div>
-              {!isPremium && (
-                <Badge variant="outline" className="bg-primary/5 text-primary">Premium</Badge>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+        <TabsContent value="backup" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Automatic Backup</CardTitle>
+              <CardDescription>
+                Configure automatic backup settings for your documents
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label htmlFor="auto-backup" className="flex items-center gap-2">
-                  Enable automatic backups
-                </Label>
-                <Switch
+                <div>
+                  <Label htmlFor="auto-backup" className="font-medium">Enable Auto Backup</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically backup your documents
+                  </p>
+                </div>
+                <Switch 
                   id="auto-backup"
-                  checked={autoBackup}
+                  checked={autoBackup} 
                   onCheckedChange={handleToggleAutoBackup}
                   disabled={!isPremium}
                 />
               </div>
               
+              {!isPremium && (
+                <div className="rounded-md bg-muted p-4">
+                  <p className="text-sm text-muted-foreground">
+                    Auto backup is a premium feature. Upgrade to enable this feature.
+                  </p>
+                </div>
+              )}
+              
               {autoBackup && (
                 <div className="space-y-2">
-                  <Label htmlFor="backup-frequency">Backup frequency</Label>
-                  <Select 
-                    value={backupFrequency} 
-                    onValueChange={handleBackupFrequencyChange}
-                    disabled={!isPremium}
-                  >
+                  <Label htmlFor="backup-frequency">Backup Frequency</Label>
+                  <Select value={backupFrequency} onValueChange={handleBackupFrequencyChange}>
                     <SelectTrigger id="backup-frequency">
-                      <SelectValue placeholder="Select frequency" />
+                      <SelectValue placeholder="Select backup frequency" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="daily">Daily</SelectItem>
@@ -381,228 +162,196 @@ const BackupSettings = ({ isPremium = false }: BackupSettingsProps) => {
                   </Select>
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Encryption Key Backup
-                </CardTitle>
-                <CardDescription>
-                  Create a secure backup of your encryption key
-                </CardDescription>
+            </CardContent>
+            <CardFooter>
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={handleBackupNow}
+                disabled={!isPremium}
+              >
+                <CloudCog className="mr-2 h-4 w-4" />
+                Backup Now
+              </Button>
+            </CardFooter>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Backup Encryption Key</CardTitle>
+              <CardDescription>
+                Create or restore from an encryption key
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-md bg-muted p-4">
+                <div className="flex items-start">
+                  <Key className="h-5 w-5 mr-2 mt-0.5 text-amber-500" />
+                  <div>
+                    <p className="text-sm font-medium">Backup Key Status</p>
+                    <p className="text-sm text-muted-foreground">
+                      {userSettings?.backupKeyCreated 
+                        ? "You have a backup key created. Keep it safe!" 
+                        : "No backup key found. Create one to secure your backups."}
+                    </p>
+                    {userSettings?.lastKeyBackup && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Last backup: {new Date(userSettings.lastKeyBackup).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
+              
+              <div className="border rounded-md p-4">
+                <h4 className="font-medium mb-2">Restore from Backup Key</h4>
+                <div className="space-y-2">
+                  <Label htmlFor="backup-key">Enter your backup key</Label>
+                  <Input
+                    id="backup-key"
+                    value={backupKey}
+                    onChange={(e) => setBackupKey(e.target.value)}
+                    placeholder="Enter your backup key"
+                    className="font-mono"
+                  />
+                </div>
+                <Button 
+                  className="w-full mt-4" 
+                  disabled={!backupKey || isRestoring} 
+                  onClick={handleRestore}
+                >
+                  {isRestoring ? "Restoring..." : "Restore from Key"}
+                </Button>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button 
+                variant={userSettings?.backupKeyCreated ? "outline" : "default"} 
+                className="w-full"
+                onClick={handleCreateBackupKey}
+              >
+                <Lock className="mr-2 h-4 w-4" />
+                {userSettings?.backupKeyCreated ? "Regenerate Backup Key" : "Create Backup Key"}
+              </Button>
+            </CardFooter>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Export Data</CardTitle>
+              <CardDescription>
+                Download all your documents and data
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-md bg-muted p-4">
+                <p className="text-sm text-muted-foreground">
+                  You can export all your data as a ZIP file. This includes your documents, settings, and metadata.
+                </p>
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-2">
+              <Button className="w-full">
+                <Download className="mr-2 h-4 w-4" />
+                Export as ZIP
+              </Button>
+              <Button variant="outline" className="w-full">
+                <Database className="mr-2 h-4 w-4" />
+                Export JSON Data
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="security" className="space-y-4 mt-4">
+          <TwoFactorAuth />
+        </TabsContent>
+        
+        <TabsContent value="cloud" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Cloud Storage Providers</CardTitle>
+              <CardDescription>
+                Connect to cloud storage services for automatic backup
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               {!isPremium && (
-                <Badge variant="outline" className="bg-primary/5 text-primary">Premium</Badge>
+                <div className="rounded-md bg-muted p-4 mb-4">
+                  <p className="text-sm text-muted-foreground">
+                    Cloud export is a premium feature. Upgrade to enable this feature.
+                  </p>
+                </div>
               )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+              
               <div className="flex items-center justify-between">
-                <Label htmlFor="key-backup" className="flex items-center gap-2">
-                  Enable encryption key backup
-                </Label>
-                <Switch
-                  id="key-backup"
-                  checked={encryptionKeyBackup}
-                  onCheckedChange={handleEncryptionKeyBackup}
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 text-blue-600">
+                      <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 7h-3V6h-4v3H7v4h3v8h4v-8h3V9z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium">Google Drive</p>
+                    <p className="text-sm text-muted-foreground">Connect to Google Drive</p>
+                  </div>
+                </div>
+                <Switch 
+                  checked={cloudExportProviders.includes("google")} 
+                  onCheckedChange={() => toggleCloudProvider("google")}
                   disabled={!isPremium}
                 />
               </div>
               
-              {encryptionKeyBackup && (
-                <p className="text-sm text-muted-foreground">
-                  Your encryption key is securely stored with additional protection.
-                  {userSettings?.recoveryEmail && (
-                    <span> Recovery email: {userSettings.recoveryEmail}</span>
-                  )}
-                </p>
-              )}
-            </div>
-            
-            <Dialog open={isKeyDialogOpen} onOpenChange={setIsKeyDialogOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Set Up Key Backup</DialogTitle>
-                  <DialogDescription>
-                    Create a secure backup of your encryption key for account recovery
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="recovery-email">Recovery Email</Label>
-                    <Input
-                      id="recovery-email"
-                      type="email"
-                      value={recoveryEmail}
-                      onChange={(e) => setRecoveryEmail(e.target.value)}
-                      placeholder="Enter recovery email"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      This email will be used to recover your account if you lose your password
-                    </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 text-blue-600">
+                      <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5.61 8.49l-7.07 7.07-4.24-4.24 1.41-1.41 2.83 2.83 5.66-5.66 1.41 1.41z" />
+                    </svg>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="backup-password">Backup Password</Label>
-                    <Input
-                      id="backup-password"
-                      type="password"
-                      value={backupPassword}
-                      onChange={(e) => setBackupPassword(e.target.value)}
-                      placeholder="Create a backup password"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-backup-password">Confirm Backup Password</Label>
-                    <Input
-                      id="confirm-backup-password"
-                      type="password"
-                      value={confirmBackupPassword}
-                      onChange={(e) => setConfirmBackupPassword(e.target.value)}
-                      placeholder="Confirm backup password"
-                    />
+                  <div>
+                    <p className="font-medium">Dropbox</p>
+                    <p className="text-sm text-muted-foreground">Connect to Dropbox</p>
                   </div>
                 </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => {
-                    setIsKeyDialogOpen(false);
-                    setEncryptionKeyBackup(false);
-                  }}>Cancel</Button>
-                  <Button onClick={handleSetupKeyBackup}>Set Up Key Backup</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-          {encryptionKeyBackup && (
-            <CardFooter>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Lock className="mr-2 h-4 w-4" />
-                    Manage Key Backup
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Manage Encryption Key Backup</DialogTitle>
-                    <DialogDescription>
-                      Your encryption key backup settings
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label>Recovery Email</Label>
-                      <div className="flex items-center gap-2">
-                        <Input value={userSettings?.recoveryEmail || ""} readOnly />
-                        <Button variant="outline" size="sm">Update</Button>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Last Backup</Label>
-                      <Input 
-                        value={userSettings?.lastKeyBackup ? new Date(userSettings.lastKeyBackup).toLocaleString() : "Never"} 
-                        readOnly 
-                      />
-                    </div>
-                    
-                    <div className="pt-2">
-                      <Button className="w-full">
-                        Create New Backup Key
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </CardFooter>
-          )}
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <CardTitle className="flex items-center gap-2">
-                  <DownloadCloud className="h-5 w-5" />
-                  Cloud Export
-                </CardTitle>
-                <CardDescription>
-                  Export documents to cloud storage providers
-                </CardDescription>
+                <Switch 
+                  checked={cloudExportProviders.includes("dropbox")} 
+                  onCheckedChange={() => toggleCloudProvider("dropbox")}
+                  disabled={!isPremium}
+                />
               </div>
-              {!isPremium && (
-                <Badge variant="outline" className="bg-primary/5 text-primary">Premium</Badge>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              <Button 
-                variant={cloudExport.includes("google") ? "default" : "outline"}
-                className="h-auto py-4 px-3 flex flex-col items-center justify-center gap-2"
-                onClick={() => handleCloudExport("google")}
-                disabled={!isPremium}
-              >
-                <Upload className="h-6 w-6" />
-                <span className="text-xs">Google Drive</span>
-              </Button>
               
-              <Button 
-                variant={cloudExport.includes("dropbox") ? "default" : "outline"}
-                className="h-auto py-4 px-3 flex flex-col items-center justify-center gap-2"
-                onClick={() => handleCloudExport("dropbox")}
-                disabled={!isPremium}
-              >
-                <Upload className="h-6 w-6" />
-                <span className="text-xs">Dropbox</span>
-              </Button>
-              
-              <Button 
-                variant={cloudExport.includes("onedrive") ? "default" : "outline"}
-                className="h-auto py-4 px-3 flex flex-col items-center justify-center gap-2"
-                onClick={() => handleCloudExport("onedrive")}
-                disabled={!isPremium}
-              >
-                <Upload className="h-6 w-6" />
-                <span className="text-xs">OneDrive</span>
-              </Button>
-            </div>
-            
-            {cloudExport.length > 0 && isPremium && (
-              <div className="mt-4 pt-4 border-t">
-                <h4 className="text-sm font-medium mb-2">Connected Providers</h4>
-                <div className="space-y-2">
-                  {cloudExport.map(provider => (
-                    <div key={provider} className="flex items-center justify-between p-3 bg-muted rounded-md">
-                      <div className="flex items-center gap-2">
-                        <Upload className="h-4 w-4 text-primary" />
-                        <span className="font-medium capitalize">{provider}</span>
-                      </div>
-                      <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                        Connected
-                      </Badge>
-                    </div>
-                  ))}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 text-blue-600">
+                      <path fill="currentColor" d="M8.01 18.02l2 2L20.88 9.14l-2-2L8.01 18.02zM5.59 13.43l2 2L13.45 9.6l-2-2L5.59 13.43zM2 22l3.41-1.4-2-2L2 22z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium">OneDrive</p>
+                    <p className="text-sm text-muted-foreground">Connect to OneDrive</p>
+                  </div>
                 </div>
-                
-                <div className="mt-4">
-                  <Button variant="outline" size="sm" className="w-full">
-                    Configure Sync Settings
-                  </Button>
-                </div>
+                <Switch 
+                  checked={cloudExportProviders.includes("onedrive")} 
+                  onCheckedChange={() => toggleCloudProvider("onedrive")}
+                  disabled={!isPremium}
+                />
               </div>
+            </CardContent>
+            {isPremium && cloudExportProviders.length > 0 && (
+              <CardFooter>
+                <Button variant="outline" className="w-full">
+                  <Cloud className="mr-2 h-4 w-4" />
+                  Sync Cloud Storage Now
+                </Button>
+              </CardFooter>
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

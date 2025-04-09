@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import Container from "@/components/layout/Container";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Bell, Palette, Shield, CloudCog } from "lucide-react";
@@ -13,7 +14,10 @@ import { useUser } from "@/contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
 
 const Settings = () => {
-  const [activeTab, setActiveTab] = useState("backup"); // Changed default tab to backup
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(tabParam || "backup");
+  
   const { userSettings, updateUserSettings, displayName, email, updateProfile } = useUser();
   
   // Account settings state
@@ -25,6 +29,13 @@ const Settings = () => {
     setLocalDisplayName(displayName);
     setLocalEmail(email);
   }, [displayName, email]);
+  
+  // Track tab changes from URL params
+  useEffect(() => {
+    if (tabParam && ["backup", "account", "notifications", "appearance", "extensions"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
   
   // Check if user has premium subscription
   const isPremiumUser = userSettings?.subscriptionPlan === 'premium' || userSettings?.subscriptionPlan === 'enterprise';
@@ -108,11 +119,12 @@ const Settings = () => {
           )}
         </div>
 
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="flex flex-wrap h-auto gap-2 p-1 sm:p-0 sm:gap-0 sm:h-10">
             <TabsTrigger value="backup" className="text-xs sm:text-sm flex items-center gap-1">
               <CloudCog className="h-4 w-4" />
               <span className="hidden sm:inline">Backup & Export</span>
+              <span className="inline sm:hidden">Backup</span>
             </TabsTrigger>
             <TabsTrigger value="account" className="text-xs sm:text-sm flex items-center gap-1">
               <User className="h-4 w-4" />
@@ -121,6 +133,7 @@ const Settings = () => {
             <TabsTrigger value="notifications" className="text-xs sm:text-sm flex items-center gap-1">
               <Bell className="h-4 w-4" />
               <span className="hidden sm:inline">Notifications</span>
+              <span className="inline sm:hidden">Alerts</span>
             </TabsTrigger>
             <TabsTrigger value="appearance" className="text-xs sm:text-sm flex items-center gap-1">
               <Palette className="h-4 w-4" />

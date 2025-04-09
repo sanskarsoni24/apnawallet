@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import MobileNav from "../ui/mobile-nav";
 import SurakshitLogo from "../ui/SurakshitLogo";
-import { Bell, Menu, User, HelpCircle } from "lucide-react";
+import { Bell, Menu, User, HelpCircle, Settings } from "lucide-react";
 import { ModeToggle } from "../ui/mode-toggle";
 import { useUser } from "@/contexts/UserContext";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
@@ -129,6 +130,17 @@ const Header = () => {
             
             {isLoggedIn ? (
               <>
+                {/* Settings button in the header */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/settings")}
+                  className="relative"
+                  title="Settings"
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
+                
                 <Button
                   variant="ghost"
                   size="icon"

@@ -16,6 +16,11 @@ interface UserSettings {
   subscriptionPlan?: 'free' | 'basic' | 'premium' | 'enterprise';
   documentLimit?: number;
   documentSizeLimit?: number;
+  twoFactorEnabled?: boolean;
+  recoveryEmail?: string;
+  backupKeyCreated?: boolean;
+  backupKeyLocation?: string;
+  lastKeyBackup?: string;
 }
 
 interface UserContextType {
@@ -28,6 +33,10 @@ interface UserContextType {
   updateProfile: (name: string, email: string) => void;
   updateUserSettings: (settings: Partial<UserSettings>) => void;
   register: (email: string, password: string, name: string) => void;
+  enableTwoFactor: () => void;
+  disableTwoFactor: () => void;
+  createBackupKey: () => void;
+  restoreFromBackupKey: (key: string) => boolean;
 }
 
 const defaultContextValue: UserContextType = {
@@ -40,6 +49,10 @@ const defaultContextValue: UserContextType = {
   updateProfile: () => {},
   updateUserSettings: () => {},
   register: () => {},
+  enableTwoFactor: () => {},
+  disableTwoFactor: () => {},
+  createBackupKey: () => {},
+  restoreFromBackupKey: () => false,
 };
 
 const UserContext = createContext<UserContextType>(defaultContextValue);
@@ -79,7 +92,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       reminderDays: 3,
       theme: "system",
       voiceType: "default",
-      subscriptionPlan: "free",
+      subscriptionPlan: "free" as 'free', // Type assertion to ensure it's one of the allowed values
+      twoFactorEnabled: false,
+      backupKeyCreated: false,
       ...getDocumentLimits("free")
     };
     
@@ -113,6 +128,93 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
 
+  // Generate encryption key for secure backup
+  const generateEncryptionKey = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
+    let key = '';
+    for (let i = 0; i < 32; i++) {
+      key += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return key;
+  };
+  
+  // Enable two-factor authentication
+  const enableTwoFactor = () => {
+    // In a real app, this would integrate with an authenticator app
+    const updatedSettings = {
+      ...userSettings,
+      twoFactorEnabled: true
+    };
+    
+    localStorage.setItem("userSettings", JSON.stringify(updatedSettings));
+    setUserSettings(updatedSettings);
+    
+    toast({
+      title: "Two-factor authentication enabled",
+      description: "Your account is now more secure"
+    });
+  };
+  
+  // Disable two-factor authentication
+  const disableTwoFactor = () => {
+    const updatedSettings = {
+      ...userSettings,
+      twoFactorEnabled: false
+    };
+    
+    localStorage.setItem("userSettings", JSON.stringify(updatedSettings));
+    setUserSettings(updatedSettings);
+    
+    toast({
+      title: "Two-factor authentication disabled",
+      description: "Two-factor authentication has been turned off"
+    });
+  };
+  
+  // Create backup encryption key
+  const createBackupKey = () => {
+    const key = generateEncryptionKey();
+    const currentDate = new Date().toISOString();
+    
+    const updatedSettings = {
+      ...userSettings,
+      backupKeyCreated: true,
+      lastKeyBackup: currentDate,
+      backupKeyLocation: "secure_storage"
+    };
+    
+    // In a real app, we would encrypt user data with this key
+    localStorage.setItem("encryptionBackupKey", key);
+    localStorage.setItem("userSettings", JSON.stringify(updatedSettings));
+    setUserSettings(updatedSettings);
+    
+    toast({
+      title: "Encryption key backup created",
+      description: "Your encryption key has been securely backed up"
+    });
+  };
+  
+  // Restore from backup key
+  const restoreFromBackupKey = (key: string) => {
+    // In a real app, we would validate the key against the stored key
+    const storedKey = localStorage.getItem("encryptionBackupKey");
+    
+    if (key === storedKey) {
+      toast({
+        title: "Restoration successful",
+        description: "Your data has been restored using the backup key"
+      });
+      return true;
+    } else {
+      toast({
+        title: "Restoration failed",
+        description: "The backup key is invalid",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   // Register a new user
   const register = (userEmail: string, password: string, name: string) => {
     if (!userEmail || !password || !name) {
@@ -142,13 +244,20 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setEmail(userEmail);
     setDisplayName(name);
     
-    const updatedSettings = {
-      ...userSettings,
+    const updatedSettings: UserSettings = {
       email: userEmail,
       displayName: name,
       isLoggedIn: true,
       lastLogin: new Date().toISOString(),
-      subscriptionPlan: "free",
+      subscriptionPlan: 'free',
+      emailNotifications: true,
+      pushNotifications: false,
+      voiceReminders: false,
+      reminderDays: 3,
+      theme: "system",
+      voiceType: "default",
+      twoFactorEnabled: false,
+      backupKeyCreated: false,
       ...getDocumentLimits("free")
     };
     
@@ -188,9 +297,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // If this is Google sign-in user, assign premium by default for demo
     const isGoogleUser = userEmail === "demo@example.com";
-    const plan = isGoogleUser ? "premium" : (userSettings.subscriptionPlan || "free");
+    const plan = isGoogleUser ? "premium" as 'premium' : (userSettings.subscriptionPlan || "free" as 'free');
     
-    const updatedSettings = {
+    const updatedSettings: UserSettings = {
       ...userSettings,
       email: userEmail,
       displayName: userName,
@@ -215,7 +324,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setIsLoggedIn(false);
     
-    const updatedSettings = {
+    const updatedSettings: UserSettings = {
       ...userSettings,
       isLoggedIn: false,
     };
@@ -236,7 +345,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setDisplayName(name);
     setEmail(userEmail);
     
-    const updatedSettings = {
+    const updatedSettings: UserSettings = {
       ...userSettings,
       displayName: name,
       email: userEmail,
@@ -255,7 +364,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updatedLimits = getDocumentLimits(settings.subscriptionPlan);
     }
     
-    const updatedSettings = {
+    const updatedSettings: UserSettings = {
       ...userSettings,
       ...settings,
       ...updatedLimits
@@ -334,6 +443,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateProfile,
         updateUserSettings,
         register,
+        enableTwoFactor,
+        disableTwoFactor,
+        createBackupKey,
+        restoreFromBackupKey
       }}
     >
       {children}

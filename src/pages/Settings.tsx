@@ -13,7 +13,7 @@ import { useUser } from "@/contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
 
 const Settings = () => {
-  const [activeTab, setActiveTab] = useState("account");
+  const [activeTab, setActiveTab] = useState("backup"); // Changed default tab to backup
   const { userSettings, updateUserSettings, displayName, email, updateProfile } = useUser();
   
   // Account settings state
@@ -23,7 +23,7 @@ const Settings = () => {
   // Update local state when user profile changes
   useEffect(() => {
     setLocalDisplayName(displayName);
-    setLocalEmail(setLocalEmail);
+    setLocalEmail(email);
   }, [displayName, email]);
   
   // Check if user has premium subscription
@@ -65,6 +65,24 @@ const Settings = () => {
     });
   };
   
+  // Default notification settings for new users
+  const defaultNotificationSettings = {
+    emailNotifications: true,
+    pushNotifications: false,
+    voiceReminders: false,
+    reminderDays: 3,
+    voiceType: 'default'
+  };
+  
+  // Create notification settings object based on userSettings or defaults
+  const notificationSettings = {
+    emailNotifications: userSettings?.emailNotifications ?? defaultNotificationSettings.emailNotifications,
+    pushNotifications: userSettings?.pushNotifications ?? defaultNotificationSettings.pushNotifications,
+    voiceReminders: userSettings?.voiceReminders ?? defaultNotificationSettings.voiceReminders,
+    reminderDays: userSettings?.reminderDays ?? defaultNotificationSettings.reminderDays,
+    voiceType: userSettings?.voiceType ?? defaultNotificationSettings.voiceType
+  };
+  
   return (
     <Container>
       <div className="space-y-6">
@@ -92,6 +110,10 @@ const Settings = () => {
 
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="flex flex-wrap h-auto gap-2 p-1 sm:p-0 sm:gap-0 sm:h-10">
+            <TabsTrigger value="backup" className="text-xs sm:text-sm flex items-center gap-1">
+              <CloudCog className="h-4 w-4" />
+              <span className="hidden sm:inline">Backup & Export</span>
+            </TabsTrigger>
             <TabsTrigger value="account" className="text-xs sm:text-sm flex items-center gap-1">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Account</span>
@@ -99,10 +121,6 @@ const Settings = () => {
             <TabsTrigger value="notifications" className="text-xs sm:text-sm flex items-center gap-1">
               <Bell className="h-4 w-4" />
               <span className="hidden sm:inline">Notifications</span>
-            </TabsTrigger>
-            <TabsTrigger value="backup" className="text-xs sm:text-sm flex items-center gap-1">
-              <CloudCog className="h-4 w-4" />
-              <span className="hidden sm:inline">Backup & Export</span>
             </TabsTrigger>
             <TabsTrigger value="appearance" className="text-xs sm:text-sm flex items-center gap-1">
               <Palette className="h-4 w-4" />
@@ -126,13 +144,7 @@ const Settings = () => {
 
           <TabsContent value="notifications" className="space-y-6">
             <NotificationSettings 
-              settings={userSettings || {
-                emailNotifications: true,
-                pushNotifications: false,
-                voiceReminders: false,
-                reminderDays: 3,
-                voiceType: 'default'
-              }}
+              settings={notificationSettings}
               saveSettings={saveSettings}
             />
           </TabsContent>

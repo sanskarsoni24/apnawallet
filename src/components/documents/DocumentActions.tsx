@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Download, Share2 } from "lucide-react";
+import { Pencil, Trash2, Download } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useUser } from "@/contexts/UserContext";
 import DocumentSharing from "./DocumentSharing";

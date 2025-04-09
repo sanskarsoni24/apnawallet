@@ -10,7 +10,6 @@ import { toast } from "@/hooks/use-toast";
 
 const DownloadApp = () => {
   const [platform, setPlatform] = useState<"android" | "ios" | "unknown">("unknown");
-  const [appLink, setAppLink] = useState("");
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
@@ -19,10 +18,8 @@ const DownloadApp = () => {
     
     if (/android/i.test(userAgent)) {
       setPlatform("android");
-      setAppLink("/downloads/surakshitlocker.apk");
     } else if (/iPad|iPhone|iPod/.test(userAgent)) {
       setPlatform("ios");
-      setAppLink("https://testflight.apple.com/join/surakshitlocker");
     } else {
       setPlatform("unknown");
     }
@@ -32,62 +29,31 @@ const DownloadApp = () => {
     setDownloading(true);
     
     if (platform === "android") {
-      try {
-        // For direct file download (better approach for binary files)
-        fetch(appLink)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.blob();
-          })
-          .then(blob => {
-            // Create a temporary URL for the blob
-            const url = window.URL.createObjectURL(
-              new Blob([blob], { type: 'application/vnd.android.package-archive' })
-            );
-            
-            // Create a link element and trigger download
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = "surakshitlocker.apk";
-            document.body.appendChild(link);
-            link.click();
-            
-            // Clean up
-            setTimeout(() => {
-              document.body.removeChild(link);
-              window.URL.revokeObjectURL(url);
-            }, 100);
-            
-            toast({
-              title: "Download Started",
-              description: "The APK file is downloading to your device."
-            });
-          })
-          .catch(error => {
-            console.error("Download failed:", error);
-            toast({
-              title: "Download Failed",
-              description: "There was an error downloading the APK. Please try again.",
-              variant: "destructive"
-            });
-          })
-          .finally(() => {
-            setDownloading(false);
-          });
-      } catch (error) {
-        console.error("Download error:", error);
-        toast({
-          title: "Download Error",
-          description: "There was an error preparing the download. Please try again.",
-          variant: "destructive"
-        });
+      // Direct link to the APK file
+      const apkUrl = `${window.location.origin}/downloads/surakshitlocker.apk`;
+      
+      // Create an invisible iframe to trigger the download
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = apkUrl;
+      document.body.appendChild(iframe);
+      
+      // Also open in a new tab as a fallback
+      window.open(apkUrl, '_blank');
+      
+      toast({
+        title: "Download Started",
+        description: "The APK file should start downloading automatically. If not, check your downloads folder."
+      });
+      
+      // Clean up the iframe after a delay
+      setTimeout(() => {
+        document.body.removeChild(iframe);
         setDownloading(false);
-      }
+      }, 2000);
     } else if (platform === "ios") {
-      // For iOS, we redirect to the TestFlight or App Store link
-      window.location.href = appLink;
+      // For iOS, redirect to TestFlight
+      window.location.href = "https://testflight.apple.com/join/surakshitlocker";
       setDownloading(false);
     }
   };
@@ -130,6 +96,18 @@ const DownloadApp = () => {
             ? "This will download the SurakshitLocker APK to your device."
             : "This will redirect you to TestFlight to download the app."}
         </p>
+        
+        {platform === "android" && (
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30">
+            <h4 className="font-medium text-blue-800 dark:text-blue-400 mb-2">Installation Instructions:</h4>
+            <ol className="text-sm text-blue-700 dark:text-blue-300 list-decimal pl-5">
+              <li>After downloading, tap on the APK file</li>
+              <li>If prompted, allow installation from unknown sources</li>
+              <li>Follow the installation prompts</li>
+              <li>Once installed, open SurakshitLocker from your app drawer</li>
+            </ol>
+          </div>
+        )}
       </div>
     );
   };
@@ -154,11 +132,11 @@ const DownloadApp = () => {
           
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800 w-full">
             <Link 
-              to="/" 
+              to="/mobile-app" 
               className="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center justify-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              Return to Dashboard
+              Return to Mobile App Page
             </Link>
           </div>
         </BlurContainer>

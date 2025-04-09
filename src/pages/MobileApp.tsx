@@ -10,25 +10,52 @@ import { Download, Smartphone, Info } from "lucide-react";
 import BlurContainer from "@/components/ui/BlurContainer";
 import { toast } from "@/hooks/use-toast";
 import SurakshitLogo from "@/components/ui/SurakshitLogo";
+import { Link } from "react-router-dom";
 
 const MobileApp = () => {
   const [appLink, setAppLink] = useState("");
+  const [androidAppLink, setAndroidAppLink] = useState("");
   const [activeTab, setActiveTab] = useState<"android" | "ios">("android");
   const isMobile = useMediaQuery('(max-width: 768px)');
   
   useEffect(() => {
     // Get current domain for QR code
     const domain = window.location.origin;
-    setAppLink(`${domain}/download-app`);
-    console.log("App download link:", `${domain}/download-app`);
+    const downloadPage = `${domain}/download-app`;
+    const directApkLink = `${domain}/downloads/surakshitlocker.apk`;
+    
+    setAppLink(downloadPage);
+    setAndroidAppLink(directApkLink);
+    
+    console.log("App download link:", downloadPage);
+    console.log("Direct APK link:", directApkLink);
   }, []);
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(appLink);
+    const linkToCopy = activeTab === "android" ? androidAppLink : appLink;
+    navigator.clipboard.writeText(linkToCopy);
     toast({
       title: "Link copied",
       description: "App download link copied to clipboard"
     });
+  };
+
+  const handleDirectDownload = () => {
+    if (isMobile) {
+      // On mobile, attempt direct download
+      window.location.href = androidAppLink;
+      toast({
+        title: "Download Started",
+        description: "The APK file should start downloading shortly."
+      });
+    } else {
+      // On desktop, just copy the link
+      navigator.clipboard.writeText(androidAppLink);
+      toast({
+        title: "Link copied",
+        description: "Direct APK link copied to clipboard. Share this with your mobile device."
+      });
+    }
   };
 
   const detectOS = () => {
@@ -60,14 +87,14 @@ const MobileApp = () => {
             </div>
             <h1 className="text-3xl font-bold mb-2">Download SurakshitLocker Mobile App</h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Access your secure documents and passwords on the go. Scan the QR code to download our mobile app.
+              Access your secure documents and passwords on the go. Scan the QR code or use the direct download link below.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col items-center justify-center p-8">
               <QRCodeSVG 
-                value={appLink} 
+                value={activeTab === "android" ? androidAppLink : appLink} 
                 size={isMobile ? 200 : 250}
                 bgColor={"#ffffff"}
                 fgColor={"#000000"}
@@ -77,14 +104,33 @@ const MobileApp = () => {
               <p className="text-sm text-muted-foreground mt-4 text-center">
                 Scan this QR code with your device's camera
               </p>
-              <Button 
-                variant="outline" 
-                className="mt-4 flex items-center gap-2"
-                onClick={handleCopyLink}
-              >
-                <Download className="h-4 w-4" />
-                Copy Download Link
-              </Button>
+              
+              <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                  onClick={handleCopyLink}
+                >
+                  <Download className="h-4 w-4" />
+                  Copy Link
+                </Button>
+                
+                {activeTab === "android" && (
+                  <Button 
+                    className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2"
+                    onClick={handleDirectDownload}
+                  >
+                    <Download className="h-4 w-4" />
+                    Direct Download
+                  </Button>
+                )}
+              </div>
+              
+              {isMobile && activeTab === "android" && (
+                <Link to="/download-app" className="mt-4 text-indigo-600 dark:text-indigo-400 hover:underline">
+                  Go to Download Page
+                </Link>
+              )}
             </Card>
 
             <div className="space-y-6">

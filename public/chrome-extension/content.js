@@ -1,4 +1,98 @@
 
+// SurakshitLocker Chrome Extension Content Script
+// This script runs in the context of the web page and communicates with the extension
+
+// Initialize global namespace to avoid conflicts
+window.__DOCU_NINJA_EXTENSION__ = {
+  isConnected: false,
+  version: '1.0.0',
+  
+  // Method to connect the extension to the web app
+  connect: function(userData) {
+    console.log('Extension connect called with user data:', userData);
+    
+    // Store user data in local storage for the extension
+    localStorage.setItem('extension_user_data', JSON.stringify(userData));
+    localStorage.setItem('extensionConnected', 'true');
+    
+    // Trigger connection event
+    const event = new CustomEvent('extensionConnected', {
+      detail: { timestamp: new Date().toISOString() }
+    });
+    document.dispatchEvent(event);
+    
+    this.isConnected = true;
+    
+    // Trigger initial sync
+    this.syncWithWebApp();
+    
+    return { success: true };
+  },
+  
+  // Method to disconnect the extension
+  disconnect: function() {
+    localStorage.removeItem('extension_user_data');
+    localStorage.setItem('extensionConnected', 'false');
+    
+    const event = new CustomEvent('extensionDisconnected', {
+      detail: { timestamp: new Date().toISOString() }
+    });
+    document.dispatchEvent(event);
+    
+    this.isConnected = false;
+    
+    return { success: true };
+  },
+  
+  // Method to sync data with the web app
+  syncWithWebApp: function() {
+    try {
+      // Get data from local storage
+      const documents = JSON.parse(localStorage.getItem('documents') || '[]');
+      const userSettings = JSON.parse(localStorage.getItem('userSettings') || '{}');
+      const userEmail = localStorage.getItem('userEmail') || '';
+      const userId = localStorage.getItem('userId') || '';
+      
+      // Create sync data object
+      const syncData = {
+        documents,
+        userSettings,
+        userEmail,
+        userId,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Store sync data for the extension
+      localStorage.setItem('extensionSyncData', JSON.stringify({
+        lastSync: new Date().toISOString(),
+        syncedData: syncData
+      }));
+      
+      // Send a message to the extension background script
+      chrome.runtime.sendMessage({
+        action: 'syncData',
+        data: syncData
+      });
+      
+      return { success: true };
+    } catch (e) {
+      console.error('Error syncing with web app:', e);
+      return { success: false, error: e.toString() };
+    }
+  },
+  
+  // Method to check if the extension is connected
+  isExtensionConnected: function() {
+    return localStorage.getItem('extensionConnected') === 'true';
+  }
+};
+
+// Notify the page that the extension is available
+const extensionReadyEvent = new CustomEvent('extensionInstalled', {
+  detail: { version: window.__DOCU_NINJA_EXTENSION__.version }
+});
+document.dispatchEvent(extensionReadyEvent);
+
 // Listen for messages from the extension
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "getLocalStorage") {
@@ -8,6 +102,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const userEmail = localStorage.getItem("userEmail") || "";
       const backupHistory = JSON.parse(localStorage.getItem("backup_history") || "[]");
       const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+      const userId = localStorage.getItem("userId") || "";
       
       sendResponse({
         documents,
@@ -15,6 +110,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         userEmail,
         backupHistory,
         isLoggedIn,
+        userId,
         success: true
       });
     } catch (e) {
@@ -34,17 +130,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     try {
       // Sync data between extension and web app
       if (message.data) {
+        let dataChanged = false;
+        
         if (message.data.userSettings) {
           localStorage.setItem("userSettings", JSON.stringify(message.data.userSettings));
+          dataChanged = true;
         }
         
         if (message.data.documents) {
           localStorage.setItem("documents", JSON.stringify(message.data.documents));
+          dataChanged = true;
         }
         
         // Handle any custom data from the extension
         if (message.data.customData) {
           localStorage.setItem("extension_data", JSON.stringify(message.data.customData));
+          dataChanged = true;
         }
         
         // Handle user profile data
@@ -53,20 +154,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           if (message.data.userProfile.email) {
             localStorage.setItem("userEmail", message.data.userProfile.email);
           }
+          dataChanged = true;
         }
         
         // Sync login state
         if (message.data.isLoggedIn !== undefined) {
           localStorage.setItem("isLoggedIn", message.data.isLoggedIn);
+          dataChanged = true;
         }
         
-        // Notify the page that data was updated
-        const event = new CustomEvent('DocuNinjaDataSync', {
-          detail: { source: 'extension', timestamp: new Date().toISOString() }
-        });
-        document.dispatchEvent(event);
+        // Store the last sync time
+        localStorage.setItem("extensionSyncData", JSON.stringify({
+          lastSync: new Date().toISOString(),
+          syncedData: message.data
+        }));
         
-        sendResponse({success: true, message: "Data synced successfully"});
+        // Notify the page that data was updated if changes occurred
+        if (dataChanged) {
+          const event = new CustomEvent('DocuNinjaDataSync', {
+            detail: { source: 'extension', timestamp: new Date().toISOString() }
+          });
+          document.dispatchEvent(event);
+        }
+        
+        sendResponse({success: true, message: "Data synced successfully", dataChanged});
       }
     } catch (e) {
       sendResponse({error: e.toString()});
@@ -80,13 +191,83 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
       const userSettings = JSON.parse(localStorage.getItem("userSettings") || "{}");
       const userEmail = localStorage.getItem("userEmail") || "";
+      const userId = localStorage.getItem("userId") || "";
       
       sendResponse({
         isLoggedIn,
         userSettings,
         userEmail,
+        userId,
         success: true
       });
+    } catch (e) {
+      sendResponse({error: e.toString()});
+    }
+    return true;
+  }
+  
+  if (message.action === "notifyUser") {
+    // Display a notification to the user
+    try {
+      const { title, message, type } = message;
+      
+      // Create a toast-like notification
+      const toastContainer = document.createElement('div');
+      toastContainer.style.position = 'fixed';
+      toastContainer.style.bottom = '20px';
+      toastContainer.style.right = '20px';
+      toastContainer.style.padding = '10px 20px';
+      toastContainer.style.backgroundColor = type === 'error' ? '#ef4444' : '#10b981';
+      toastContainer.style.color = 'white';
+      toastContainer.style.borderRadius = '5px';
+      toastContainer.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+      toastContainer.style.zIndex = '9999';
+      toastContainer.style.opacity = '0';
+      toastContainer.style.transition = 'opacity 0.3s ease-in-out';
+      
+      toastContainer.innerHTML = `
+        <div style="font-weight: bold;">${title}</div>
+        <div>${message}</div>
+      `;
+      
+      document.body.appendChild(toastContainer);
+      
+      // Fade in
+      setTimeout(() => {
+        toastContainer.style.opacity = '1';
+      }, 10);
+      
+      // Remove after 5 seconds
+      setTimeout(() => {
+        toastContainer.style.opacity = '0';
+        setTimeout(() => {
+          document.body.removeChild(toastContainer);
+        }, 300);
+      }, 5000);
+      
+      sendResponse({success: true});
+    } catch (e) {
+      sendResponse({error: e.toString()});
+    }
+    return true;
+  }
+  
+  if (message.action === "updateDocuments") {
+    // Update documents from the extension
+    try {
+      const { documents } = message;
+      if (documents) {
+        localStorage.setItem("documents", JSON.stringify(documents));
+        
+        const event = new CustomEvent('DocumentsUpdated', {
+          detail: { source: 'extension', timestamp: new Date().toISOString() }
+        });
+        document.dispatchEvent(event);
+        
+        sendResponse({success: true});
+      } else {
+        sendResponse({success: false, error: "No documents provided"});
+      }
     } catch (e) {
       sendResponse({error: e.toString()});
     }
@@ -96,7 +277,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Inform extension when document data changes in the web app
 window.addEventListener("storage", function(e) {
-  if (e.key === "documents" || e.key === "userSettings" || e.key === "backup_history" || e.key === "user_profile" || e.key === "isLoggedIn" || e.key === "userEmail") {
+  if (e.key === "documents" || e.key === "userSettings" || e.key === "backup_history" || e.key === "user_profile" || e.key === "isLoggedIn" || e.key === "userEmail" || e.key === "userId") {
     chrome.runtime.sendMessage({
       action: "webAppDataChanged",
       key: e.key,
@@ -110,7 +291,8 @@ window.addEventListener("storage", function(e) {
 chrome.runtime.sendMessage({
   action: "contentScriptLoaded",
   url: window.location.href,
-  isLoggedIn: localStorage.getItem("isLoggedIn") === "true"
+  isLoggedIn: localStorage.getItem("isLoggedIn") === "true",
+  userEmail: localStorage.getItem("userEmail") || ""
 });
 
 // Listen for custom events from the web application
@@ -128,73 +310,22 @@ document.addEventListener('DocuNinjaEvent', function(e) {
   }
 });
 
-// Add event listener for test user profile click
-document.addEventListener('DOMContentLoaded', () => {
-  // This will be handled by the router but adding extra handler for extension context
-  const profileElements = document.querySelectorAll('[data-profile-link="true"]');
-  profileElements.forEach(el => {
-    el.addEventListener('click', () => {
-      window.location.href = "/profile";
-    });
-  });
-  
-  // Inject notification badge for demo purposes
-  injectNotificationBadge();
-});
-
-// Inject a notification badge for demo purposes
-function injectNotificationBadge() {
-  // Check if there are notifications to show
-  const notificationCount = 3; // For demo purposes
-  
-  if (notificationCount > 0) {
-    // Find the notification icon in the app
-    setTimeout(() => {
-      const notificationIcons = document.querySelectorAll('[data-notification-icon="true"]');
-      notificationIcons.forEach(icon => {
-        const badge = document.createElement('span');
-        badge.className = 'notification-badge';
-        badge.textContent = notificationCount.toString();
-        badge.style.position = 'absolute';
-        badge.style.top = '-5px';
-        badge.style.right = '-5px';
-        badge.style.backgroundColor = '#ef4444';
-        badge.style.color = 'white';
-        badge.style.borderRadius = '50%';
-        badge.style.width = '16px';
-        badge.style.height = '16px';
-        badge.style.fontSize = '10px';
-        badge.style.display = 'flex';
-        badge.style.alignItems = 'center';
-        badge.style.justifyContent = 'center';
-        badge.style.fontWeight = 'bold';
-        
-        // Make sure the icon has position relative for absolute positioning of the badge
-        icon.style.position = 'relative';
-        icon.appendChild(badge);
-      });
-    }, 1000);
+// Define global functions to expose extension functionality
+window.syncWithExtension = function() {
+  if (window.__DOCU_NINJA_EXTENSION__) {
+    return window.__DOCU_NINJA_EXTENSION__.syncWithWebApp();
   }
-}
+  return { success: false, error: "Extension not available" };
+};
 
-// Function to expose data to the extension
-window.exposeDataToExtension = function() {
-  // This function can be called from the web app to manually trigger data sharing
-  const documents = JSON.parse(localStorage.getItem("documents") || "[]");
-  const userSettings = JSON.parse(localStorage.getItem("userSettings") || "{}");
-  const userEmail = localStorage.getItem("userEmail") || "";
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  
-  chrome.runtime.sendMessage({
-    action: "manualDataSync",
-    documents,
-    userSettings,
-    userEmail,
-    isLoggedIn,
-    timestamp: new Date().toISOString()
-  });
-  
-  return true;
+window.checkExtensionStatus = function() {
+  return {
+    installed: typeof window.__DOCU_NINJA_EXTENSION__ !== 'undefined',
+    connected: localStorage.getItem('extensionConnected') === 'true',
+    lastSync: localStorage.getItem('extensionSyncData') 
+      ? JSON.parse(localStorage.getItem('extensionSyncData')).lastSync 
+      : null
+  };
 };
 
 // Initialize sync with extension
@@ -204,7 +335,8 @@ setTimeout(() => {
     action: "initialSync",
     url: window.location.href,
     isLoggedIn: localStorage.getItem("isLoggedIn") === "true",
-    userEmail: localStorage.getItem("userEmail") || ""
+    userEmail: localStorage.getItem("userEmail") || "",
+    userId: localStorage.getItem("userId") || ""
   });
 }, 2000);
 
@@ -216,6 +348,18 @@ document.addEventListener('userAuthChanged', function(e) {
     action: "authStatusChanged",
     isLoggedIn: detail.isLoggedIn,
     userEmail: detail.userEmail || "",
+    userId: detail.userId || "",
     timestamp: new Date().toISOString()
   });
 });
+
+// Create a chrome extension ZIP file for download
+function createExtensionZip() {
+  console.log("Creating extension zip file...");
+  // This is a mock function that would be implemented in a real scenario
+  // In a production environment, this would create a ZIP file with the extension files
+  return true;
+}
+
+// Execute initialization
+createExtensionZip();

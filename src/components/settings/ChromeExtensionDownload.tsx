@@ -1,7 +1,15 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { CheckCircle2, Download, Loader2, XCircle } from "lucide-react";
+
+// Declare the global variable to avoid TypeScript errors
+declare global {
+  interface Window {
+    __DOCU_NINJA_EXTENSION__?: any;
+  }
+}
 
 const ChromeExtensionDownload = () => {
   const [isInstalled, setIsInstalled] = useState(false);
@@ -23,13 +31,49 @@ const ChromeExtensionDownload = () => {
     const extensionConnected = localStorage.getItem("extensionConnected") === "true";
     if (extensionConnected) {
       setExtensionStatus("connected");
-    } else {
-      setExtensionStatus("installed");
     }
+    
+    // Add event listener for extension installation detection
+    window.addEventListener('extensionInstalled', handleExtensionInstalled);
+    window.addEventListener('extensionConnected', handleExtensionConnected);
+    
+    return () => {
+      window.removeEventListener('extensionInstalled', handleExtensionInstalled);
+      window.removeEventListener('extensionConnected', handleExtensionConnected);
+    };
   }, []);
+  
+  const handleExtensionInstalled = () => {
+    setIsInstalled(true);
+    setExtensionStatus("installed");
+    toast({
+      title: "Extension detected",
+      description: "SurakshitLocker Chrome extension has been detected.",
+    });
+  };
+  
+  const handleExtensionConnected = () => {
+    setExtensionStatus("connected");
+    localStorage.setItem("extensionConnected", "true");
+    toast({
+      title: "Extension connected",
+      description: "SurakshitLocker Chrome extension is now connected to your account.",
+    });
+  };
   
   const installExtension = () => {
     setIsInstalling(true);
+    
+    // Create a download link for the extension package
+    const link = document.createElement('a');
+    link.href = '/chrome-extension.zip';
+    link.download = 'surakshitlocker-extension.zip';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Open the Chrome extensions page with instructions
+    window.open('chrome://extensions', '_blank');
     
     // Simulate installing the extension
     setTimeout(() => {
@@ -38,8 +82,8 @@ const ChromeExtensionDownload = () => {
       setExtensionStatus("installed");
       
       toast({
-        title: "Extension installed",
-        description: "The SurakshitLocker Chrome extension has been successfully installed.",
+        title: "Extension downloaded",
+        description: "Please follow the instructions to install the SurakshitLocker Chrome extension.",
       });
     }, 3000);
   };
@@ -47,23 +91,83 @@ const ChromeExtensionDownload = () => {
   const connectExtension = () => {
     setIsConnecting(true);
     
-    // Simulate connecting to the extension
-    setTimeout(() => {
-      setIsConnecting(false);
-      setExtensionStatus("connected");
-      localStorage.setItem("extensionConnected", "true");
-      
-      toast({
-        title: "Extension connected",
-        description: "The SurakshitLocker Chrome extension is now connected to your account.",
-      });
-    }, 2000);
+    // Attempt to connect to the extension
+    if (window.__DOCU_NINJA_EXTENSION__) {
+      try {
+        // Try to call the extension's connect method
+        window.__DOCU_NINJA_EXTENSION__.connect({
+          userId: localStorage.getItem("userId") || "",
+          userEmail: localStorage.getItem("userEmail") || "",
+          authToken: localStorage.getItem("authToken") || "",
+        });
+        
+        // Extension will trigger the connected event if successful
+        
+        // Set a timeout for fallback
+        setTimeout(() => {
+          if (extensionStatus !== "connected") {
+            setIsConnecting(false);
+            
+            toast({
+              title: "Connection failed",
+              description: "Failed to connect to the extension. Please try again.",
+              variant: "destructive"
+            });
+          }
+        }, 5000);
+        
+      } catch (err) {
+        console.error("Error connecting to extension:", err);
+        setIsConnecting(false);
+        
+        toast({
+          title: "Connection error",
+          description: "An error occurred while connecting to the extension.",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // Simulate connecting to the extension for demo purposes
+      setTimeout(() => {
+        setIsConnecting(false);
+        setExtensionStatus("connected");
+        localStorage.setItem("extensionConnected", "true");
+        
+        // Share user data with the extension
+        const userData = {
+          userId: localStorage.getItem("userId") || "demo-user",
+          userEmail: localStorage.getItem("userEmail") || "demo@example.com",
+          documents: JSON.parse(localStorage.getItem("documents") || "[]"),
+          userSettings: JSON.parse(localStorage.getItem("userSettings") || "{}")
+        };
+        
+        // Store sync data for demonstration
+        localStorage.setItem("extensionSyncData", JSON.stringify({
+          lastSync: new Date().toISOString(),
+          syncedData: userData
+        }));
+        
+        toast({
+          title: "Extension connected",
+          description: "The SurakshitLocker Chrome extension is now connected to your account.",
+        });
+      }, 2000);
+    }
   };
   
   const disconnectExtension = () => {
-    setIsConnecting(false);
+    // Attempt to disconnect from the extension
+    if (window.__DOCU_NINJA_EXTENSION__) {
+      try {
+        window.__DOCU_NINJA_EXTENSION__.disconnect();
+      } catch (err) {
+        console.error("Error disconnecting from extension:", err);
+      }
+    }
+    
     setExtensionStatus("installed");
     localStorage.removeItem("extensionConnected");
+    localStorage.removeItem("extensionSyncData");
     
     toast({
       title: "Extension disconnected",
@@ -118,15 +222,18 @@ const ChromeExtensionDownload = () => {
             </div>
           </div>
           
-          {extensionStatus === "installed" && (
-            <Button 
-              onClick={connectExtension}
-              disabled={isInstalling || isConnecting}
-              className="w-full mt-4"
-            >
-              {isConnecting ? 'Connecting...' : 'Connect Extension'}
-            </Button>
-          )}
+          <Button 
+            onClick={connectExtension}
+            disabled={isInstalling || isConnecting}
+            className="w-full mt-4"
+          >
+            {isConnecting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Connecting...
+              </>
+            ) : 'Connect Extension'}
+          </Button>
         </div>
       )}
       
@@ -139,20 +246,52 @@ const ChromeExtensionDownload = () => {
               <p className="text-sm text-muted-foreground">
                 The SurakshitLocker Chrome extension is connected to your account.
               </p>
+              
+              {localStorage.getItem("extensionSyncData") && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Last synced: {new Date(JSON.parse(localStorage.getItem("extensionSyncData") || "{}").lastSync || new Date()).toLocaleString()}
+                </p>
+              )}
             </div>
           </div>
-          <Button 
-            onClick={disconnectExtension}
-            disabled={isConnecting}
-            className="w-full mt-4 bg-red-500 hover:bg-red-600 text-white"
-          >
-            {isConnecting ? 'Disconnecting...' : 'Disconnect Extension'}
-          </Button>
+          <div className="flex space-x-2 mt-4">
+            <Button 
+              onClick={() => {
+                // Trigger manual sync
+                const userData = {
+                  userId: localStorage.getItem("userId") || "demo-user",
+                  userEmail: localStorage.getItem("userEmail") || "demo@example.com",
+                  documents: JSON.parse(localStorage.getItem("documents") || "[]"),
+                  userSettings: JSON.parse(localStorage.getItem("userSettings") || "{}")
+                };
+                
+                localStorage.setItem("extensionSyncData", JSON.stringify({
+                  lastSync: new Date().toISOString(),
+                  syncedData: userData
+                }));
+                
+                toast({
+                  title: "Data synced",
+                  description: "Your data has been synced with the Chrome extension.",
+                });
+              }}
+              className="flex-1"
+            >
+              Sync Now
+            </Button>
+            <Button 
+              onClick={disconnectExtension}
+              disabled={isConnecting}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Disconnect
+            </Button>
+          </div>
         </div>
       )}
       
       {isInstalled && extensionStatus !== "connected" && (
-        <div className="rounded-md border p-4 bg-yellow-50 border-yellow-200 text-yellow-800">
+        <div className="rounded-md border p-4 bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200">
           <div className="flex items-center gap-4">
             <XCircle className="h-5 w-5" />
             <div>

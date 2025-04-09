@@ -179,7 +179,7 @@ const ChromeExtensionDownload = () => {
             </div>
           )}
           
-          {extensionStatus === 'installed' && !extensionStatus === 'connected' && (
+          {extensionStatus === 'installed' && extensionStatus !== 'connected' && (
             <div className="mt-3 flex items-center text-sm text-amber-600 dark:text-amber-400">
               <Clock className="h-4 w-4 mr-1.5" /> Extension installed, waiting for connection...
             </div>

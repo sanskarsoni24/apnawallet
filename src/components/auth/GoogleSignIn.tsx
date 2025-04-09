@@ -16,7 +16,7 @@ const GoogleSignIn = () => {
       // Simulate Google authentication
       setTimeout(() => {
         // In a real implementation, we would handle the Google OAuth flow
-        // For now, we'll simulate it with a demo account
+        // For demo purposes, we'll use a premium demo account
         login("demo@example.com", "demo123");
         toast({
           title: "Signed in with Google",
@@ -40,7 +40,7 @@ const GoogleSignIn = () => {
       variant="outline"
       type="button"
       disabled={isLoading}
-      className="w-full border-slate-300"
+      className="w-full border-slate-300 flex items-center justify-center"
       onClick={handleGoogleSignIn}
     >
       {!isLoading && (

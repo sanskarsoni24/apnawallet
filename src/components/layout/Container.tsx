@@ -1,8 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "./Header";
 import MobileBanner from "@/components/ui/MobileBanner";
 import { cn } from "@/lib/utils";
+import { useLocation } from "react-router-dom";
 
 interface ContainerProps {
   children: React.ReactNode;
@@ -10,12 +11,32 @@ interface ContainerProps {
 }
 
 const Container = ({ children, className }: ContainerProps) => {
-  const [showMobileBanner, setShowMobileBanner] = useState<boolean>(
-    localStorage.getItem('mobile_banner_dismissed') !== 'true' &&
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+  const [showMobileBanner, setShowMobileBanner] = useState<boolean>(false);
+  const location = useLocation();
+  
+  useEffect(() => {
+    // Check if the user is on a mobile device
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent
-    )
-  );
+    );
+    
+    // Don't show the banner on the mobile app page itself or if already dismissed
+    const shouldShowBanner = 
+      isMobileDevice && 
+      !location.pathname.includes("/mobile-app") &&
+      !location.pathname.includes("/download-app") &&
+      localStorage.getItem('mobile_banner_dismissed') !== 'true';
+    
+    setShowMobileBanner(shouldShowBanner);
+    
+    // First time mobile visitors get redirected to mobile app page after a delay
+    // but only once and only on first visit
+    const isFirstVisit = !localStorage.getItem('visited_before');
+    
+    if (isFirstVisit && isMobileDevice && location.pathname === "/") {
+      localStorage.setItem('visited_before', 'true');
+    }
+  }, [location.pathname]);
 
   const handleDismissBanner = () => {
     setShowMobileBanner(false);

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -22,6 +21,7 @@ import BlurContainer from "@/components/ui/BlurContainer";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import ForgotPassword from "@/components/auth/ForgotPassword";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -146,7 +146,10 @@ const SignIn = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <div className="flex items-center justify-between">
+                          <FormLabel>Password</FormLabel>
+                          <ForgotPassword />
+                        </div>
                         <FormControl>
                           <div className="relative">
                             <Input

@@ -17,7 +17,7 @@ import SignUp from "./pages/SignUp";
 import { DocumentProvider, useDocuments } from "./contexts/DocumentContext";
 import { UserProvider, useUser } from "./contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
-import { checkForDueDocuments, createNotification } from "./services/NotificationService";
+import { checkForDueDocuments, createNotification, sendEmailNotification, verifyEmailNotifications } from "./services/NotificationService";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import StripeCheckout from "./pages/StripeCheckout";
 import UserProfile from "./pages/UserProfile";
@@ -49,6 +49,7 @@ const NotificationCheck = () => {
   const { documents } = useDocuments();
   const { email, userSettings } = useUser();
   const [lastNotificationCheck, setLastNotificationCheck] = useState<string | null>(null);
+  const [emailVerified, setEmailVerified] = useState(false);
 
   useEffect(() => {
     const firstVisit = localStorage.getItem("firstVisit") !== "false";
@@ -61,6 +62,22 @@ const NotificationCheck = () => {
         });
         localStorage.setItem("firstVisit", "false");
       }, 1000);
+    }
+
+    // Verify email notification settings on component mount
+    if (email && userSettings.emailNotifications) {
+      const emailStatus = verifyEmailNotifications(email);
+      setEmailVerified(emailStatus.configured && emailStatus.enabled);
+      
+      // If email is configured but not verified, send a test email
+      if (emailStatus.configured && !emailVerified) {
+        sendEmailNotification(
+          email,
+          "SurakshitLocker - Email Notifications Enabled",
+          `Hello,\n\nYour email notifications for SurakshitLocker have been successfully enabled. You will now receive notifications about your documents.\n\nThank you for using SurakshitLocker!`
+        );
+        setEmailVerified(true);
+      }
     }
 
     // Check user notification preferences - only once per hour
@@ -99,7 +116,7 @@ const NotificationCheck = () => {
       clearTimeout(initialTimeout);
       clearInterval(intervalId);
     };
-  }, [documents, email, userSettings]);
+  }, [documents, email, userSettings, emailVerified]);
 
   return null;
 };

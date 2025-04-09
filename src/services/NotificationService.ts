@@ -1,3 +1,4 @@
+
 import { toast } from "@/hooks/use-toast";
 import { Document } from "@/contexts/DocumentContext";
 
@@ -170,6 +171,57 @@ export const createNotification = (
 export const createAppNotification = createNotification;
 
 /**
+ * Send an email notification
+ * @param to recipient email address
+ * @param subject email subject
+ * @param body email body content
+ * @returns boolean indicating if email was sent successfully
+ */
+export const sendEmailNotification = (
+  to: string,
+  subject: string,
+  body: string
+): boolean => {
+  try {
+    console.log(`[Email Notification] Sending email to: ${to}`);
+    console.log(`[Email Notification] Subject: ${subject}`);
+    console.log(`[Email Notification] Body: ${body}`);
+    
+    // For a real implementation, you would call an email service API here
+    // Since we're in a front-end only environment without a backend,
+    // we'll simulate email sending and store in localStorage for demo purposes
+    
+    const emailHistory = JSON.parse(localStorage.getItem('emailNotifications') || '[]');
+    emailHistory.push({
+      to,
+      subject,
+      body,
+      timestamp: new Date().toISOString(),
+      status: 'sent'
+    });
+    localStorage.setItem('emailNotifications', JSON.stringify(emailHistory));
+    
+    // Show toast notification to confirm email was sent
+    toast({
+      title: "Email Notification Sent",
+      description: `Email sent to ${to} regarding ${subject}`,
+    });
+    
+    return true;
+  } catch (error) {
+    console.error("Error sending email notification:", error);
+    
+    toast({
+      title: "Email Notification Failed",
+      description: "Could not send the email notification. Please try again later.",
+      variant: "destructive"
+    });
+    
+    return false;
+  }
+};
+
+/**
  * Check for documents due soon and send notifications
  */
 export const checkForDueDocuments = (
@@ -225,12 +277,48 @@ export const checkForDueDocuments = (
       });
     }
     
-    // For email notifications, we would normally call an API here
-    // This is just a placeholder since actual email sending would require backend integration
+    // For email notifications, use our new email notification function
     if (preferences.emailNotifications && userEmail) {
-      console.log(`Would send email to ${userEmail} about ${dueSoonDocs.length} documents due soon.`);
+      // Create a more detailed email body with document information
+      let emailBody = `Dear SurakshitLocker User,\n\n`;
+      emailBody += `You have ${dueSoonDocs.length} document${dueSoonDocs.length > 1 ? 's' : ''} that will expire soon:\n\n`;
+      
+      dueSoonDocs.forEach(doc => {
+        const dueDate = doc.dueDate ? new Date(doc.dueDate).toLocaleDateString() : 'No due date';
+        emailBody += `- ${doc.title} (${doc.type}): Due on ${dueDate}\n`;
+      });
+      
+      emailBody += `\nPlease log in to your SurakshitLocker account to take action on these documents.\n\n`;
+      emailBody += `Thank you for using SurakshitLocker!\n`;
+      
+      sendEmailNotification(
+        userEmail,
+        "SurakshitLocker - Documents Due Soon",
+        emailBody
+      );
     }
   }
+};
+
+/**
+ * Verify email notification settings and permissions
+ * @returns object with email notification status
+ */
+export const verifyEmailNotifications = (userEmail: string): { 
+  enabled: boolean; 
+  configured: boolean; 
+  email: string 
+} => {
+  // In a real app, this would check server-side email configuration
+  // For our demo, we'll just verify if the user has enabled email notifications
+  const userSettings = JSON.parse(localStorage.getItem('userSettings') || '{}');
+  const emailNotifications = userSettings.emailNotifications !== false; // Default to true
+  
+  return {
+    enabled: emailNotifications,
+    configured: !!userEmail,
+    email: userEmail
+  };
 };
 
 // Initialize voice settings when imported

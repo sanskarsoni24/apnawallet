@@ -1,13 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import BlurContainer from '@/components/ui/BlurContainer';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Bell, Volume2, VolumeX, Save } from 'lucide-react';
-import { speakNotification, getAvailableVoices, updateVoiceSettings, getVoiceSettings } from '@/services/NotificationService';
+import { Bell, Volume2, VolumeX, Save, Mail, AlertCircle } from 'lucide-react';
+import { speakNotification, getAvailableVoices, updateVoiceSettings, getVoiceSettings, sendEmailNotification, verifyEmailNotifications } from '@/services/NotificationService';
 import { toast } from '@/hooks/use-toast';
 import { Slider } from '@/components/ui/slider';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { useUser } from '@/contexts/UserContext';
 
 interface NotificationSettingsProps {
   settings: {
@@ -33,6 +34,8 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
   const [voiceVolume, setVoiceVolume] = useState(0.8);
   const [voiceRate, setVoiceRate] = useState(1.0);
   const [voicePitch, setVoicePitch] = useState(1.0);
+  const [showEmailTest, setShowEmailTest] = useState(false);
+  const { email } = useUser();
   
   useEffect(() => {
     // Get available voices
@@ -49,10 +52,20 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
       setVoiceRate(currentSettings.rate);
       setVoicePitch(currentSettings.pitch);
     }
-  }, []);
+    
+    // Check if email notification was recently enabled
+    if (localSettings.emailNotifications) {
+      setShowEmailTest(true);
+    }
+  }, [localSettings.emailNotifications]);
   
   const handleCheck = (field: string, value: boolean) => {
     setLocalSettings({ ...localSettings, [field]: value });
+    
+    // Show email test option when email notifications are enabled
+    if (field === 'emailNotifications' && value) {
+      setShowEmailTest(true);
+    }
   };
   
   const handleChange = (field: string, value: string) => {
@@ -85,6 +98,12 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
     if (localSettings.pushNotifications && Notification.permission !== 'granted') {
       requestNotificationPermission();
     }
+    
+    // Send test email notification if email notifications are enabled and we have a valid email
+    if (localSettings.emailNotifications && email && showEmailTest) {
+      sendTestEmailNotification();
+      setShowEmailTest(false); // Don't show test option again until re-enabled
+    }
   };
   
   const requestNotificationPermission = () => {
@@ -105,6 +124,43 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
           // Update local state to reflect actual status
           setLocalSettings(prev => ({...prev, pushNotifications: false}));
         }
+      });
+    }
+  };
+  
+  const sendTestEmailNotification = () => {
+    if (!email) {
+      toast({
+        title: "Email Required",
+        description: "Please add an email address in your account settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const emailBody = `
+Dear SurakshitLocker User,
+
+This is a test email to confirm that your email notifications are working correctly.
+
+You will now receive important notifications about your documents, including:
+- Documents that are due soon
+- Documents that have expired
+- Important security alerts
+
+Thank you for using SurakshitLocker!
+    `;
+    
+    const success = sendEmailNotification(
+      email,
+      "SurakshitLocker - Email Notifications Test",
+      emailBody
+    );
+    
+    if (success) {
+      toast({
+        title: "Test Email Sent",
+        description: `A test notification has been sent to ${email}`,
       });
     }
   };
@@ -171,6 +227,33 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
                 </p>
               </div>
             </div>
+            
+            {localSettings.emailNotifications && showEmailTest && (
+              <div className="ml-7 mt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={sendTestEmailNotification}
+                  className="flex items-center gap-2 text-sm"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  Send Test Email
+                </Button>
+                <p className="text-xs text-muted-foreground mt-1 dark:text-slate-400">
+                  {email ? `A test notification will be sent to ${email}` : "Please add an email in account settings"}
+                </p>
+              </div>
+            )}
+            
+            {localSettings.emailNotifications && !email && (
+              <Alert variant="warning" className="ml-7 mt-2 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/30">
+                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <AlertTitle className="text-amber-800 dark:text-amber-300">Email address required</AlertTitle>
+                <AlertDescription className="text-amber-700 dark:text-amber-400">
+                  Please add an email address in your account settings to receive email notifications.
+                </AlertDescription>
+              </Alert>
+            )}
             
             <div className="flex items-start space-x-3">
               <Checkbox

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Container from "@/components/layout/Container";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Bell, Palette, Shield, CloudCog } from "lucide-react";
@@ -9,10 +9,51 @@ import AppearanceSettings from "@/components/settings/AppearanceSettings";
 import ChromeExtensionDownload from "@/components/settings/ChromeExtensionDownload";
 import BackupSettings from "@/components/settings/BackupSettings";
 import PremiumFeatures from "@/components/premium/PremiumFeatures";
+import { useUser } from "@/contexts/UserContext";
+import { toast } from "@/hooks/use-toast";
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("account");
+  const { userSettings, updateUserSettings, displayName, email, updateProfile } = useUser();
+  
+  // Account settings state
+  const [localDisplayName, setLocalDisplayName] = useState(displayName);
+  const [localEmail, setLocalEmail] = useState(email);
+  
+  // Update local state when user profile changes
+  useEffect(() => {
+    setLocalDisplayName(displayName);
+    setLocalEmail(email);
+  }, [displayName, email]);
+  
   const isPremiumUser = false; // This would be determined by the user's subscription
+  
+  // Save account settings
+  const saveAccountSettings = () => {
+    updateProfile(localDisplayName, localEmail);
+    toast({
+      title: "Settings saved",
+      description: "Your account settings have been updated successfully.",
+    });
+  };
+  
+  // Save notification settings
+  const saveSettings = (newSettings: any) => {
+    updateUserSettings(newSettings);
+    toast({
+      title: "Settings saved",
+      description: "Your notification settings have been updated successfully.",
+    });
+  };
+  
+  // Save theme
+  const saveTheme = (theme: string) => {
+    updateUserSettings({ theme });
+    toast({
+      title: "Theme updated",
+      description: `Your theme has been set to ${theme}.`,
+    });
+  };
   
   return (
     <Container>
@@ -49,11 +90,20 @@ const Settings = () => {
           </TabsList>
 
           <TabsContent value="account" className="space-y-6">
-            <AccountSettings />
+            <AccountSettings 
+              localDisplayName={localDisplayName}
+              setLocalDisplayName={setLocalDisplayName}
+              localEmail={localEmail}
+              setLocalEmail={setLocalEmail}
+              saveAccountSettings={saveAccountSettings}
+            />
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-6">
-            <NotificationSettings />
+            <NotificationSettings 
+              settings={userSettings}
+              saveSettings={saveSettings}
+            />
           </TabsContent>
           
           <TabsContent value="backup" className="space-y-6">
@@ -69,7 +119,10 @@ const Settings = () => {
           </TabsContent>
 
           <TabsContent value="appearance" className="space-y-6">
-            <AppearanceSettings />
+            <AppearanceSettings 
+              theme={userSettings.theme || 'system'} 
+              saveTheme={saveTheme} 
+            />
           </TabsContent>
 
           <TabsContent value="extensions" className="space-y-6">

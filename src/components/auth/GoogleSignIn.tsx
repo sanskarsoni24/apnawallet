@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Google } from "lucide-react";
+import { CircleUser } from "lucide-react"; // Changed from Google to CircleUser which is available
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -43,15 +43,10 @@ const GoogleSignIn = () => {
       disabled={isLoading}
       className="w-full border-slate-300"
       onClick={handleGoogleSignIn}
+      loading={isLoading}
     >
-      {isLoading ? (
-        "Signing in..."
-      ) : (
-        <>
-          <Google className="mr-2 h-4 w-4" />
-          Sign in with Google
-        </>
-      )}
+      {!isLoading && <CircleUser className="mr-2 h-4 w-4" />}
+      {isLoading ? "Signing in..." : "Sign in with Google"}
     </Button>
   );
 };

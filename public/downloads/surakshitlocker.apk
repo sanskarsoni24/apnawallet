@@ -1,22 +1,23 @@
 
-PK\003\004\024\000\000\000\010\000\000\0001\000\000\000\000\000\000\000\000\000\000\000\013\000\000\000META-INF/MANIFEST.MFManifest-Version: 1.0
+PK\003\004\014\000\000\000\010\000bcJMf\375\221j\357\000\000\000\365\002\000\000\013\000\000\000META-INF/MANIFEST.MFManifest-Version: 1.0
 Created-By: SurakshitLocker
 Main-Class: app.surakshitlocker.secure.MainActivity
 Name: SurakshitLocker Mobile App
 Version: 1.0.0
-
-PK\003\004\024\000\000\000\010\000\000\0001\000\000\000\000\000\000\000\000\000\000\000\020\000\000\000assets/placeholder.txtThis is a placeholder APK file for demonstration purposes only.
-Please visit our website to download the actual application.
-
-SurakshitLocker Mobile App Demo v1.0.0
-PK\003\004\024\000\000\000\010\000\000\0001\000\000\000\000\000\000\000\000\000\000\000\024\000\000\000classes.dexdex
-035 \000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\3760\000\000\000\000\000\000\000\000\000\000\000\000
-PK\003\004\024\000\000\000\010\000\000\0001\000\000\000\000\000\000\000\000\000\000\000\023\000\000\000AndroidManifest.xml<?xml version="1.0" encoding="utf-8"?>
+PK\003\004\014\000\000\000\010\000bcJM\253\315\351\235V\000\000\000j\000\000\000\020\000\000\000assets/placeholder.txtThis is a placeholder APK file for the SurakshitLocker mobile app.
+Please visit our website for the complete application.
+PK\003\004\014\000\000\000\010\000bcJM\253\327\320:k\002\000\000\324\n\000\000\023\000\000\000AndroidManifest.xml<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="app.surakshitlocker.secure">
+    package="app.surakshitlocker.secure"
+    android:versionCode="1"
+    android:versionName="1.0">
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="30" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
         android:label="SurakshitLocker"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
@@ -26,4 +27,4 @@ PK\003\004\024\000\000\000\010\000\000\0001\000\000\000\000\000\000\000\000\000\
         </activity>
     </application>
 </manifest>
-PK\001\002\024\003\024\000\000\000\010\000\000\0001\000\000\000\000\000\000\000\000\000\000\000\013\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000META-INF/MANIFEST.MFPK\001\002\024\003\024\000\000\000\010\000\000\0001\000\000\000\000\000\000\000\000\000\000\000\020\000\000\000\000\000\000\000\000\000\000\000\000\000\163\000\000\000assets/placeholder.txtPK\001\002\024\003\024\000\000\000\010\000\000\0001\000\000\000\000\000\000\000\000\000\000\000\024\000\000\000\000\000\000\000\000\000\000\000\000\000\305\000\000\000classes.dexPK\001\002\024\003\024\000\000\000\010\000\000\0001\000\000\000\000\000\000\000\000\000\000\000\023\000\000\000\000\000\000\000\000\000\000\000\000\000\371\000\000\000AndroidManifest.xmlPK\005\006\000\000\000\000\004\000\004\000\131\001\000\000\364\001\000\000\000\000
+PK\001\002\014\003\014\000\000\000\010\000bcJMf\375\221j\357\000\000\000\365\002\000\000\013\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000META-INF/MANIFEST.MFPK\001\002\014\003\014\000\000\000\010\000bcJM\253\315\351\235V\000\000\000j\000\000\000\020\000\000\000\000\000\000\000\000\000\000\000\000\000\023\001\000\000assets/placeholder.txtPK\001\002\014\003\014\000\000\000\010\000bcJM\253\327\320:k\002\000\000\324\n\000\000\023\000\000\000\000\000\000\000\000\000\000\000\000\000\221\001\000\000AndroidManifest.xmlPK\005\006\000\000\000\000\003\000\003\000\271\000\000\000\004\004\000\000\000\000

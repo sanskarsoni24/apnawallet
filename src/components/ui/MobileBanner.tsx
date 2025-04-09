@@ -4,10 +4,12 @@ import { X, Download } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 const MobileBanner = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [directApkUrl, setDirectApkUrl] = useState('');
   
   useEffect(() => {
     // Check if this is a mobile device
@@ -16,6 +18,10 @@ const MobileBanner = () => {
     );
     
     setIsMobileDevice(isMobile);
+    
+    // Set direct APK download URL with absolute path
+    const origin = window.location.origin;
+    setDirectApkUrl(`${origin}/downloads/surakshitlocker.apk`);
     
     // Only show banner on mobile devices and if it hasn't been dismissed
     const bannerDismissed = localStorage.getItem('mobile_banner_dismissed') === 'true';
@@ -32,6 +38,58 @@ const MobileBanner = () => {
   const dismissBanner = () => {
     setIsVisible(false);
     localStorage.setItem('mobile_banner_dismissed', 'true');
+  };
+  
+  const handleDirectApkDownload = (e) => {
+    e.preventDefault();
+    
+    console.log("Starting direct APK download");
+    
+    // For Android devices, try direct download
+    if (/android/i.test(navigator.userAgent)) {
+      fetch(directApkUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.blob();
+        })
+        .then(blob => {
+          // Create a URL for the blob
+          const blobUrl = window.URL.createObjectURL(blob);
+          
+          // Create a link element
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = 'surakshitlocker.apk';
+          link.setAttribute('type', 'application/vnd.android.package-archive');
+          document.body.appendChild(link);
+          link.click();
+          
+          // Clean up
+          window.URL.revokeObjectURL(blobUrl);
+          document.body.removeChild(link);
+          
+          toast({
+            title: "Download Started",
+            description: "The APK file is downloading. Check your downloads folder to install."
+          });
+        })
+        .catch(error => {
+          console.error("Download error:", error);
+          toast({
+            title: "Download Failed",
+            description: "There was a problem downloading the app. Redirecting to download page.",
+            variant: "destructive"
+          });
+          
+          // Fallback to download page
+          window.location.href = "/download-app";
+        });
+    } else {
+      // Non-Android devices go to download page
+      window.location.href = "/download-app";
+    }
   };
   
   if (!isVisible || !isMobileDevice) {
@@ -82,16 +140,14 @@ const MobileBanner = () => {
                     </Button>
                   </Link>
                   {/android/i.test(navigator.userAgent) && (
-                    <a 
-                      href={`${window.location.origin}/downloads/surakshitlocker.apk`}
-                      download="surakshitlocker.apk"
+                    <Button 
+                      variant="secondary" 
                       className="w-full"
+                      onClick={handleDirectApkDownload}
                     >
-                      <Button variant="secondary" className="w-full">
-                        <Download className="mr-2 h-4 w-4" />
-                        Direct APK Download
-                      </Button>
-                    </a>
+                      <Download className="mr-2 h-4 w-4" />
+                      Direct APK Download
+                    </Button>
                   )}
                 </div>
               </div>

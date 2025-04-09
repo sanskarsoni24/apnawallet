@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Container from "@/components/layout/Container";
 import { QRCodeSVG } from "qrcode.react";
@@ -63,6 +62,37 @@ const MobileApp = () => {
   const handleDirectApkDownload = () => {
     // Only attempt direct download on mobile Android devices
     if (isMobile && /android/i.test(navigator.userAgent)) {
+      console.log("Starting direct APK download from MobileApp");
+    
+    // Show loading toast
+    toast({
+      title: "Starting Download",
+      description: "Preparing your APK file..."
+    });
+    
+    try {
+      // Create a temporary anchor element
+      const link = document.createElement('a');
+      link.href = directApkUrl;
+      link.download = 'surakshitlocker.apk';
+      link.setAttribute('type', 'application/vnd.android.package-archive');
+      document.body.appendChild(link);
+      
+      // Trigger the click
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      
+      // Show success toast
+      toast({
+        title: "Download Started",
+        description: "The APK file is downloading. Check your notifications."
+      });
+    } catch (error) {
+      console.error("Direct download error:", error);
+      
+      // Try alternative method with fetch
       fetch(directApkUrl)
         .then(response => {
           if (!response.ok) {
@@ -71,44 +101,38 @@ const MobileApp = () => {
           return response.blob();
         })
         .then(blob => {
-          // Create a URL for the blob
           const blobUrl = window.URL.createObjectURL(blob);
-          
-          // Create a link element
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = 'surakshitlocker.apk';
-          link.setAttribute('type', 'application/vnd.android.package-archive');
-          document.body.appendChild(link);
-          link.click();
-          
-          // Clean up
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = 'surakshitlocker.apk';
+          a.setAttribute('type', 'application/vnd.android.package-archive');
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
           window.URL.revokeObjectURL(blobUrl);
-          document.body.removeChild(link);
           
           toast({
-            title: "Download Started",
-            description: "The APK file is downloading. Check your downloads folder to install."
+            title: "Download Started (Alternative Method)",
+            description: "The APK file is downloading with alternative method."
           });
         })
-        .catch(error => {
-          console.error("Download error:", error);
+        .catch(err => {
+          console.error("Fetch download failed:", err);
           toast({
             title: "Download Failed",
-            description: "There was a problem downloading the app. Try the download page instead.",
+            description: "Redirecting to download page for better options.",
             variant: "destructive"
           });
           
           // Fallback to download page
-          setTimeout(() => {
-            window.location.href = "/download-app";
-          }, 1500);
+          window.location.href = "/download-app";
         });
-    } else {
-      // Non-Android mobile or desktop users get sent to download page
-      window.location.href = "/download-app";
     }
-  };
+  } else {
+    // Non-Android mobile or desktop users get sent to download page
+    window.location.href = "/download-app";
+  }
+};
 
   const detectOS = () => {
     const userAgent = navigator.userAgent || navigator.vendor;

@@ -1,12 +1,14 @@
 
 {
-  "name": "ApnaWallet",
-  "short_name": "ApnaWallet",
-  "description": "Your secure document vault",
+  "name": "SurakshitLocker",
+  "short_name": "SurakshitLocker",
+  "description": "Your secure document vault and password manager",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#5f5cff",
+  "orientation": "portrait",
+  "scope": "/",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -19,6 +21,34 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "web",
+      "url": "https://surakshitlocker.com"
+    },
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=app.surakshitlocker.secure",
+      "id": "app.surakshitlocker.secure"
+    }
+  ],
+  "prefer_related_applications": true,
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Go to your dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Documents",
+      "short_name": "Documents",
+      "description": "Manage your documents",
+      "url": "/documents",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     }
   ]
 }

@@ -21,13 +21,20 @@ const Container = ({ children, className }: ContainerProps) => {
     );
     
     // Don't show the banner on the mobile app page itself or if already dismissed
+    // or if the user has already been shown the banner
     const shouldShowBanner = 
       isMobileDevice && 
       !location.pathname.includes("/mobile-app") &&
       !location.pathname.includes("/download-app") &&
-      localStorage.getItem('mobile_banner_dismissed') !== 'true';
+      localStorage.getItem('mobile_banner_dismissed') !== 'true' &&
+      localStorage.getItem('mobile_banner_shown') !== 'true';
     
     setShowMobileBanner(shouldShowBanner);
+    
+    // Mark that we've shown the banner to this user
+    if (shouldShowBanner) {
+      localStorage.setItem('mobile_banner_shown', 'true');
+    }
     
     // First time mobile visitors get redirected to mobile app page after a delay
     // but only once and only on first visit

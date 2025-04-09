@@ -12,8 +12,18 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="SurakshitLocker" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="SurakshitLocker" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
+
+    <!-- Home screen icons for iOS -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon.png" />
+
+    <!-- Splash screens for iOS -->
+    <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" />
 
     <meta property="og:title" content="SurakshitLocker - Secure Document Manager" />
     <meta property="og:description" content="Your secure vault for managing important documents" />
@@ -35,6 +45,30 @@
     
     <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png" />
+    
+    <!-- PWA installation helper script -->
+    <script>
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        // Store the event so it can be triggered later
+        window.deferredPrompt = e;
+        // Show install button or notification
+        const installPromptShown = localStorage.getItem('install_prompt_shown');
+        if (!installPromptShown) {
+          setTimeout(() => {
+            document.dispatchEvent(new CustomEvent('showInstallPrompt'));
+            localStorage.setItem('install_prompt_shown', 'true');
+          }, 3000);
+        }
+      });
+
+      // Add a redirect to web app from the mobile app
+      if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+        console.log("Running in standalone mode (installed on home screen)");
+        localStorage.setItem('installed_as_pwa', 'true');
+      }
+    </script>
   </head>
 
   <body>

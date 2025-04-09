@@ -25,7 +25,7 @@ const DownloadApp = () => {
       setPlatform("unknown");
     }
 
-    // Set the direct download URL
+    // Set the direct download URL with absolute path
     const origin = window.location.origin;
     setDownloadUrl(`${origin}/downloads/surakshitlocker.apk`);
     
@@ -38,24 +38,48 @@ const DownloadApp = () => {
     
     try {
       if (platform === "android") {
-        // Method 1: Direct link with proper MIME type
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = 'surakshitlocker.apk';
-        link.setAttribute('type', 'application/vnd.android.package-archive');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Method 2: Window location fallback with timeout
-        setTimeout(() => {
-          window.location.href = downloadUrl;
-        }, 800);
-        
-        toast({
-          title: "Download Started",
-          description: "The APK file is downloading. Check your downloads folder to install."
-        });
+        // Create a fetch request to ensure the file exists and can be loaded
+        fetch(downloadUrl)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.blob();
+          })
+          .then(blob => {
+            // Create a URL for the blob
+            const blobUrl = window.URL.createObjectURL(blob);
+            
+            // Create a link element
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = 'surakshitlocker.apk';
+            link.setAttribute('type', 'application/vnd.android.package-archive');
+            document.body.appendChild(link);
+            link.click();
+            
+            // Clean up
+            window.URL.revokeObjectURL(blobUrl);
+            document.body.removeChild(link);
+            
+            toast({
+              title: "Download Started",
+              description: "The APK file is downloading. Check your downloads folder to install."
+            });
+          })
+          .catch(error => {
+            console.error("Download error:", error);
+            toast({
+              title: "Download Failed",
+              description: "There was a problem downloading the app. Try the direct links below.",
+              variant: "destructive"
+            });
+          })
+          .finally(() => {
+            setTimeout(() => {
+              setDownloading(false);
+            }, 1500);
+          });
       } else if (platform === "ios") {
         // For iOS, redirect to TestFlight (placeholder URL)
         window.location.href = "https://testflight.apple.com/join/surakshitlocker";
@@ -64,6 +88,10 @@ const DownloadApp = () => {
           title: "Redirecting to iOS Download",
           description: "You'll be redirected to download the app via TestFlight."
         });
+        
+        setTimeout(() => {
+          setDownloading(false);
+        }, 1500);
       }
     } catch (error) {
       console.error("Download error:", error);
@@ -72,7 +100,7 @@ const DownloadApp = () => {
         description: "There was a problem downloading the app. Try the direct links below.",
         variant: "destructive"
       });
-    } finally {
+      
       setTimeout(() => {
         setDownloading(false);
       }, 1500);
@@ -131,7 +159,7 @@ const DownloadApp = () => {
             <div className="mt-8 border-t border-gray-200 dark:border-gray-800 pt-6">
               <h4 className="font-medium mb-4">Multiple Download Options:</h4>
               <div className="flex flex-col gap-4">
-                {/* Method 1: Direct download using HTML5 download attribute */}
+                {/* Method 1: Direct link using anchor with download attribute */}
                 <a 
                   href={downloadUrl}
                   download="surakshitlocker.apk"
@@ -158,24 +186,35 @@ const DownloadApp = () => {
                   Open Download Link (Method 2)
                 </a>
                 
-                {/* Method 3: iframe download */}
+                {/* Method 3: Fetch and blob download */}
                 <Button 
                   className="bg-indigo-700 hover:bg-indigo-800"
                   onClick={() => {
-                    const iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    iframe.src = downloadUrl;
-                    document.body.appendChild(iframe);
-                    
-                    toast({
-                      title: "Download Initiated",
-                      description: "Download attempt via iframe method. Check your notifications."
-                    });
-                    
-                    // Remove iframe after a delay
-                    setTimeout(() => {
-                      document.body.removeChild(iframe);
-                    }, 2000);
+                    fetch(downloadUrl)
+                      .then(response => response.blob())
+                      .then(blob => {
+                        const blobUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = 'surakshitlocker.apk';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(blobUrl);
+                        
+                        toast({
+                          title: "Download Initiated",
+                          description: "Download started via fetch method. Check your notifications."
+                        });
+                      })
+                      .catch(err => {
+                        console.error("Fetch download failed:", err);
+                        toast({
+                          title: "Download Failed",
+                          description: "There was a problem with the fetch download method.",
+                          variant: "destructive"
+                        });
+                      });
                   }}
                 >
                   <Download className="h-4 w-4 mr-2" />

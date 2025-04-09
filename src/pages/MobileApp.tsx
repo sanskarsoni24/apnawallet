@@ -14,16 +14,22 @@ import { Link } from "react-router-dom";
 
 const MobileApp = () => {
   const [downloadUrl, setDownloadUrl] = useState("");
+  const [directApkUrl, setDirectApkUrl] = useState("");
   const [activeTab, setActiveTab] = useState<"android" | "ios">("android");
   const isMobile = useMediaQuery('(max-width: 768px)');
   
   useEffect(() => {
-    // Set direct APK download URL for QR code on Android
+    // Set download page URL for QR code
     const domain = window.location.origin;
     const downloadPage = `${domain}/download-app`;
     setDownloadUrl(downloadPage);
+
+    // Set direct APK download URL
+    const apkUrl = `${domain}/downloads/surakshitlocker.apk`;
+    setDirectApkUrl(apkUrl);
     
     console.log("Download page URL:", downloadPage);
+    console.log("Direct APK URL:", apkUrl);
   }, []);
 
   const handleCopyLink = () => {
@@ -50,6 +56,57 @@ const MobileApp = () => {
         title: "Link copied",
         description: "Download page link copied to clipboard. Share this with your mobile device."
       });
+    }
+  };
+
+  // New direct APK download function
+  const handleDirectApkDownload = () => {
+    // Only attempt direct download on mobile Android devices
+    if (isMobile && /android/i.test(navigator.userAgent)) {
+      fetch(directApkUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.blob();
+        })
+        .then(blob => {
+          // Create a URL for the blob
+          const blobUrl = window.URL.createObjectURL(blob);
+          
+          // Create a link element
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = 'surakshitlocker.apk';
+          link.setAttribute('type', 'application/vnd.android.package-archive');
+          document.body.appendChild(link);
+          link.click();
+          
+          // Clean up
+          window.URL.revokeObjectURL(blobUrl);
+          document.body.removeChild(link);
+          
+          toast({
+            title: "Download Started",
+            description: "The APK file is downloading. Check your downloads folder to install."
+          });
+        })
+        .catch(error => {
+          console.error("Download error:", error);
+          toast({
+            title: "Download Failed",
+            description: "There was a problem downloading the app. Try the download page instead.",
+            variant: "destructive"
+          });
+          
+          // Fallback to download page
+          setTimeout(() => {
+            window.location.href = "/download-app";
+          }, 1500);
+        });
+    } else {
+      // Non-Android mobile or desktop users get sent to download page
+      window.location.href = "/download-app";
     }
   };
 
@@ -120,15 +177,29 @@ const MobileApp = () => {
                 </Button>
               </div>
               
-              {/* Direct link to download page for mobile devices */}
+              {/* Direct link to download page and direct APK download for mobile devices */}
               {isMobile && (
-                <div className="mt-4 text-center">
+                <div className="mt-4 text-center space-y-3">
                   <Link 
                     to="/download-app" 
                     className="inline-block bg-indigo-600 text-white rounded-lg px-4 py-2 mt-2 hover:bg-indigo-700"
                   >
                     Go to Download Page
                   </Link>
+                  
+                  {/android/i.test(navigator.userAgent) && (
+                    <a 
+                      href={directApkUrl}
+                      download="surakshitlocker.apk"
+                      className="inline-block bg-green-600 text-white rounded-lg px-4 py-2 mt-2 hover:bg-green-700 w-full"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleDirectApkDownload();
+                      }}
+                    >
+                      Download APK Directly
+                    </a>
+                  )}
                 </div>
               )}
               
@@ -142,6 +213,16 @@ const MobileApp = () => {
                   >
                     Go to download page
                   </Link>
+                  
+                  {isMobile && /android/i.test(navigator.userAgent) && (
+                    <a 
+                      href={directApkUrl}
+                      download="surakshitlocker.apk"
+                      className="text-green-600 dark:text-green-400 hover:underline text-sm"
+                    >
+                      Direct APK download link
+                    </a>
+                  )}
                 </div>
               </div>
             </Card>
@@ -174,16 +255,31 @@ const MobileApp = () => {
                   </div>
                   
                   {/* Manual download button for mobile devices */}
-                  {isMobile && (
+                  {isMobile && /android/i.test(navigator.userAgent) && (
                     <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg text-center">
                       <p className="text-indigo-700 dark:text-indigo-300 mb-3">
                         Tap below for direct installation:
                       </p>
+                      <Button
+                        className="bg-green-600 hover:bg-green-700 w-full"
+                        onClick={handleDirectApkDownload}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download APK File
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {isMobile && !/android/i.test(navigator.userAgent) && (
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg text-center">
+                      <p className="text-indigo-700 dark:text-indigo-300 mb-3">
+                        Tap below to visit the download page:
+                      </p>
                       <Link 
                         to="/download-app" 
-                        className="inline-block bg-indigo-600 text-white rounded-lg px-4 py-2 hover:bg-indigo-700"
+                        className="inline-block bg-indigo-600 text-white rounded-lg px-4 py-2 hover:bg-indigo-700 w-full"
                       >
-                        Download APK File
+                        Go to Download Page
                       </Link>
                     </div>
                   )}
@@ -216,6 +312,20 @@ const MobileApp = () => {
                       <li>Launch SurakshitLocker from your home screen</li>
                     </ol>
                   </div>
+                  
+                  {isMobile && /iPad|iPhone|iPod/i.test(navigator.userAgent) && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center">
+                      <p className="text-blue-700 dark:text-blue-300 mb-3">
+                        Tap below to visit the download page:
+                      </p>
+                      <Link 
+                        to="/download-app" 
+                        className="inline-block bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700 w-full"
+                      >
+                        Go to Download Page
+                      </Link>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
 

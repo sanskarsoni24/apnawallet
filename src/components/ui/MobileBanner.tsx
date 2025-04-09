@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Download } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -74,12 +74,25 @@ const MobileBanner = () => {
                     <span>Push notifications for document expiry</span>
                   </li>
                 </ul>
-                <div className="flex justify-center">
+                <div className="flex flex-col gap-2">
                   <Link to="/download-app">
-                    <Button className="bg-indigo-600 hover:bg-indigo-700">
+                    <Button className="bg-indigo-600 hover:bg-indigo-700 w-full">
+                      <Download className="mr-2 h-4 w-4" />
                       Download Mobile App
                     </Button>
                   </Link>
+                  {/android/i.test(navigator.userAgent) && (
+                    <a 
+                      href={`${window.location.origin}/downloads/surakshitlocker.apk`}
+                      download="surakshitlocker.apk"
+                      className="w-full"
+                    >
+                      <Button variant="secondary" className="w-full">
+                        <Download className="mr-2 h-4 w-4" />
+                        Direct APK Download
+                      </Button>
+                    </a>
+                  )}
                 </div>
               </div>
             </SheetContent>

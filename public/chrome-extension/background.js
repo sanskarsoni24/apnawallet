@@ -11,14 +11,13 @@ function checkForDocumentDeadlines() {
     const settings = data.userSettings;
     
     // Find documents that are due soon based on settings
-    const daysThreshold = settings.reminderDays || 3;
     const dueSoonDocs = documents.filter(doc => {
       // Use document-specific reminder days if available, otherwise use global settings
-      const docThreshold = doc.customReminderDays !== undefined 
+      const daysThreshold = doc.customReminderDays !== undefined 
         ? doc.customReminderDays 
-        : daysThreshold;
+        : (settings.reminderDays || 3);
         
-      return doc.daysRemaining > 0 && doc.daysRemaining <= docThreshold;
+      return doc.daysRemaining > 0 && doc.daysRemaining <= daysThreshold;
     });
     
     const overdueDocs = documents.filter(doc => doc.daysRemaining < 0);
@@ -56,79 +55,12 @@ chrome.alarms.onAlarm.addListener(function(alarm) {
   }
 });
 
-// Monitor downloads and detect document types
-chrome.downloads.onDeterminingFilename.addListener(function(downloadItem, suggest) {
-  // Only process certain file types
-  const fileExtension = downloadItem.filename.split('.').pop()?.toLowerCase();
-  const documentExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'jpg', 'jpeg', 'png'];
-  
-  if (documentExtensions.includes(fileExtension)) {
-    // Get the file content for analysis (this is limited by Chrome's security model)
-    // In a real extension, you might need user to upload or select the file
-    setTimeout(() => {
-      // Notify user of potential document detected
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: 'icon-48.png',
-        title: 'Document Downloaded',
-        message: `We detected a potential document: ${downloadItem.filename}. Click to add to SurakshitLocker.`,
-        priority: 2,
-        buttons: [
-          { title: 'Add to SurakshitLocker' }
-        ]
-      }, function(notificationId) {
-        // Store the download info to be used when the notification is clicked
-        chrome.storage.local.set({
-          ['pending_document_' + notificationId]: {
-            filename: downloadItem.filename,
-            url: downloadItem.url,
-            fileType: fileExtension,
-            mimeType: downloadItem.mime,
-            fileSize: downloadItem.fileSize,
-            downloadTime: new Date().toISOString()
-          }
-        });
-      });
-    }, 1000);
-  }
-  
-  // Continue with the download
-  suggest();
-});
-
-// Handle notification clicks
-chrome.notifications.onButtonClicked.addListener(function(notificationId, buttonIndex) {
-  if (buttonIndex === 0) {
-    chrome.storage.local.get(['pending_document_' + notificationId], function(data) {
-      const documentInfo = data['pending_document_' + notificationId];
-      if (documentInfo) {
-        // Open popup to add document
-        chrome.tabs.create({ url: `popup.html?action=add_document&filename=${encodeURIComponent(documentInfo.filename)}` });
-        
-        // Clean up storage
-        chrome.storage.local.remove(['pending_document_' + notificationId]);
-      }
-    });
-  }
-});
-
 // Check immediately when the extension is installed or updated
 chrome.runtime.onInstalled.addListener(function() {
   // Initialize sync data on install
   chrome.storage.local.set({
     lastSyncTime: new Date().toISOString(),
     initialSync: true
-  });
-  
-  // Request downloads permission
-  chrome.permissions.request({
-    permissions: ['downloads']
-  }, function(granted) {
-    if (granted) {
-      console.log('Downloads permission granted');
-    } else {
-      console.log('Downloads permission denied');
-    }
   });
   
   // Create a welcome notification
@@ -157,21 +89,6 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
       sendResponse({ documents: data.documents || [] });
     });
     return true; // Keep the messaging channel open for async response
-  } else if (message.action === 'analyzeDocument') {
-    // Send to active tab's content script for analysis
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      if (tabs[0] && tabs[0].id) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: 'analyzeDownload',
-          fileData: message.fileData
-        }, function(response) {
-          sendResponse(response);
-        });
-      } else {
-        sendResponse({ success: false, error: 'No active tab found' });
-      }
-    });
-    return true;
   }
 });
 

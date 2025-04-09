@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Lock, Eye, EyeOff, Save, Plus, Trash2, FileText, Check, Upload, Download, KeyRound } from 'lucide-react';
 import BlurContainer from '../ui/BlurContainer';
@@ -17,7 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from '../ui/label';
 
-// Document types and interfaces
 interface SecureDocument {
   id: string;
   title: string;
@@ -92,71 +92,6 @@ const SurakshaLocker = () => {
     }
   };
   
-  // Enhanced password change function with proper validation
-  const handleChangePassword = () => {
-    // Validate current password
-    if (currentPassword !== storedPassword) {
-      toast({
-        title: 'Incorrect Password',
-        description: 'The current password you entered is incorrect.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    // Validate new password
-    if (newPassword.length < 6) {
-      toast({
-        title: 'Password Too Short',
-        description: 'New password must be at least 6 characters.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    // Validate password confirmation
-    if (newPassword !== confirmNewPassword) {
-      toast({
-        title: 'Password Mismatch',
-        description: 'New password and confirmation do not match.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    // Password strength validation (optional but recommended)
-    const hasUpperCase = /[A-Z]/.test(newPassword);
-    const hasLowerCase = /[a-z]/.test(newPassword);
-    const hasNumbers = /\d/.test(newPassword);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
-    
-    if (!(hasUpperCase && hasLowerCase && hasNumbers) && newPassword.length < 8) {
-      toast({
-        title: 'Weak Password',
-        description: 'Consider using a stronger password with uppercase, lowercase, numbers, and special characters.',
-        variant: 'warning',
-      });
-      // Continue anyway - this is just a warning
-    }
-    
-    // Update password in localStorage
-    localStorage.setItem(`suraksha_password_${email}`, newPassword);
-    setStoredPassword(newPassword);
-    
-    // Reset form fields
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmNewPassword('');
-    
-    // Close dialog
-    setIsChangePasswordOpen(false);
-    
-    toast({
-      title: 'Password Updated',
-      description: 'Your Suraksha Locker password has been changed successfully.',
-    });
-  };
-  
   // Handle password setup or validation
   const handleUnlock = () => {
     if (!storedPassword) {
@@ -211,6 +146,56 @@ const SurakshaLocker = () => {
     // Reset password fields
     setPassword('');
     setConfirmPassword('');
+  };
+  
+  // Handle password change
+  const handleChangePassword = () => {
+    // Validate current password
+    if (currentPassword !== storedPassword) {
+      toast({
+        title: 'Incorrect Password',
+        description: 'The current password you entered is incorrect.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validate new password
+    if (newPassword.length < 6) {
+      toast({
+        title: 'Password Too Short',
+        description: 'New password must be at least 6 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validate password confirmation
+    if (newPassword !== confirmNewPassword) {
+      toast({
+        title: 'Password Mismatch',
+        description: 'New password and confirmation do not match.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Update password in localStorage
+    localStorage.setItem(`suraksha_password_${email}`, newPassword);
+    setStoredPassword(newPassword);
+    
+    // Reset form fields
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmNewPassword('');
+    
+    // Close dialog
+    setIsChangePasswordOpen(false);
+    
+    toast({
+      title: 'Password Updated',
+      description: 'Your Suraksha Locker password has been changed successfully.',
+    });
   };
   
   // Lock the secure locker
@@ -485,7 +470,6 @@ const SurakshaLocker = () => {
         </div>
       ) : (
         <div>
-          {/* Important: Change Password button in the header actions */}
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-base font-medium">Your Secure Documents</h3>
             <div className="flex gap-2">
@@ -602,7 +586,6 @@ const SurakshaLocker = () => {
             </div>
           </div>
           
-          {/* ... keep existing code (document grid and other UI components) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1 border rounded-lg h-[500px] overflow-y-auto p-2">
               {secureDocuments.length === 0 ? (
@@ -919,4 +902,60 @@ const SurakshaLocker = () => {
                       {currentDocument.fileURL && (
                         <div className="mb-4 p-4 border rounded-md bg-slate-50 dark:bg-slate-800/50">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-indigo-100 rounded-lg flex items-center
+                            <div className="h-10 w-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                              <FileText className="h-6 w-6 text-indigo-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{currentDocument.fileName || "Attached Document"}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">
+                                  {currentDocument.fileType ? currentDocument.fileType.toUpperCase() : "Document"}
+                                </span>
+                                {currentDocument.fileSize && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {(currentDocument.fileSize / 1024).toFixed(1)} KB
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="ml-auto">
+                              <Button
+                                size="sm"
+                                onClick={() => downloadFile(currentDocument)}
+                                className="flex items-center gap-1.5"
+                              >
+                                <Download className="h-4 w-4" /> Download
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                  <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center mb-4">
+                    <FileText className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No document selected</h3>
+                  <p className="text-sm text-muted-foreground max-w-md mb-6">
+                    Select a document from the list or create a new document to view its contents.
+                  </p>
+                  <Button
+                    onClick={startCreatingDocument}
+                    className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Create New Document
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </BlurContainer>
+  );
+};
+
+export default SurakshaLocker;

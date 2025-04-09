@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { isMobileApp } from '../utils/capacitor';
 import { Capacitor } from '@capacitor/core';
 import { Device } from '@capacitor/device';
+import { isMobileApp } from '../utils/capacitor';
 
 // Custom hook to detect mobile browser
 export function useIsMobile() {

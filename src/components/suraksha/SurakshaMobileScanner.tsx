@@ -1,190 +1,410 @@
-import React, { useState, useEffect } from "react";
-import { QRCodeSVG } from "qrcode.react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect, useRef } from 'react';
+import { QrScanner } from '@yudiel/react-qr-scanner';
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useUser } from "@/contexts/UserContext";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Smartphone, CheckCircle, Clock, Scan } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useUser } from "@/contexts/UserContext";
+import { CheckCircle, Copy, RefreshCw, Smartphone } from "lucide-react";
+import { useTheme } from 'next-themes';
 
-const SurakshaMobileScanner = () => {
+interface MobileScannerProps {
+  onScanSuccess: (data: string) => void;
+  onScanError: (error: Error) => void;
+}
+
+const SurakshaMobileScanner: React.FC<MobileScannerProps> = ({ onScanSuccess, onScanError }) => {
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [hasPermission, setHasPermission] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [deviceId, setDeviceId] = useState<string | undefined>(undefined);
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(undefined);
+  const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
+  const [manualCode, setManualCode] = useState('');
+  const [isCodeValid, setIsCodeValid] = useState(false);
+  const [isCodeCopied, setIsCodeCopied] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [installPromptEvent, setInstallPromptEvent] = useState<Event | null>(null);
+  const [isAppInstalled, setIsAppInstalled] = useState(false);
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const qrScannerRef = useRef<QrScanner>(null);
+  const { theme } = useTheme();
   const { userSettings } = useUser();
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [scanCode, setScanCode] = useState("");
-  const navigate = useNavigate();
   
   useEffect(() => {
-    // Generate a random connection code for the QR code
-    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-    setScanCode(code);
+    // Check if the user is on a mobile device
+    const mobileCheck = () => {
+      return /Android|iOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    };
     
-    // For demo, check if a mobile connection exists in localStorage
-    const mobileConnected = localStorage.getItem("surakshit-mobile-connected") === "true";
-    setIsConnected(mobileConnected);
+    setIsMobile(mobileCheck());
+    
+    // Check if the user is on iOS
+    const iOSCheck = () => {
+      return /iOS|iPhone|iPad|iPod/i.test(navigator.userAgent) && !!navigator.platform;
+    };
+    
+    setIsIOS(iOSCheck());
+    
+    // Check if the app is installed (PWA)
+    const checkAppInstalled = () => {
+      if ((navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches) {
+        setIsAppInstalled(true);
+      } else {
+        setIsAppInstalled(false);
+      }
+    };
+    
+    checkAppInstalled();
+    
+    // Listen for the appinstalled event
+    window.addEventListener('appinstalled', () => {
+      setIsAppInstalled(true);
+    });
+    
+    // Detect theme changes
+    setIsDarkTheme(theme === 'dark');
+    
+    // Listen for theme changes
+    const handleThemeChange = () => {
+      setIsDarkTheme(theme === 'dark');
+    };
+    
+    return () => {
+      window.removeEventListener('appinstalled', () => {
+        setIsAppInstalled(true);
+      });
+    };
+  }, [theme]);
+  
+  useEffect(() => {
+    // Check for PWA installation prompt
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPromptEvent(event);
+    };
+    
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
   
-  const handleConnectMobile = () => {
-    setIsConnecting(true);
+  useEffect(() => {
+    // Get available media devices
+    const getDevices = async () => {
+      try {
+        const deviceList = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = deviceList.filter(device => device.kind === 'videoinput');
+        setDevices(videoDevices);
+        
+        // Set default device if available
+        if (videoDevices.length > 0) {
+          setSelectedDeviceId(videoDevices[0].deviceId);
+          setDeviceId(videoDevices[0].deviceId);
+        }
+      } catch (error) {
+        console.error("Error enumerating devices:", error);
+        toast({
+          title: "Camera access error",
+          description: "Failed to access camera devices. Please check your permissions.",
+          variant: "destructive"
+        });
+      }
+    };
     
-    // Simulate connection process
-    setTimeout(() => {
-      setIsConnecting(false);
-      setIsConnected(true);
-      localStorage.setItem("surakshit-mobile-connected", "true");
+    // Check camera permission
+    const checkCameraPermission = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setHasPermission(true);
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Get devices after permission is granted
+        await getDevices();
+      } catch (error: any) {
+        console.error("Camera permission denied:", error);
+        setHasPermission(false);
+        toast({
+          title: "Camera permission denied",
+          description: "Please grant camera permission to use the scanner.",
+          variant: "destructive"
+        });
+      }
+    };
+    
+    checkCameraPermission();
+  }, []);
+  
+  const handleScan = (result: any) => {
+    if (result) {
+      setIsScanning(false);
+      setIsCodeValid(true);
+      onScanSuccess(result?.text);
       
       toast({
-        title: "Mobile device connected",
-        description: "Your mobile device is now linked to your account"
+        title: "Scan successful",
+        description: "Code scanned successfully!",
       });
-    }, 3000);
+    }
   };
   
-  const handleDisconnectMobile = () => {
-    setIsConnected(false);
-    localStorage.removeItem("surakshit-mobile-connected");
-    
+  const handleError = (error: Error) => {
+    console.error("Scan error:", error);
+    onScanError(error);
     toast({
-      title: "Mobile device disconnected",
-      description: "Your mobile device has been unlinked from your account"
+      title: "Scan error",
+      description: "An error occurred while scanning. Please try again.",
+      variant: "destructive"
     });
   };
   
-  const simulateReceiveScan = () => {
-    toast({
-      title: "Document received from mobile",
-      description: "Passport scan has been added to your account"
-    });
-    
-    setTimeout(() => {
-      navigate("/documents");
-    }, 1500);
+  const toggleFacingMode = () => {
+    setFacingMode(facingMode === 'environment' ? 'user' : 'environment');
   };
   
-  const getConnectionUrl = () => {
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/mobile-connect?code=${scanCode}&user=${encodeURIComponent(userSettings?.email || "user")}`;
+  const handleDeviceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newDeviceId = e.target.value;
+    setSelectedDeviceId(newDeviceId);
+    setDeviceId(newDeviceId);
   };
-
+  
+  const startScanning = async () => {
+    setIsScanning(true);
+    setIsCodeValid(false);
+    
+    // Check camera permission again before starting
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setHasPermission(true);
+      stream.getTracks().forEach(track => track.stop());
+    } catch (error: any) {
+      console.error("Camera permission denied:", error);
+      setHasPermission(false);
+      setIsScanning(false);
+      toast({
+        title: "Camera permission denied",
+        description: "Please grant camera permission to use the scanner.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Ensure deviceId is set before starting
+    if (!deviceId && devices.length > 0) {
+      setDeviceId(devices[0].deviceId);
+    }
+  };
+  
+  const stopScanning = () => {
+    setIsScanning(false);
+  };
+  
+  const handleManualCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const code = e.target.value;
+    setManualCode(code);
+    setIsCodeValid(code.length > 0);
+  };
+  
+  const submitManualCode = () => {
+    if (manualCode.length > 0) {
+      onScanSuccess(manualCode);
+      setIsManualEntryOpen(false);
+      setIsCodeValid(true);
+      toast({
+        title: "Code submitted",
+        description: "Manual code submitted successfully!",
+      });
+    } else {
+      toast({
+        title: "Invalid code",
+        description: "Please enter a valid code.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const copyCodeToClipboard = () => {
+    navigator.clipboard.writeText(manualCode)
+      .then(() => {
+        setIsCodeCopied(true);
+        toast({
+          title: "Code copied",
+          description: "Code copied to clipboard!",
+        });
+        setTimeout(() => setIsCodeCopied(false), 2000);
+      })
+      .catch(err => {
+        console.error("Failed to copy code: ", err);
+        toast({
+          title: "Copy failed",
+          description: "Failed to copy code to clipboard.",
+          variant: "destructive"
+        });
+      });
+  };
+  
+  const installApp = async () => {
+    if (installPromptEvent) {
+      (installPromptEvent as any).prompt();
+      const choiceResult = await (installPromptEvent as any).userChoice;
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+      setInstallPromptEvent(null);
+    }
+  };
+  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Scan className="h-5 w-5 text-indigo-500" />
-          Mobile Scanner
-        </CardTitle>
-        <CardDescription>
-          Connect your mobile device to scan and upload documents directly
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {!isConnected ? (
-          <div className="flex flex-col items-center space-y-6">
-            <div className="p-2 bg-white rounded-lg shadow-sm w-full max-w-[260px] mx-auto">
-              <QRCodeSVG
-                value={getConnectionUrl()}
-                size={240}
-                includeMargin={true}
-                className="w-full h-auto"
+    <div className="flex flex-col items-center justify-center p-4">
+      <h2 className="text-xl font-semibold mb-4">
+        {isMobile ? "Mobile Scanner" : "Desktop Scanner"}
+      </h2>
+      
+      {isMobile && !isAppInstalled && installPromptEvent && (
+        <div className="mb-4 p-3 rounded-md bg-blue-50 border border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
+          <div className="flex items-center gap-2">
+            <Smartphone className="h-4 w-4" />
+            <p className="text-sm">
+              Install the app for a better experience!
+              <Button variant="link" onClick={installApp} className="ml-2">
+                Install Now
+              </Button>
+            </p>
+          </div>
+        </div>
+      )}
+      
+      {hasPermission ? (
+        <>
+          {devices.length > 1 && (
+            <div className="mb-4">
+              <Label htmlFor="cameraSelect" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Select Camera:
+              </Label>
+              <select
+                id="cameraSelect"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                onChange={handleDeviceChange}
+                value={selectedDeviceId}
+              >
+                {devices.map(device => (
+                  <option key={device.deviceId} value={device.deviceId}>
+                    {device.label || `Camera ${devices.indexOf(device) + 1}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          
+          {isScanning ? (
+            <div className="relative">
+              <QrScanner
+                ref={qrScannerRef}
+                delay={300}
+                onError={handleError}
+                onScan={handleScan}
+                facingMode={facingMode}
+                deviceId={deviceId}
+                className="w-full aspect-square rounded-md overflow-hidden"
+              />
+              <button
+                onClick={stopScanning}
+                className="absolute top-2 right-2 bg-gray-800 bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70"
+              >
+                <RefreshCw className="h-5 w-5" />
+              </button>
+            </div>
+          ) : (
+            <Button onClick={startScanning} disabled={isScanning} className="mb-4">
+              {isScanning ? "Scanning..." : "Start Scanning"}
+            </Button>
+          )}
+          
+          <Button variant="outline" onClick={toggleFacingMode} disabled={!isScanning}>
+            Switch Camera
+          </Button>
+        </>
+      ) : (
+        <p className="text-red-500">Camera permission denied. Please enable it in your browser settings.</p>
+      )}
+      
+      <Dialog open={isManualEntryOpen} onOpenChange={setIsManualEntryOpen}>
+        <DialogTrigger asChild>
+          <Button variant="secondary" className="mt-4">Enter Code Manually</Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Enter Code Manually</DialogTitle>
+            <DialogDescription>
+              Enter the code you want to submit
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="code" className="text-right">
+                Code
+              </Label>
+              <Input
+                type="text"
+                id="code"
+                value={manualCode}
+                onChange={handleManualCodeChange}
+                className="col-span-3"
               />
             </div>
-            
-            <div className="text-center space-y-2">
-              <p className="text-sm font-medium">Your connection code:</p>
-              <div className="font-mono text-xl tracking-wide bg-gray-100 dark:bg-gray-800 p-2 rounded-md">
-                {scanCode}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Scan with your mobile device or enter this code manually
-              </p>
-            </div>
-            
-            <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800">
-              <AlertDescription className="text-sm text-blue-800 dark:text-blue-300">
-                1. Download the SurakshitLocker mobile app
-                <br />
-                2. Open the app and tap "Connect to Desktop"
-                <br />
-                3. Scan this QR code or enter the connection code
-              </AlertDescription>
-            </Alert>
-            
-            <div className="w-full">
-              <Button 
-                className="w-full"
-                onClick={handleConnectMobile}
-                disabled={isConnecting}
-              >
-                {isConnecting ? (
-                  <>
-                    <Clock className="mr-2 h-4 w-4 animate-spin" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <Smartphone className="mr-2 h-4 w-4" />
-                    Connect Mobile Device
-                  </>
-                )}
-              </Button>
-              <p className="text-xs text-center mt-2 text-muted-foreground">
-                Note: For this demo, pressing the button will simulate a connection
-              </p>
-            </div>
           </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="flex items-center justify-center gap-4 bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-100 dark:border-green-800">
-              <CheckCircle className="h-10 w-10 text-green-500" />
-              <div>
-                <h3 className="font-medium text-green-800 dark:text-green-300">Mobile Device Connected</h3>
-                <p className="text-sm text-green-700 dark:text-green-400">
-                  Your mobile device is linked and ready to scan
-                </p>
-              </div>
-            </div>
-            
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-              <h3 className="font-medium mb-2">Connected Device</h3>
-              <div className="flex items-center gap-3">
-                <Smartphone className="h-6 w-6 text-indigo-500" />
-                <div>
-                  <p className="font-medium">{userSettings?.mobileDeviceName || "Mobile Device"}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Last active: {new Date().toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <Button className="w-full" onClick={simulateReceiveScan}>
-                <Scan className="mr-2 h-4 w-4" />
-                Simulate Receiving Scan
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full text-red-500 hover:text-red-600 border-red-200 hover:border-red-300 dark:border-red-900"
-                onClick={handleDisconnectMobile}
-              >
-                Disconnect Mobile Device
-              </Button>
-            </div>
+          <div className="flex justify-between">
+            <Button type="button" variant="secondary" onClick={() => setIsManualEntryOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" onClick={submitManualCode} disabled={!isCodeValid}>
+              Submit
+            </Button>
           </div>
-        )}
-      </CardContent>
-      <CardFooter className="flex justify-center">
-        <Button 
-          variant="link" 
-          onClick={() => navigate("/mobile-app")}
-          className="text-indigo-500"
-        >
-          Download Mobile App
-        </Button>
-      </CardFooter>
-    </Card>
+        </DialogContent>
+      </Dialog>
+      
+      {isCodeValid && (
+        <div className="mt-4 p-3 rounded-md bg-green-50 border border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            <p className="text-sm">Code is valid!</p>
+          </div>
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 break-all">
+              {manualCode || "Code scanned successfully!"}
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={copyCodeToClipboard}
+              disabled={isCodeCopied}
+            >
+              {isCodeCopied ? "Copied!" : <Copy className="h-4 w-4" />}
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {userSettings?.mobileDeviceName ? (
+        <div className="mt-4 p-3 rounded-md bg-gray-50 border border-gray-200 text-gray-800 dark:bg-gray-900/20 dark:border-gray-800 dark:text-gray-300">
+          <p className="text-sm">
+            Connected Device: {userSettings?.mobileDeviceName || 'Unknown Device'}
+          </p>
+        </div>
+      ) : (
+        <div className="mt-4 p-3 rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-300">
+          <p className="text-sm">No device connected.</p>
+        </div>
+      )}
+    </div>
   );
 };
 

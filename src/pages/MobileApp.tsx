@@ -20,7 +20,9 @@ const MobileApp = () => {
   useEffect(() => {
     // Get current domain for QR code
     const domain = window.location.origin;
+    const downloadPage = `${domain}/download-app`;
     const apkLink = `${domain}/downloads/surakshitlocker.apk`;
+    
     setDirectApkLink(apkLink);
     
     console.log("Direct APK link:", apkLink);
@@ -36,8 +38,20 @@ const MobileApp = () => {
 
   const handleDirectDownload = () => {
     if (isMobile) {
-      // On mobile, directly go to the APK
-      window.location.href = directApkLink;
+      // On mobile, directly download the APK
+      const downloadLink = document.createElement('a');
+      downloadLink.href = directApkLink;
+      downloadLink.download = "surakshitlocker.apk";
+      downloadLink.setAttribute('download', 'surakshitlocker.apk');
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      // Also try opening directly
+      setTimeout(() => {
+        window.location.href = directApkLink;
+      }, 500);
+      
       toast({
         title: "Download Started",
         description: "The app is downloading now. Check your notifications."
@@ -133,6 +147,27 @@ const MobileApp = () => {
                   </a>
                 </div>
               )}
+              
+              {/* Manual alternative links */}
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800 w-full">
+                <p className="text-sm font-medium mb-2">Alternative Methods:</p>
+                <div className="flex flex-col gap-2">
+                  <Link 
+                    to="/download-app" 
+                    className="text-indigo-600 dark:text-indigo-400 hover:underline text-sm"
+                  >
+                    Go to download page
+                  </Link>
+                  <a 
+                    href={directApkLink}
+                    className="text-indigo-600 dark:text-indigo-400 hover:underline text-sm"
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    Open APK directly in browser
+                  </a>
+                </div>
+              </div>
             </Card>
 
             <div className="space-y-6">
@@ -175,6 +210,19 @@ const MobileApp = () => {
                       >
                         Download APK File
                       </a>
+                    </div>
+                  )}
+                  
+                  {/* Only show this on desktop */}
+                  {!isMobile && (
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg text-center">
+                      <p className="font-medium mb-2">Using Desktop?</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                        Email yourself this link or visit this page on your Android device:
+                      </p>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded border">
+                        <code className="text-xs break-all">{directApkLink}</code>
+                      </div>
                     </div>
                   )}
                 </TabsContent>

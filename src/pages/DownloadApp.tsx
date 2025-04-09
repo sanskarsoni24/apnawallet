@@ -28,6 +28,8 @@ const DownloadApp = () => {
     // Set the direct download URL
     const apkUrl = `${window.location.origin}/downloads/surakshitlocker.apk`;
     setDownloadUrl(apkUrl);
+    
+    console.log("Download URL set to:", apkUrl);
   }, []);
 
   const handleDownload = async () => {
@@ -35,29 +37,31 @@ const DownloadApp = () => {
     
     if (platform === "android") {
       try {
-        // Direct method - open the APK file directly
-        window.location.href = downloadUrl;
+        console.log("Starting Android download from:", downloadUrl);
+        
+        // Create a direct download link
+        const downloadLink = document.createElement('a');
+        downloadLink.href = downloadUrl;
+        downloadLink.download = "surakshitlocker.apk";
+        downloadLink.setAttribute('download', 'surakshitlocker.apk');
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
         
         toast({
           title: "Download Started",
-          description: "The app is downloading now. Please check your notifications and allow installation when prompted."
+          description: "The app is downloading now. Please check your downloads folder and install when complete."
         });
         
-        // Create a hidden download link as a fallback
+        // Fallback: Open in new tab
         setTimeout(() => {
-          const downloadLink = document.createElement('a');
-          downloadLink.href = downloadUrl;
-          downloadLink.download = "surakshitlocker.apk";
-          downloadLink.style.display = 'none';
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
+          window.open(downloadUrl, '_blank');
         }, 1000);
       } catch (error) {
         console.error("Download error:", error);
         toast({
           title: "Download Failed",
-          description: "There was a problem downloading the app. Please try again or use a different browser.",
+          description: "There was a problem downloading the app. Please try the direct link below.",
           variant: "destructive"
         });
       } finally {
@@ -78,7 +82,7 @@ const DownloadApp = () => {
             Desktop Device Detected
           </h3>
           <p className="text-amber-700 dark:text-amber-300 mb-4">
-            Please scan the QR code using a mobile device to download the app.
+            Please visit this page from a mobile device or scan the QR code from the Mobile App page.
           </p>
           <Button
             variant="outline"
@@ -112,21 +116,33 @@ const DownloadApp = () => {
             <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30">
               <h4 className="font-medium text-blue-800 dark:text-blue-400 mb-2">Installation Instructions:</h4>
               <ol className="text-sm text-blue-700 dark:text-blue-300 list-decimal pl-5">
-                <li>After downloading, tap on the notification to begin installation</li>
+                <li>After downloading, tap on the file in your downloads folder</li>
                 <li>If prompted, allow installation from unknown sources</li>
                 <li>Follow the installation prompts</li>
                 <li>Once installed, open SurakshitLocker from your app drawer</li>
               </ol>
             </div>
             
-            <div className="mt-4">
-              <a 
-                href={downloadUrl}
-                download="surakshitlocker.apk"
-                className="text-indigo-600 dark:text-indigo-400 hover:underline"
-              >
-                Click here if download doesn't start automatically
-              </a>
+            <div className="mt-8 border-t border-gray-200 dark:border-gray-800 pt-6">
+              <h4 className="font-medium mb-4">Direct Download Links:</h4>
+              <div className="flex flex-col gap-4">
+                <a 
+                  href={downloadUrl}
+                  download="surakshitlocker.apk"
+                  className="bg-indigo-600 text-white rounded-md px-4 py-3 inline-flex items-center justify-center gap-2 hover:bg-indigo-700"
+                >
+                  <Download className="h-4 w-4" />
+                  Download APK Directly
+                </a>
+                <a 
+                  href={downloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-md px-4 py-3 inline-flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-700"
+                >
+                  Open APK in Browser
+                </a>
+              </div>
             </div>
           </>
         )}

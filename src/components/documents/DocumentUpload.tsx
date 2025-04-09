@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Upload, Camera, ArrowRight, Loader2, ScanSearch, Plus, X, FileIcon } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
@@ -10,7 +9,7 @@ import { Textarea } from "../ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "../ui/form";
 import { useForm } from "react-hook-form";
-import { processDocument } from "@/services/DocumentProcessingService";
+import { processDocument, parseMultiFormatDate } from "@/services/DocumentProcessingService";
 import { format, parse, isValid } from "date-fns";
 import { Badge } from "../ui/badge";
 import { ScrollArea } from "../ui/scroll-area";
@@ -480,7 +479,7 @@ const DocumentUpload = () => {
           
           <div className="flex gap-2">
             <label className="inline-flex h-9 items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer">
-              Select documents
+              Upload
               <input 
                 ref={fileInputRef}
                 type="file" 

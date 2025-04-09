@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -200,40 +199,8 @@ const Header = () => {
       {/* Mobile Navigation */}
       <MobileNav 
         open={mobileMenuOpen} 
-        onClose={() => setMobileMenuOpen(false)}
-      >
-        <div className="flex flex-col gap-4 p-4">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="flex items-center py-2 text-base font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              {item.name}
-            </Link>
-          ))}
-          
-          {!isLoggedIn && (
-            <div className="flex flex-col gap-2 mt-4 pt-4 border-t">
-              <Link 
-                to="/sign-in" 
-                className="w-full py-2 text-center"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Login
-              </Link>
-              <Link 
-                to="/sign-up" 
-                className="w-full bg-indigo-600 text-white py-2 rounded-md text-center"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Sign up free
-              </Link>
-            </div>
-          )}
-        </div>
-      </MobileNav>
+        onOpenChange={setMobileMenuOpen}
+      />
 
       <div className="pb-16"></div>
     </>

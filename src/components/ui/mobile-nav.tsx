@@ -16,11 +16,26 @@ const navLinks = [
   { href: "/help", label: "Help" },
 ];
 
-const MobileNav: React.FC = () => {
-  const [open, setOpen] = React.useState(false);
+interface MobileNavProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children?: React.ReactNode;
+}
+
+const MobileNav: React.FC<MobileNavProps> = ({ 
+  open, 
+  onOpenChange,
+  children 
+}) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  
+  // Use controlled or uncontrolled state based on props
+  const isControlled = open !== undefined && onOpenChange !== undefined;
+  const isSheetOpen = isControlled ? open : isOpen;
+  const setIsSheetOpen = isControlled ? onOpenChange : setIsOpen;
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="md:hidden">
           <Menu className="h-5 w-5" />
@@ -39,12 +54,13 @@ const MobileNav: React.FC = () => {
                   isActive && "bg-secondary font-medium"
                 )
               }
-              onClick={() => setOpen(false)}
+              onClick={() => setIsSheetOpen(false)}
             >
               {link.label}
             </NavLink>
           ))}
         </nav>
+        {children}
       </SheetContent>
     </Sheet>
   );

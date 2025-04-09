@@ -1,249 +1,240 @@
+import React, { useState, useEffect } from "react";
+import { Scanner } from "@yudiel/react-qr-scanner";
+import { AlertCircle, Smartphone, Check, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from "@/hooks/use-toast";
 
-import React, { useState, useEffect } from 'react';
-import { Camera, QrCode, FlipHorizontal, Upload } from 'lucide-react';
-import { Button } from '../ui/button';
-import { toast } from '@/hooks/use-toast';
-import BlurContainer from '../ui/BlurContainer';
+type ScannerState = "waiting" | "scanning" | "success" | "error";
 
-// Define the interface for scanner props
-interface IScannerProps {
-  onScan: (result: string) => void; // Changed from onResult to onScan
-  onError?: (error: any) => void;
-  containerStyle?: React.CSSProperties;
+interface SurakshaMobileScannerProps {
+  userSettings?: UserSettings;
+  updateUserSettings?: (settings: Partial<UserSettings>) => void;
 }
 
-// Mock QR scanner component for demo purposes
-const QRScanner: React.FC<IScannerProps> = ({ onScan, onError, containerStyle }) => {
-  const [cameraSwitched, setCameraSwitched] = useState(false);
-  const [scanning, setScanning] = useState(true);
-  
-  // Simulate QR code detection
+const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
+  userSettings,
+  updateUserSettings
+}) => {
+  const [scannerState, setScannerState] = useState<ScannerState>("waiting");
+  const [deviceName, setDeviceName] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    if (scanning) {
-      const timer = setTimeout(() => {
-        const mockQRContent = `SURAKSHA:DOC:${Math.random().toString(36).substring(2, 15)}`;
-        onScan(mockQRContent);
-        setScanning(false);
-      }, 3000);
-      
-      return () => clearTimeout(timer);
+    // Check if device is already paired
+    if (userSettings?.mobileDeviceName) {
+      setDeviceName(userSettings.mobileDeviceName);
+      setScannerState("success");
     }
-  }, [scanning, onScan]);
-  
-  return (
-    <div style={{ position: 'relative', ...containerStyle }}>
-      <div className="relative overflow-hidden" style={{ height: '250px', background: '#000' }}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          {scanning ? (
-            <>
-              <div className="absolute inset-0 bg-black opacity-80 z-0"></div>
-              <div className="absolute inset-0 flex items-center justify-center z-10">
-                <div className="w-3/4 h-3/4 border-2 border-white/50 rounded-lg relative">
-                  <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary -translate-x-1 -translate-y-1"></div>
-                  <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary translate-x-1 -translate-y-1"></div>
-                  <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary -translate-x-1 translate-y-1"></div>
-                  <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary translate-x-1 translate-y-1"></div>
-                </div>
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center z-20">
-                <div className="animate-pulse text-primary">
-                  <QrCode className="h-8 w-8" />
-                </div>
-              </div>
-              <div className="absolute inset-x-0 bottom-4 text-center text-white text-sm z-20">
-                Position QR code in the frame
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center space-y-2">
-              <QrCode className="h-12 w-12 text-primary" />
-              <div className="text-white text-sm">QR code detected!</div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setScanning(true)}
-                className="bg-white/10 text-white hover:bg-white/20 border-white/20"
-              >
-                Scan Again
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      <div className="absolute bottom-2 right-2 z-20">
-        <Button
-          variant="outline"
-          size="icon"
-          className="bg-black/50 border-white/20 text-white rounded-full w-8 h-8"
-          onClick={() => setCameraSwitched(!cameraSwitched)}
-        >
-          <FlipHorizontal className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
-};
+  }, [userSettings]);
 
-// File uploader component
-const QRFileUploader = ({ onScan, onError }) => {
-  const [isDragging, setIsDragging] = useState(false);
-  
-  const handleFileSelect = (file) => {
-    if (!file) return;
+  // Updated handler to match the API of the Scanner component
+  const handleScan = (detectedCodes: any) => {
+    // Extract the text value from the detected codes
+    const result = detectedCodes && detectedCodes.length > 0 ? detectedCodes[0].rawValue : null;
     
-    if (!file.type.match('image.*')) {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload an image file",
-        variant: "destructive"
-      });
-      if (onError) onError(new Error("Invalid file type"));
-      return;
-    }
-    
-    // In a real app, we would use a QR code library to decode the image
-    // For demo purposes, we'll simulate a successful decode after a delay
-    setTimeout(() => {
-      const mockQRContent = `SURAKSHA:UPLOAD:${file.name}:${Math.random().toString(36).substring(2, 15)}`;
-      onScan(mockQRContent);
-      
-      toast({
-        title: "QR Code detected",
-        description: "Successfully scanned QR code from image",
-      });
-    }, 1500);
-  };
-  
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setIsDragging(true);
-    } else if (e.type === 'dragleave') {
-      setIsDragging(false);
-    }
-  };
-  
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileSelect(e.dataTransfer.files[0]);
+    if (result) {
+      try {
+        // Parse QR code data
+        const data = JSON.parse(result);
+        
+        if (data && data.deviceName) {
+          // Simulate pairing process
+          setScannerState("success");
+          setDeviceName(data.deviceName);
+          
+          // Update user settings with device name
+          if (updateUserSettings) {
+            updateUserSettings({
+              mobileDeviceName: data.deviceName
+            });
+          }
+          
+          toast({
+            title: "Device connected",
+            description: `Successfully paired with ${data.deviceName}`,
+          });
+        } else {
+          throw new Error("Invalid QR code data");
+        }
+      } catch (err) {
+        setScannerState("error");
+        setError("Invalid QR code. Please try again.");
+        
+        toast({
+          title: "Connection failed",
+          description: "Could not read the QR code. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
-  
-  const handleFileInput = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFileSelect(e.target.files[0]);
-    }
-  };
-  
-  return (
-    <div 
-      className={`border-2 border-dashed rounded-md p-6 transition-colors ${
-        isDragging ? 'border-primary bg-primary/5' : 'border-gray-300 dark:border-gray-700'
-      }`}
-      onDragEnter={handleDrag}
-      onDragLeave={handleDrag}
-      onDragOver={handleDrag}
-      onDrop={handleDrop}
-    >
-      <div className="flex flex-col items-center justify-center gap-2">
-        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-          <Upload className="h-6 w-6 text-primary" />
-        </div>
-        <p className="font-medium text-center">Upload QR code image</p>
-        <p className="text-sm text-muted-foreground text-center">
-          Drag and drop an image, or click to browse
-        </p>
-        <input 
-          type="file" 
-          accept="image/*" 
-          className="hidden" 
-          id="qr-file-input" 
-          onChange={handleFileInput}
-        />
-        <Button 
-          variant="outline"
-          onClick={() => document.getElementById('qr-file-input').click()}
-          className="mt-2"
-        >
-          Select Image
-        </Button>
-      </div>
-    </div>
-  );
-};
 
-// Main component
-const SurakshaMobileScanner = ({ onDetected }) => {
-  const [scanMethod, setScanMethod] = useState('camera');
-  
-  const handleCodeDetection = (detectedCode) => {
-    if (onDetected) onDetected(detectedCode);
-  };
-  
-  const handleScanError = (err) => {
-    console.error('Scanning error:', err);
+  const handleError = (err: any) => {
+    console.error("QR Scanner error:", err);
+    setScannerState("error");
+    setError("Failed to access camera. Please check permissions and try again.");
+    
     toast({
-      title: "Scanning Error",
-      description: "An error occurred while scanning. Please try again.",
+      title: "Scanner error",
+      description: "Couldn't access your camera. Please check camera permissions.",
       variant: "destructive"
     });
   };
-  
+
+  const startScanning = () => {
+    setScannerState("scanning");
+    setError(null);
+  };
+
+  const resetScanner = () => {
+    setScannerState("waiting");
+    setError(null);
+  };
+
+  const unpairDevice = () => {
+    if (updateUserSettings) {
+      updateUserSettings({
+        mobileDeviceName: undefined
+      });
+    }
+    
+    setDeviceName("");
+    setScannerState("waiting");
+    
+    toast({
+      title: "Device unpaired",
+      description: "Your mobile device has been disconnected",
+    });
+  };
+
   return (
-    <BlurContainer className="p-5 animate-fade-in">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <QrCode className="h-4 w-4 text-primary" />
-          </div>
-          <h3 className="font-medium">Suraksha QR Scanner</h3>
-        </div>
-        
-        <div className="flex rounded-lg overflow-hidden border divide-x">
-          <Button 
-            variant={scanMethod === 'camera' ? 'default' : 'ghost'}
-            size="sm"
-            className={`rounded-none ${scanMethod === 'camera' ? '' : 'text-muted-foreground'}`}
-            onClick={() => setScanMethod('camera')}
-          >
-            <Camera className="h-4 w-4 mr-1" />
-            Camera
-          </Button>
-          <Button 
-            variant={scanMethod === 'upload' ? 'default' : 'ghost'}
-            size="sm"
-            className={`rounded-none ${scanMethod === 'upload' ? '' : 'text-muted-foreground'}`}
-            onClick={() => setScanMethod('upload')}
-          >
-            <Upload className="h-4 w-4 mr-1" />
-            Upload
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold mb-2">Mobile Device Pairing</h2>
+        <p className="text-muted-foreground">
+          Pair your mobile device with SurakshitLocker to access your documents on the go.
+        </p>
       </div>
       
-      {scanMethod === 'camera' ? (
-        <QRScanner 
-          onScan={handleCodeDetection}
-          onError={handleScanError}
-          containerStyle={{ borderRadius: '0.5rem' }}
-        />
-      ) : (
-        <QRFileUploader
-          onScan={handleCodeDetection}
-          onError={handleScanError}
-        />
+      {scannerState === "success" && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center text-center p-4">
+              <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mb-4">
+                <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
+              </div>
+              <h3 className="text-xl font-medium mb-2">Device Connected</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Your account is linked with <span className="font-medium">{deviceName}</span>
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+                <Button
+                  variant="default"
+                  onClick={() => window.open("/documents", "_blank")}
+                  className="flex-1"
+                >
+                  View Documents
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={unpairDevice}
+                  className="flex-1"
+                >
+                  Disconnect
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
       
-      <div className="mt-4 text-sm text-muted-foreground">
-        <p>Scan a Suraksha QR code to quickly access your secure documents.</p>
+      {scannerState === "waiting" && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center text-center p-4">
+              <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-4">
+                <Smartphone className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="text-xl font-medium mb-2">Connect Mobile Device</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Scan the QR code from your SurakshitLocker mobile app to connect your account
+              </p>
+              
+              <Button onClick={startScanning}>
+                Start Scanner
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {scannerState === "scanning" && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center space-y-4">
+              <h3 className="text-xl font-medium">Scan QR Code</h3>
+              <p className="text-sm text-muted-foreground text-center mb-2">
+                Open the SurakshitLocker mobile app and scan the QR code shown on your screen
+              </p>
+              
+              <div className="relative w-full max-w-sm overflow-hidden rounded-lg border">
+                <Scanner
+                  onDecode={handleScan}
+                  onError={handleError}
+                  containerStyle={{ borderRadius: '0.5rem' }}
+                />
+                <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-primary opacity-50 rounded-lg"></div>
+              </div>
+              
+              <Button variant="outline" onClick={resetScanner}>
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {scannerState === "error" && error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="border-t pt-6 mt-6">
+        <h3 className="font-medium mb-4">About Mobile Device Connection</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col space-y-2">
+            <h4 className="font-medium text-sm">Access on Multiple Devices</h4>
+            <p className="text-sm text-muted-foreground">
+              Connect your account to access your documents securely from your smartphone or tablet.
+            </p>
+          </div>
+          <div className="flex flex-col space-y-2">
+            <h4 className="font-medium text-sm">End-to-End Encryption</h4>
+            <p className="text-sm text-muted-foreground">
+              All data transfers between devices are encrypted for maximum security.
+            </p>
+          </div>
+          <div className="flex flex-col space-y-2">
+            <h4 className="font-medium text-sm">Offline Access</h4>
+            <p className="text-sm text-muted-foreground">
+              Download documents to your mobile device for offline viewing.
+            </p>
+          </div>
+          <div className="flex flex-col space-y-2">
+            <h4 className="font-medium text-sm">Real-time Sync</h4>
+            <p className="text-sm text-muted-foreground">
+              Changes made on any device will automatically sync across all your connected devices.
+            </p>
+          </div>
+        </div>
       </div>
-    </BlurContainer>
+    </div>
   );
 };
 

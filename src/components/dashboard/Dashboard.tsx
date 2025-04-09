@@ -159,16 +159,7 @@ const Dashboard = () => {
             {recentDocuments.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-3">
                 {recentDocuments.map((doc) => (
-                  <DocumentCard 
-                    key={doc.id} 
-                    id={doc.id}
-                    title={doc.title}
-                    type={doc.type}
-                    date={doc.date || doc.createdAt || new Date().toISOString()}
-                    daysRemaining={doc.daysRemaining}
-                    importance={doc.importance}
-                    isPremium={doc.isPremium}
-                  />
+                  <DocumentCard key={doc.id} {...doc} />
                 ))}
               </div>
             ) : (

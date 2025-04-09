@@ -241,11 +241,11 @@ const DocumentSharing = ({ documentId, documentName, isPremium = false }: Docume
           </div>
           
           {!isPremium && (
-            <div className="rounded-md bg-muted p-3">
-              <span className="text-sm text-muted-foreground">
+            <div className="rounded-md bg-muted p-3 text-sm">
+              <p className="text-muted-foreground">
                 Upgrade to Premium for advanced sharing controls, including permissions management 
                 and access tracking.
-              </span>
+              </p>
             </div>
           )}
         </div>

@@ -5,9 +5,10 @@ import Container from "@/components/layout/Container";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { QRCodeCanvas } from "qrcode.react";
-import { Share, Download, Smartphone, Tablet, Laptop, ArrowRight, PhoneCall } from "lucide-react";
+import { Share, Download, Smartphone, Tablet, Laptop, ArrowRight, PhoneCall, Scan, CheckCircle, Shield } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Define a global type for the deferredPrompt
 declare global {
@@ -20,11 +21,17 @@ const MobileApp = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("android");
   const [canInstall, setCanInstall] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
   
   // Current page URL to create QR code
   const downloadUrl = `${window.location.origin}/download-app`;
   
   useEffect(() => {
+    // Check if the app has been "downloaded" before (for demo purposes)
+    const hasDownloaded = localStorage.getItem("app-downloaded") === "true";
+    setDownloaded(hasDownloaded);
+    
     // Check if the app can be installed as PWA
     if (window.deferredPrompt) {
       setCanInstall(true);
@@ -110,6 +117,26 @@ const MobileApp = () => {
     setCanInstall(false);
   };
 
+  const handleDownloadApp = () => {
+    setDownloading(true);
+    
+    // Simulate download for demo purposes
+    setTimeout(() => {
+      setDownloading(false);
+      setDownloaded(true);
+      localStorage.setItem("app-downloaded", "true");
+      
+      // Show success message
+      toast({
+        title: "App downloaded successfully",
+        description: "SurakshitLocker app has been downloaded to your device"
+      });
+      
+      // Navigate to download app page
+      navigate("/download-app");
+    }, 2000);
+  };
+
   return (
     <Container className="max-w-5xl">
       <div className="space-y-8">
@@ -121,6 +148,16 @@ const MobileApp = () => {
             Access your secure document vault on the go with our mobile app
           </p>
         </div>
+        
+        <Alert className="bg-blue-50 border-blue-100 dark:bg-blue-900/20 dark:border-blue-800 mb-6">
+          <AlertTitle className="text-blue-800 dark:text-blue-300 flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            Cross-device scanning now available!
+          </AlertTitle>
+          <AlertDescription className="text-blue-700 dark:text-blue-400">
+            Scan documents with your phone and they'll automatically appear in your vault. Try it now!
+          </AlertDescription>
+        </Alert>
         
         <div className="grid md:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
@@ -171,12 +208,22 @@ const MobileApp = () => {
                 <TabsContent value="android" className="space-y-4">
                   <div className="flex flex-col gap-2">
                     <Button 
-                      onClick={() => navigate("/download-app")}
+                      onClick={handleDownloadApp}
                       size="lg" 
                       className="w-full"
+                      disabled={downloading}
                     >
-                      <Download className="mr-2 h-5 w-5" />
-                      Download APK
+                      {downloading ? (
+                        <>
+                          <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                          Downloading...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="mr-2 h-5 w-5" />
+                          Download APK
+                        </>
+                      )}
                     </Button>
                     
                     {canInstall && (
@@ -256,12 +303,22 @@ const MobileApp = () => {
                 </p>
               </div>
               <Button 
-                onClick={() => navigate("/download-app")}
+                onClick={handleDownloadApp}
                 className="w-full"
                 variant="outline"
+                disabled={downloading}
               >
-                Go to Download Page
-                <ArrowRight className="ml-2 h-4 w-4" />
+                {downloading ? (
+                  <>
+                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></span>
+                    Downloading...
+                  </>
+                ) : (
+                  <>
+                    Go to Download Page
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
               </Button>
             </CardFooter>
           </Card>
@@ -270,18 +327,24 @@ const MobileApp = () => {
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Sync Everywhere</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Scan className="h-5 w-5 text-primary" />
+                Mobile Scanning
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Access your documents across all your devices with real-time syncing and seamless backup.
+                Easily scan documents with your phone camera and instantly add them to your secure vault.
               </p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Offline Access</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                Offline Access
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
@@ -292,7 +355,10 @@ const MobileApp = () => {
           
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Secure Sharing</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Share className="h-5 w-5 text-primary" />
+                Secure Sharing
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">

@@ -38,7 +38,7 @@ const DownloadApp = () => {
     
     try {
       if (platform === "android") {
-        // Create a blob URL for the APK to ensure proper MIME type
+        // Method 1: Direct link with proper MIME type
         const link = document.createElement('a');
         link.href = downloadUrl;
         link.download = 'surakshitlocker.apk';
@@ -47,15 +47,15 @@ const DownloadApp = () => {
         link.click();
         document.body.removeChild(link);
         
+        // Method 2: Window location fallback with timeout
+        setTimeout(() => {
+          window.location.href = downloadUrl;
+        }, 800);
+        
         toast({
           title: "Download Started",
           description: "The APK file is downloading. Check your downloads folder to install."
         });
-        
-        // Secondary download method for mobile browsers
-        setTimeout(() => {
-          window.location.href = downloadUrl;
-        }, 500);
       } else if (platform === "ios") {
         // For iOS, redirect to TestFlight (placeholder URL)
         window.location.href = "https://testflight.apple.com/join/surakshitlocker";
@@ -73,7 +73,9 @@ const DownloadApp = () => {
         variant: "destructive"
       });
     } finally {
-      setDownloading(false);
+      setTimeout(() => {
+        setDownloading(false);
+      }, 1500);
     }
   };
 
@@ -127,8 +129,9 @@ const DownloadApp = () => {
             </div>
             
             <div className="mt-8 border-t border-gray-200 dark:border-gray-800 pt-6">
-              <h4 className="font-medium mb-4">Direct Download Links:</h4>
+              <h4 className="font-medium mb-4">Multiple Download Options:</h4>
               <div className="flex flex-col gap-4">
+                {/* Method 1: Direct download using HTML5 download attribute */}
                 <a 
                   href={downloadUrl}
                   download="surakshitlocker.apk"
@@ -141,36 +144,62 @@ const DownloadApp = () => {
                   }}
                 >
                   <Download className="h-4 w-4" />
-                  Download APK File
+                  Download APK (Method 1)
                 </a>
+                
+                {/* Method 2: Direct link in new tab */}
+                <a 
+                  href={downloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-indigo-500 text-white rounded-md px-4 py-3 inline-flex items-center justify-center gap-2 hover:bg-indigo-600"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open Download Link (Method 2)
+                </a>
+                
+                {/* Method 3: iframe download */}
+                <Button 
+                  className="bg-indigo-700 hover:bg-indigo-800"
+                  onClick={() => {
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = downloadUrl;
+                    document.body.appendChild(iframe);
+                    
+                    toast({
+                      title: "Download Initiated",
+                      description: "Download attempt via iframe method. Check your notifications."
+                    });
+                    
+                    // Remove iframe after a delay
+                    setTimeout(() => {
+                      document.body.removeChild(iframe);
+                    }, 2000);
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download APK (Method 3)
+                </Button>
                 
                 <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-4">
                   <div className="flex items-start gap-3">
                     <Info className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h5 className="font-medium text-amber-700 dark:text-amber-300 mb-1">Download Troubleshooting</h5>
+                      <h5 className="font-medium text-amber-700 dark:text-amber-300 mb-1">Troubleshooting APK Installation</h5>
                       <p className="text-xs text-amber-600 dark:text-amber-400 mb-2">
-                        If the download doesn't start automatically:
+                        If you encounter a "Parse Error" or "Problem parsing package":
                       </p>
                       <ol className="text-xs text-amber-600 dark:text-amber-400 list-decimal pl-4 space-y-1">
-                        <li>Try opening this page in Chrome or your default browser</li>
-                        <li>Long-press the Download APK button and select "Download link" or "Save link"</li>
-                        <li>Check your Downloads folder after download completes</li>
-                        <li>Make sure you have enough storage space available</li>
+                        <li>Ensure your Android version is compatible (Android 5.0+)</li>
+                        <li>Go to Settings > Security/Privacy and enable "Install from Unknown Sources"</li>
+                        <li>Try a different download method from the options above</li>
+                        <li>If using Chrome, check that downloads are allowed in site settings</li>
+                        <li>Clear your browser cache and try downloading again</li>
                       </ol>
                     </div>
                   </div>
                 </div>
-                
-                <a 
-                  href={downloadUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-md px-4 py-3 inline-flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-700"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Open in Browser
-                </a>
               </div>
             </div>
           </>

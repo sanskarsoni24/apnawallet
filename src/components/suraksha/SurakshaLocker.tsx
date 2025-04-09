@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Lock, Eye, EyeOff, Save, Plus, Trash2, FileText, Check, Upload, Download, KeyRound } from 'lucide-react';
 import BlurContainer from '../ui/BlurContainer';
@@ -921,4 +922,40 @@ const SurakshaLocker = () => {
                               <Button
                                 size="sm"
                                 onClick={() => downloadFile(currentDocument)}
-                                className="flex items
+                                className="flex items-center gap-1.5"
+                              >
+                                <Download className="h-4 w-4" /> Download
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                  <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center mb-4">
+                    <FileText className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No document selected</h3>
+                  <p className="text-sm text-muted-foreground max-w-md mb-6">
+                    Select a document from the list or create a new document to view its contents.
+                  </p>
+                  <Button
+                    onClick={startCreatingDocument}
+                    className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Create New Document
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </BlurContainer>
+  );
+};
+
+export default SurakshaLocker;

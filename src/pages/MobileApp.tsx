@@ -13,55 +13,42 @@ import SurakshitLogo from "@/components/ui/SurakshitLogo";
 import { Link } from "react-router-dom";
 
 const MobileApp = () => {
-  const [directApkLink, setDirectApkLink] = useState("");
+  const [downloadUrl, setDownloadUrl] = useState("");
   const [activeTab, setActiveTab] = useState<"android" | "ios">("android");
   const isMobile = useMediaQuery('(max-width: 768px)');
   
   useEffect(() => {
-    // Get current domain for QR code
+    // Set absolute download page URL for QR code
     const domain = window.location.origin;
     const downloadPage = `${domain}/download-app`;
-    const apkLink = `${domain}/downloads/surakshitlocker.apk`;
+    setDownloadUrl(downloadPage);
     
-    setDirectApkLink(apkLink);
-    
-    console.log("Direct APK link:", apkLink);
+    console.log("Download page URL:", downloadPage);
   }, []);
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(directApkLink);
+    navigator.clipboard.writeText(downloadUrl);
     toast({
       title: "Link copied",
-      description: "Direct APK download link copied to clipboard"
+      description: "Download page link copied to clipboard"
     });
   };
 
   const handleDirectDownload = () => {
     if (isMobile) {
-      // On mobile, directly download the APK
-      const downloadLink = document.createElement('a');
-      downloadLink.href = directApkLink;
-      downloadLink.download = "surakshitlocker.apk";
-      downloadLink.setAttribute('download', 'surakshitlocker.apk');
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      
-      // Also try opening directly
-      setTimeout(() => {
-        window.location.href = directApkLink;
-      }, 500);
+      // Navigate to download page on mobile
+      window.location.href = downloadUrl;
       
       toast({
-        title: "Download Started",
-        description: "The app is downloading now. Check your notifications."
+        title: "Redirecting to download page",
+        description: "You'll be able to download the app directly"
       });
     } else {
       // On desktop, copy the link
-      navigator.clipboard.writeText(directApkLink);
+      navigator.clipboard.writeText(downloadUrl);
       toast({
         title: "Link copied",
-        description: "Direct APK link copied to clipboard. Share this with your mobile device."
+        description: "Download page link copied to clipboard. Share this with your mobile device."
       });
     }
   };
@@ -101,9 +88,9 @@ const MobileApp = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col items-center justify-center p-8">
-              {/* QR Code that links directly to the APK file */}
+              {/* QR Code that links to the download page */}
               <QRCodeSVG 
-                value={directApkLink} 
+                value={downloadUrl} 
                 size={isMobile ? 200 : 250}
                 bgColor={"#ffffff"}
                 fgColor={"#000000"}
@@ -111,7 +98,7 @@ const MobileApp = () => {
                 includeMargin={true}
               />
               <p className="text-sm text-muted-foreground mt-4 text-center">
-                Scan this QR code with your device's camera to download the app
+                Scan this QR code with your device's camera to go to the download page
               </p>
               
               <div className="flex flex-col sm:flex-row gap-2 mt-4">
@@ -124,27 +111,24 @@ const MobileApp = () => {
                   Copy Link
                 </Button>
                 
-                {activeTab === "android" && (
-                  <Button 
-                    className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2"
-                    onClick={handleDirectDownload}
-                  >
-                    <Download className="h-4 w-4" />
-                    {isMobile ? "Download Now" : "Copy Direct Link"}
-                  </Button>
-                )}
+                <Button 
+                  className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2"
+                  onClick={handleDirectDownload}
+                >
+                  <Download className="h-4 w-4" />
+                  {isMobile ? "Download Now" : "Copy Download Link"}
+                </Button>
               </div>
               
-              {/* Direct download links */}
-              {isMobile && activeTab === "android" && (
+              {/* Direct link to download page for mobile devices */}
+              {isMobile && (
                 <div className="mt-4 text-center">
-                  <a 
-                    href={directApkLink} 
-                    download="surakshitlocker.apk" 
+                  <Link 
+                    to="/download-app" 
                     className="inline-block bg-indigo-600 text-white rounded-lg px-4 py-2 mt-2 hover:bg-indigo-700"
                   >
-                    Direct Download
-                  </a>
+                    Go to Download Page
+                  </Link>
                 </div>
               )}
               
@@ -158,14 +142,6 @@ const MobileApp = () => {
                   >
                     Go to download page
                   </Link>
-                  <a 
-                    href={directApkLink}
-                    className="text-indigo-600 dark:text-indigo-400 hover:underline text-sm"
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                  >
-                    Open APK directly in browser
-                  </a>
                 </div>
               </div>
             </Card>
@@ -189,10 +165,10 @@ const MobileApp = () => {
                     </h3>
                     <ol className="list-decimal pl-5 space-y-2 text-sm text-green-700 dark:text-green-300">
                       <li>Scan the QR code with your Android device</li>
-                      <li>Tap to download the APK file</li>
-                      <li>Tap on the download notification when complete</li>
+                      <li>Tap <strong>Download Now</strong> on the download page</li>
+                      <li>When download completes, tap the APK file to install</li>
                       <li>Allow installation from unknown sources if prompted</li>
-                      <li>Open the APK file and install the app</li>
+                      <li>Follow the installation prompts</li>
                       <li>Launch SurakshitLocker from your app drawer</li>
                     </ol>
                   </div>
@@ -201,15 +177,14 @@ const MobileApp = () => {
                   {isMobile && (
                     <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg text-center">
                       <p className="text-indigo-700 dark:text-indigo-300 mb-3">
-                        If scanning doesn't work, download directly:
+                        Go to the download page for direct installation:
                       </p>
-                      <a 
-                        href={directApkLink} 
-                        download="surakshitlocker.apk" 
+                      <Link 
+                        to="/download-app" 
                         className="inline-block bg-indigo-600 text-white rounded-lg px-4 py-2 hover:bg-indigo-700"
                       >
                         Download APK File
-                      </a>
+                      </Link>
                     </div>
                   )}
                   
@@ -218,10 +193,10 @@ const MobileApp = () => {
                     <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg text-center">
                       <p className="font-medium mb-2">Using Desktop?</p>
                       <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                        Email yourself this link or visit this page on your Android device:
+                        Share this link or visit this page on your Android device:
                       </p>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border">
-                        <code className="text-xs break-all">{directApkLink}</code>
+                        <code className="text-xs break-all">{downloadUrl}</code>
                       </div>
                     </div>
                   )}

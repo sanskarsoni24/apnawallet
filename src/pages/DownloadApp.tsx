@@ -26,50 +26,39 @@ const DownloadApp = () => {
     }
 
     // Set the direct download URL
-    const apkUrl = `${window.location.origin}/downloads/surakshitlocker.apk`;
-    setDownloadUrl(apkUrl);
-    
-    console.log("Download URL set to:", apkUrl);
+    setDownloadUrl(`${window.location.origin}/downloads/surakshitlocker.apk`);
   }, []);
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     setDownloading(true);
     
-    if (platform === "android") {
-      try {
-        console.log("Starting Android download from:", downloadUrl);
+    try {
+      if (platform === "android") {
+        // Create an iframe to trigger download
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = downloadUrl;
+        document.body.appendChild(iframe);
         
-        // Create a direct download link
-        const downloadLink = document.createElement('a');
-        downloadLink.href = downloadUrl;
-        downloadLink.download = "surakshitlocker.apk";
-        downloadLink.setAttribute('download', 'surakshitlocker.apk');
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+        // Also try direct link method
+        window.location.href = downloadUrl;
         
         toast({
           title: "Download Started",
-          description: "The app is downloading now. Please check your downloads folder and install when complete."
+          description: "The app is downloading now. Check your notifications and install when complete."
         });
-        
-        // Fallback: Open in new tab
-        setTimeout(() => {
-          window.open(downloadUrl, '_blank');
-        }, 1000);
-      } catch (error) {
-        console.error("Download error:", error);
-        toast({
-          title: "Download Failed",
-          description: "There was a problem downloading the app. Please try the direct link below.",
-          variant: "destructive"
-        });
-      } finally {
-        setDownloading(false);
+      } else if (platform === "ios") {
+        // For iOS, redirect to TestFlight
+        window.location.href = "https://testflight.apple.com/join/surakshitlocker";
       }
-    } else if (platform === "ios") {
-      // For iOS, redirect to TestFlight
-      window.location.href = "https://testflight.apple.com/join/surakshitlocker";
+    } catch (error) {
+      console.error("Download error:", error);
+      toast({
+        title: "Download Failed",
+        description: "There was a problem downloading the app. Try the direct links below.",
+        variant: "destructive"
+      });
+    } finally {
       setDownloading(false);
     }
   };
@@ -128,19 +117,19 @@ const DownloadApp = () => {
               <div className="flex flex-col gap-4">
                 <a 
                   href={downloadUrl}
-                  download="surakshitlocker.apk"
                   className="bg-indigo-600 text-white rounded-md px-4 py-3 inline-flex items-center justify-center gap-2 hover:bg-indigo-700"
                 >
                   <Download className="h-4 w-4" />
-                  Download APK Directly
+                  Direct APK Download
                 </a>
+                
                 <a 
                   href={downloadUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-md px-4 py-3 inline-flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-700"
                 >
-                  Open APK in Browser
+                  Open in Browser
                 </a>
               </div>
             </div>

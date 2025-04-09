@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { LifeBuoy } from "lucide-react";
 
 type GoogleSignInProps = {
   mode?: "signin" | "signup";
@@ -19,51 +18,61 @@ const GoogleSignIn = ({ mode = "signin", className = "" }: GoogleSignInProps) =>
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      // Simulate Google authentication
-      setTimeout(() => {
-        // In a real implementation, we would handle the Google OAuth flow
-        const googleEmail = "demo@example.com";
-        const googleProfilePicture = "https://i.pravatar.cc/150?u=google";
-        const googleId = "google_123456789";
+      // In a real implementation, this would be replaced with actual Google OAuth
+      // Here we simulate the Google account selection popup
+      
+      // Let's display mock Google account selection using browser's native confirm
+      const useDefault = window.confirm(
+        "Select a Google account to continue:\n\n" +
+        "▶ demo@example.com (Default)\n" +
+        "▶ Use another account"
+      );
+      
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Get the Google account info (either default or simulated manual entry)
+      const googleEmail = useDefault ? "demo@example.com" : "user.custom@gmail.com";
+      const googleProfilePicture = `https://i.pravatar.cc/150?u=${encodeURIComponent(googleEmail)}`;
+      const googleId = `google_${Math.random().toString(36).substring(2, 11)}`;
+      
+      if (mode === "signup") {
+        // For signup, register a new user with Google credentials
+        register(googleEmail, "demo123", googleEmail.split('@')[0]);
         
-        if (mode === "signup") {
-          // For signup, register a new user with Google credentials
-          register(googleEmail, "demo123", "Google User");
-          
-          // Update user settings with Google information
-          updateUserSettings({
-            googleConnected: true,
-            googleEmail,
-            googleProfilePicture,
-            googleId,
-            lastLoginMethod: "google"
-          });
-          
-          toast({
-            title: "Account created with Google",
-            description: "Your account has been created and you're now signed in",
-          });
-        } else {
-          // For signin, use the existing login flow with Google credentials
-          login(googleEmail, "demo123");
-          
-          // Update user settings with Google information
-          updateUserSettings({
-            googleConnected: true,
-            googleEmail,
-            googleProfilePicture,
-            googleId,
-            lastLoginMethod: "google"
-          });
-          
-          toast({
-            title: "Signed in with Google",
-            description: "You have successfully signed in with Google",
-          });
-        }
+        // Update user settings with Google information
+        updateUserSettings({
+          googleConnected: true,
+          googleEmail,
+          googleProfilePicture,
+          googleId,
+          lastLoginMethod: "google"
+        });
         
-        navigate("/dashboard");
-      }, 1500);
+        toast({
+          title: "Account created with Google",
+          description: `Signed up with ${googleEmail}`,
+        });
+      } else {
+        // For signin, use the existing login flow with Google credentials
+        login(googleEmail, "demo123");
+        
+        // Update user settings with Google information
+        updateUserSettings({
+          googleConnected: true,
+          googleEmail,
+          googleProfilePicture,
+          googleId,
+          lastLoginMethod: "google"
+        });
+        
+        toast({
+          title: "Signed in with Google",
+          description: `Successfully signed in as ${googleEmail}`,
+        });
+      }
+      
+      navigate("/dashboard");
     } catch (error) {
       toast({
         title: "Google sign in failed",

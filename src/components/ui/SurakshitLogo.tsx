@@ -50,7 +50,7 @@ const SurakshitLogo: React.FC<SurakshitLogoProps> = ({
         textSizeClasses[size],
         className
       )}>
-        SurakshitLocker
+        ApnaWallet
       </span>
     );
   }
@@ -70,7 +70,7 @@ const SurakshitLogo: React.FC<SurakshitLogoProps> = ({
           "font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent",
           textSizeClasses[size]
         )}>
-          SurakshitLocker
+          ApnaWallet
         </span>
       </div>
     );

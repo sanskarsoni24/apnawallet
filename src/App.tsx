@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -49,6 +48,7 @@ const initializeTheme = () => {
 // Onboarding guide component
 const OnboardingGuides = () => {
   const location = useLocation();
+  const { isLoggedIn } = useUser();
   const [currentGuide, setCurrentGuide] = useState<{id: string, steps: GuideStep[]} | null>(null);
   const [guideOpen, setGuideOpen] = useState(false);
   
@@ -57,29 +57,41 @@ const OnboardingGuides = () => {
     const path = location.pathname;
     const guides = getGuidesForPath(path);
     
-    if (guides.length > 0) {
-      // Find the first guide that should be shown
-      const guideToShow = guides.find(guide => shouldShowGuide(guide.id));
+    // Only show guides if user is logged in and hasn't seen them before
+    if (isLoggedIn && guides.length > 0) {
+      // Check if user has dismissed all guides
+      const allGuidesShown = localStorage.getItem("all_guides_shown") === "true";
       
-      if (guideToShow) {
-        // Short delay before showing guide
-        const timer = setTimeout(() => {
-          setCurrentGuide({
-            id: guideToShow.id,
-            steps: guideToShow.steps
-          });
-          setGuideOpen(true);
-        }, 1000);
+      if (!allGuidesShown) {
+        // Find the first guide that should be shown
+        const guideToShow = guides.find(guide => shouldShowGuide(guide.id));
         
-        return () => clearTimeout(timer);
+        if (guideToShow) {
+          // Short delay before showing guide
+          const timer = setTimeout(() => {
+            setCurrentGuide({
+              id: guideToShow.id,
+              steps: guideToShow.steps
+            });
+            setGuideOpen(true);
+          }, 1000);
+          
+          return () => clearTimeout(timer);
+        } else {
+          // If no guides to show for this path, mark all as shown
+          localStorage.setItem("all_guides_shown", "true");
+        }
       }
     }
-  }, [location]);
+  }, [location, isLoggedIn]);
   
   const handleGuideComplete = () => {
     if (currentGuide) {
       markGuideAsCompleted(currentGuide.id);
       setCurrentGuide(null);
+      
+      // Mark all guides as shown so they don't appear again
+      localStorage.setItem("all_guides_shown", "true");
     }
   };
   
@@ -109,7 +121,7 @@ const NotificationCheck = () => {
     if (firstVisit) {
       setTimeout(() => {
         toast({
-          title: "Welcome to SurakshitLocker",
+          title: "Welcome to ApnaWallet",
           description: "Your secure vault for managing important documents.",
         });
         localStorage.setItem("firstVisit", "false");
@@ -125,8 +137,8 @@ const NotificationCheck = () => {
       if (emailStatus.configured && !emailVerified) {
         sendEmailNotification(
           email,
-          "SurakshitLocker - Email Notifications Enabled",
-          `Hello,\n\nYour email notifications for SurakshitLocker have been successfully enabled. You will now receive notifications about your documents.\n\nThank you for using SurakshitLocker!`
+          "ApnaWallet - Email Notifications Enabled",
+          `Hello,\n\nYour email notifications for ApnaWallet have been successfully enabled. You will now receive notifications about your documents.\n\nThank you for using ApnaWallet!`
         );
         setEmailVerified(true);
       }

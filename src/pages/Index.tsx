@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Container from "@/components/layout/Container";
 import Dashboard from "@/components/dashboard/Dashboard";
 import LandingPage from "@/components/landing/LandingPage";
 import { useUser } from "@/contexts/UserContext";
 import SurakshaLocker from "@/components/suraksha/SurakshaLocker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, LayoutDashboard, Calendar, Clock, ArrowRight } from "lucide-react";
+import { Shield, LayoutDashboard, Calendar, Clock, ArrowRight, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SurakshitLogo from "@/components/ui/SurakshitLogo";
 import BlurContainer from "@/components/ui/BlurContainer";
@@ -16,8 +17,10 @@ interface IndexProps {
 }
 
 const Index = ({ defaultTab = "locker" }: IndexProps) => {
+  const navigate = useNavigate();
   const { isLoggedIn } = useUser();
   const [activeTab, setActiveTab] = useState<"dashboard" | "locker">(defaultTab);
+  const [guideDismissed, setGuideDismissed] = useState<boolean>(false);
   
   // Set the active tab when defaultTab changes
   useEffect(() => {
@@ -25,6 +28,12 @@ const Index = ({ defaultTab = "locker" }: IndexProps) => {
       setActiveTab(defaultTab);
     }
   }, [defaultTab]);
+  
+  // Check if user has seen the guide before
+  useEffect(() => {
+    const dismissed = localStorage.getItem("guide_dismissed") === "true";
+    setGuideDismissed(dismissed);
+  }, []);
   
   if (!isLoggedIn) {
     return (
@@ -36,7 +45,7 @@ const Index = ({ defaultTab = "locker" }: IndexProps) => {
   
   return (
     <Container>
-      {/* Hero Section for Surakshit Locker */}
+      {/* Hero Section for ApnaWallet */}
       <div className="mb-10 relative overflow-hidden">
         <BlurContainer variant="dark" className="p-8 md:p-10">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 -z-10"></div>
@@ -47,7 +56,7 @@ const Index = ({ defaultTab = "locker" }: IndexProps) => {
             <div className="text-center md:text-left">
               <div className="flex items-center gap-3 mb-6 justify-center md:justify-start">
                 <SurakshitLogo size="lg" />
-                <h1 className="text-3xl md:text-4xl font-bold text-white">Surakshit Locker</h1>
+                <h1 className="text-3xl md:text-4xl font-bold text-white">ApnaWallet</h1>
               </div>
               <p className="text-lg text-white/80 max-w-xl leading-relaxed">
                 Your private vault for securing sensitive information. Store passwords, notes, and documents with enterprise-grade end-to-end encryption.
@@ -157,17 +166,17 @@ const Index = ({ defaultTab = "locker" }: IndexProps) => {
         >
           <div className="flex items-center gap-3 mb-4">
             <div className="h-12 w-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-              <Clock className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+              <Upload className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h3 className="font-semibold text-lg">Custom Reminders</h3>
+            <h3 className="font-semibold text-lg">Upload Documents</h3>
           </div>
-          <p className="text-muted-foreground mb-6">Set personalized reminders for important documents and deadlines.</p>
+          <p className="text-muted-foreground mb-6">Upload and securely store your important documents and files.</p>
           <Button 
-            onClick={() => setActiveTab("dashboard")} 
+            onClick={() => navigate("/documents")} 
             variant="outline" 
             className="w-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 border-emerald-200 dark:border-emerald-800/30 text-emerald-700 dark:text-emerald-400 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30"
           >
-            Manage Reminders
+            Upload Documents
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </BlurContainer>

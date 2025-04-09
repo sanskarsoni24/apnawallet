@@ -1,7 +1,7 @@
 
 {
-  "name": "SurakshitLocker",
-  "short_name": "SurakshitLocker",
+  "name": "ApnaWallet",
+  "short_name": "ApnaWallet",
   "description": "Your secure document vault",
   "start_url": "/",
   "display": "standalone",

@@ -93,7 +93,7 @@ const Header = () => {
             <Link to="/" className="flex items-center gap-2">
               <SurakshitLogo size="sm" />
               <span className="font-semibold text-xl hidden sm:inline-block">
-                SurakshitLocker
+                ApnaWallet
               </span>
             </Link>
 
@@ -198,7 +198,10 @@ const Header = () => {
       </header>
 
       {/* Mobile Navigation */}
-      <MobileNav open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)}>
+      <MobileNav 
+        open={mobileMenuOpen} 
+        onClose={() => setMobileMenuOpen(false)}
+      >
         <div className="flex flex-col gap-4 p-4">
           {navItems.map((item) => (
             <Link

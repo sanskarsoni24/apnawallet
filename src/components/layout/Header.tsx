@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MobileNav } from "../ui/sidebar";
+import { MobileNav } from "../ui/mobile-nav";
 import SurakshitLogo from "../ui/SurakshitLogo";
 import { Bell, Menu, User, HelpCircle } from "lucide-react";
 import { ModeToggle } from "../ui/mode-toggle";
@@ -21,10 +21,13 @@ import MobileBanner from "../ui/MobileBanner";
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, displayName, email, userSettings, avatarUrl, logout } = useUser();
+  const { isLoggedIn, displayName, email, userSettings, logout } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
+  
+  // User avatar placeholder (first letter of name or email)
+  const avatarFallback = (displayName || email || "U").charAt(0).toUpperCase();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -74,6 +77,9 @@ const Header = () => {
     { name: "Help", path: "/help" },
   ];
 
+  // Check for unread notifications
+  const hasUnreadNotifications = userSettings?.emailNotifications;
+
   return (
     <>
       {showBanner && <MobileBanner onDismiss={handleDismissBanner} />}
@@ -122,7 +128,7 @@ const Header = () => {
 
             <ModeToggle />
             
-            {isAuthenticated ? (
+            {isLoggedIn ? (
               <>
                 <Button
                   variant="ghost"
@@ -131,7 +137,7 @@ const Header = () => {
                   onClick={() => navigate("/settings?tab=notifications")}
                 >
                   <Bell className="h-5 w-5" />
-                  {userSettings?.unreadNotifications > 0 && (
+                  {hasUnreadNotifications && (
                     <span className="absolute top-1 right-1.5 flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -143,13 +149,9 @@ const Header = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="overflow-hidden rounded-full">
                       <Avatar className="h-8 w-8">
-                        {avatarUrl ? (
-                          <AvatarImage src={avatarUrl} alt={displayName || ""} />
-                        ) : (
-                          <AvatarFallback>
-                            {(displayName || email || "U").charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        )}
+                        <AvatarFallback>
+                          {avatarFallback}
+                        </AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
@@ -209,7 +211,7 @@ const Header = () => {
             </Link>
           ))}
           
-          {!isAuthenticated && (
+          {!isLoggedIn && (
             <div className="flex flex-col gap-2 mt-4 pt-4 border-t">
               <Link 
                 to="/sign-in" 

@@ -32,22 +32,64 @@ const DownloadApp = () => {
     setDownloading(true);
     
     if (platform === "android") {
-      // Create a link element and simulate a click to download the APK
-      const link = document.createElement('a');
-      link.href = appLink;
-      link.download = "surakshitlocker.apk";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Show a toast message after a delay to simulate download starting
-      setTimeout(() => {
+      try {
+        // Create an XHR request to fetch the file with proper binary handling
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', appLink, true);
+        xhr.responseType = 'blob';
+        
+        xhr.onload = function() {
+          if (this.status === 200) {
+            // Create a blob URL from the response
+            const blob = new Blob([this.response], { type: 'application/vnd.android.package-archive' });
+            const url = window.URL.createObjectURL(blob);
+            
+            // Create a link element and trigger download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = "surakshitlocker.apk";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up the blob URL
+            setTimeout(() => {
+              window.URL.revokeObjectURL(url);
+            }, 100);
+            
+            toast({
+              title: "Download Started",
+              description: "The APK file is downloading to your device."
+            });
+          } else {
+            toast({
+              title: "Download Failed",
+              description: "There was an error downloading the APK. Please try again.",
+              variant: "destructive"
+            });
+          }
+          setDownloading(false);
+        };
+        
+        xhr.onerror = function() {
+          toast({
+            title: "Download Failed",
+            description: "There was a network error. Please try again.",
+            variant: "destructive"
+          });
+          setDownloading(false);
+        };
+        
+        xhr.send();
+      } catch (error) {
+        console.error("Download error:", error);
         toast({
-          title: "Download Started",
-          description: "The APK file is downloading to your device."
+          title: "Download Error",
+          description: "There was an error preparing the download. Please try again.",
+          variant: "destructive"
         });
         setDownloading(false);
-      }, 1000);
+      }
     } else if (platform === "ios") {
       // For iOS, we redirect to the TestFlight or App Store link
       window.location.href = appLink;

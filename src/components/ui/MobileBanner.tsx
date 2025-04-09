@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Download } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -44,28 +45,47 @@ const MobileBanner = () => {
     
     console.log("Starting direct APK download");
     
-    // For Android devices, try direct download
+    // For Android devices, try multiple download methods
     if (/android/i.test(navigator.userAgent)) {
-      // Create a link element
-      const link = document.createElement('a');
-      link.href = directApkUrl;
-      link.download = 'surakshitlocker.apk';
-      link.setAttribute('type', 'application/vnd.android.package-archive');
-      
-      // Append to body and trigger click
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
       toast({
         title: "Download Started",
-        description: "The APK file is downloading. Check your downloads folder to install."
+        description: "The APK file is downloading. Check your notifications or downloads folder."
       });
       
-      // If direct link doesn't work, try window.open as fallback
-      setTimeout(() => {
-        window.open(directApkUrl, '_blank');
-      }, 1500);
+      // Method 1: Fetch API with blob
+      fetch(directApkUrl)
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.blob();
+        })
+        .then(blob => {
+          // Create downloadable link from blob
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'surakshitlocker.apk';
+          link.type = 'application/vnd.android.package-archive';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+          console.error('Fetch download failed:', error);
+          // Fallback method: Direct anchor link
+          const link = document.createElement('a');
+          link.href = directApkUrl;
+          link.download = 'surakshitlocker.apk';
+          link.type = 'application/vnd.android.package-archive';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // If all else fails, open in new tab
+          setTimeout(() => {
+            window.open(directApkUrl, '_blank');
+          }, 1000);
+        });
     } else {
       // Non-Android devices go to download page
       window.location.href = "/download-app";
@@ -122,7 +142,6 @@ const MobileBanner = () => {
                   {/android/i.test(navigator.userAgent) && (
                     <a 
                       href="/downloads/surakshitlocker.apk"
-                      download="surakshitlocker.apk"
                       className="w-full bg-gray-200 text-gray-800 hover:bg-gray-300 inline-flex items-center justify-center rounded-md font-medium h-10 px-4 py-2"
                       onClick={handleDirectApkDownload}
                     >

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { isMobileApp } from '../utils/capacitor';
 
@@ -61,6 +62,7 @@ export function usePlatform() {
       // Check if native mobile app
       if (isMobileApp()) {
         try {
+          // Dynamic import to avoid loading Device on web platforms
           const { Device } = await import('@capacitor/device');
           const info = await Device.getInfo();
           setPlatform(info.platform as 'android' | 'ios');

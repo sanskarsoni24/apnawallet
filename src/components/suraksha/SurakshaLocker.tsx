@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Lock, Eye, EyeOff, Save, Plus, Trash2, FileText, Check, Upload, Download, KeyRound } from 'lucide-react';
+import { Lock, Eye, EyeOff, Save, Plus, Trash2, FileText, Check, Upload, Download, KeyRound, Calendar } from 'lucide-react';
 import BlurContainer from '../ui/BlurContainer';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from '../ui/label';
+import { format } from 'date-fns';
 
 interface SecureDocument {
   id: string;
@@ -32,292 +33,414 @@ interface SecureDocument {
 }
 
 const SurakshaLocker = () => {
+  const { email } = useUser();
   const [isLocked, setIsLocked] = useState(true);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [storedPassword, setStoredPassword] = useState<string | null>(null);
+  const [storedPassword, setStoredPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [secureDocuments, setSecureDocuments] = useState<SecureDocument[]>([]);
   const [currentDocument, setCurrentDocument] = useState<SecureDocument | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dueDate, setDueDate] = useState<string>('');
+  const [category, setCategory] = useState<string>('');
+  
+  // Password change dialog states
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const { user } = useUser();
-
+  
+  // Load stored password and documents from localStorage
   useEffect(() => {
-    const storedPass = localStorage.getItem('lockerPassword');
-    if (storedPass) {
-      setStoredPassword(storedPass);
-      setIsLocked(true);
-    } else {
-      setIsLocked(true);
+    const savedPassword = localStorage.getItem(`suraksha_password_${email}`);
+    if (savedPassword) {
+      setStoredPassword(savedPassword);
     }
-
-    const storedDocs = localStorage.getItem('secureDocuments');
-    if (storedDocs) {
-      setSecureDocuments(JSON.parse(storedDocs));
+    
+    // Only load documents if user is authenticated
+    if (!isLocked) {
+      loadSecureDocuments();
     }
-  }, []);
-
+  }, [email, isLocked]);
+  
+  // Load secure documents from localStorage
+  const loadSecureDocuments = () => {
+    try {
+      const encryptedDocs = localStorage.getItem(`suraksha_documents_${email}`);
+      if (encryptedDocs) {
+        // In a real app, you would decrypt the data here
+        const decryptedDocs = JSON.parse(encryptedDocs);
+        setSecureDocuments(decryptedDocs);
+      }
+    } catch (error) {
+      console.error('Error loading secure documents:', error);
+    }
+  };
+  
+  // Save secure documents to localStorage
+  const saveSecureDocuments = (docs: SecureDocument[]) => {
+    try {
+      // In a real app, you would encrypt the data here
+      const encryptedDocs = JSON.stringify(docs);
+      localStorage.setItem(`suraksha_documents_${email}`, encryptedDocs);
+    } catch (error) {
+      console.error('Error saving secure documents:', error);
+    }
+  };
+  
+  // Handle password setup or validation
   const handleUnlock = () => {
     if (!storedPassword) {
-      if (password === confirmPassword) {
-        localStorage.setItem('lockerPassword', password);
-        setStoredPassword(password);
-        setIsLocked(false);
+      if (password.length < 6) {
         toast({
-          title: "Locker Created",
-          description: "Your Suraksha Locker has been created successfully!",
+          title: 'Password Too Short',
+          description: 'Password must be at least 6 characters long.',
+          variant: 'destructive',
         });
-      } else {
-        toast({
-          title: "Error",
-          description: "Passwords do not match.",
-          variant: "destructive",
-        });
+        return;
       }
+      if (password !== confirmPassword) {
+        toast({
+          title: 'Passwords Do Not Match',
+          description: 'Please make sure your passwords match.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      localStorage.setItem(`suraksha_password_${email}`, password);
+      setStoredPassword(password);
+      setIsLocked(false);
+      toast({
+        title: 'Locker Created',
+        description: 'Your secure locker has been created.',
+      });
     } else {
       if (password === storedPassword) {
         setIsLocked(false);
         toast({
-          title: "Locker Unlocked",
-          description: "Your Suraksha Locker has been unlocked!",
+          title: 'Locker Unlocked',
+          description: 'Your secure locker has been unlocked.',
         });
       } else {
         toast({
-          title: "Error",
-          description: "Incorrect password.",
-          variant: "destructive",
+          title: 'Incorrect Password',
+          description: 'Please enter the correct password.',
+          variant: 'destructive',
         });
       }
     }
     setPassword('');
     setConfirmPassword('');
   };
-
-  const handleLock = () => {
-    setIsLocked(true);
-    setCurrentDocument(null);
-    setIsCreating(false);
-    setIsEditing(false);
-    toast({
-      title: "Locker Locked",
-      description: "Your Suraksha Locker has been locked.",
-    });
-  };
-
-  const saveSecureDocuments = (docs: SecureDocument[]) => {
-    localStorage.setItem('secureDocuments', JSON.stringify(docs));
-  };
-
-  const viewDocument = (doc: SecureDocument) => {
-    setCurrentDocument(doc);
-    setNewTitle(doc.title);
-    setNewContent(doc.content);
-  };
-
-  const startCreatingDocument = () => {
-    setIsCreating(true);
-    setIsEditing(false);
-    setCurrentDocument(null);
-    setNewTitle('');
-    setNewContent('');
-  };
-
-  const startEditingDocument = () => {
-    if (currentDocument) {
-      setIsEditing(true);
-      setIsCreating(false);
-      setNewTitle(currentDocument.title);
-      setNewContent(currentDocument.content);
-    }
-  };
-
-  const saveNewDocument = () => {
-    if (!newTitle.trim() || !newContent.trim()) {
-      toast({
-        title: "Error",
-        description: "Title and content cannot be empty.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const newDoc: SecureDocument = {
-      id: Math.random().toString(36).substring(7),
-      title: newTitle,
-      content: newContent,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      fileURL: selectedFile ? URL.createObjectURL(selectedFile) : undefined,
-      fileName: selectedFile ? selectedFile.name : undefined,
-      fileType: selectedFile ? selectedFile.type : undefined,
-      fileSize: selectedFile ? selectedFile.size : undefined,
-    };
-
-    const updatedDocs = [...secureDocuments, newDoc];
-    setSecureDocuments(updatedDocs);
-    saveSecureDocuments(updatedDocs);
-    setCurrentDocument(newDoc);
-    setIsCreating(false);
-    setSelectedFile(null);
-
-    toast({
-      title: "Document Saved",
-      description: "Your new document has been saved successfully!",
-    });
-  };
-
-  const saveEditedDocument = () => {
-    if (!newTitle.trim() || !newContent.trim()) {
-      toast({
-        title: "Error",
-        description: "Title and content cannot be empty.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!currentDocument) return;
-
-    const updatedDoc = {
-      ...currentDocument,
-      title: newTitle,
-      content: newContent,
-      updatedAt: new Date().toISOString(),
-      fileURL: selectedFile ? URL.createObjectURL(selectedFile) : currentDocument.fileURL,
-      fileName: selectedFile ? selectedFile.name : currentDocument.fileName,
-      fileType: selectedFile ? selectedFile.type : currentDocument.fileType,
-      fileSize: selectedFile ? selectedFile.size : currentDocument.fileSize,
-    };
-
-    const updatedDocs = secureDocuments.map(doc =>
-      doc.id === currentDocument.id ? updatedDoc : doc
-    );
-
-    setSecureDocuments(updatedDocs);
-    saveSecureDocuments(updatedDocs);
-    setCurrentDocument(updatedDoc);
-    setIsEditing(false);
-    setSelectedFile(null);
-
-    toast({
-      title: "Document Updated",
-      description: "Your document has been updated successfully!",
-    });
-  };
-
-  const deleteDocument = (id: string) => {
-    const updatedDocs = secureDocuments.filter(doc => doc.id !== id);
-    setSecureDocuments(updatedDocs);
-    saveSecureDocuments(updatedDocs);
-    setCurrentDocument(null);
-    setIsEditing(false);
-    setIsCreating(false);
-
-    toast({
-      title: "Document Deleted",
-      description: "The document has been deleted successfully!",
-    });
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
-    }
-  };
-
-  const downloadFile = (doc: SecureDocument) => {
-    if (doc.fileURL) {
-      const link = document.createElement('a');
-      link.href = doc.fileURL;
-      link.download = doc.fileName || 'document';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      toast({
-        title: "Error",
-        description: "No file attached to this document.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const getFileTypeInfo = (doc: SecureDocument) => {
-    if (!doc.fileType) return { text: 'Document', color: 'indigo' };
-
-    if (doc.fileType.startsWith('image')) {
-      return { text: 'Image', color: 'green' };
-    } else if (doc.fileType.startsWith('video')) {
-      return { text: 'Video', color: 'blue' };
-    } else if (doc.fileType === 'application/pdf') {
-      return { text: 'PDF', color: 'red' };
-    } else {
-      return { text: 'File', color: 'indigo' };
-    }
-  };
-
+  
+  // Handle password change
   const handleChangePassword = () => {
     if (currentPassword !== storedPassword) {
       toast({
-        title: "Error",
-        description: "Incorrect current password.",
-        variant: "destructive",
+        title: 'Incorrect Current Password',
+        description: 'Please enter your current password correctly.',
+        variant: 'destructive',
       });
       return;
     }
-
-    if (newPassword !== confirmNewPassword) {
-      toast({
-        title: "Error",
-        description: "New passwords do not match.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (newPassword.length < 6) {
       toast({
-        title: "Error",
-        description: "New password must be at least 6 characters long.",
-        variant: "destructive",
+        title: 'New Password Too Short',
+        description: 'New password must be at least 6 characters long.',
+        variant: 'destructive',
       });
       return;
     }
-
-    localStorage.setItem('lockerPassword', newPassword);
+    if (newPassword !== confirmNewPassword) {
+      toast({
+        title: 'New Passwords Do Not Match',
+        description: 'Please make sure your new passwords match.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    localStorage.setItem(`suraksha_password_${email}`, newPassword);
     setStoredPassword(newPassword);
     setIsLocked(true);
     setCurrentPassword('');
     setNewPassword('');
     setConfirmNewPassword('');
     setIsChangePasswordOpen(false);
-
     toast({
-      title: "Password Changed",
-      description: "Your Suraksha Locker password has been changed successfully!",
+      title: 'Password Updated',
+      description: 'Your locker password has been updated.',
+    });
+  };
+  
+  // Lock the secure locker
+  const handleLock = () => {
+    setIsLocked(true);
+    toast({
+      title: 'Locker Locked',
+      description: 'Your secure locker has been locked.',
+    });
+  };
+  
+  // Start creating a new document
+  const startCreatingDocument = () => {
+    setIsCreating(true);
+    setIsEditing(false);
+    setCurrentDocument(null);
+    setNewTitle('');
+    setNewContent('');
+    setSelectedFile(null);
+    setDueDate('');
+    setCategory('');
+  };
+  
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      
+      // Try to detect document type and due date from the file name
+      detectDocumentInfo(file);
+    }
+  };
+
+  // Detect document info from file name or content
+  const detectDocumentInfo = (file: File) => {
+    // Extract document category from filename
+    const fileName = file.name.toLowerCase();
+    
+    // Detect category based on file name
+    if (fileName.includes('invoice') || fileName.includes('receipt')) {
+      setCategory('Invoice');
+    } else if (fileName.includes('passport') || fileName.includes('visa')) {
+      setCategory('Travel Document');
+    } else if (fileName.includes('license') || fileName.includes('permit')) {
+      setCategory('License');
+    } else if (fileName.includes('tax') || fileName.includes('return')) {
+      setCategory('Tax Document');
+    } else if (fileName.includes('insurance') || fileName.includes('policy')) {
+      setCategory('Insurance');
+    } else if (fileName.includes('id') || fileName.includes('card')) {
+      setCategory('ID Card');
+    }
+    
+    // Try to detect due date from file name
+    // Look for date patterns like YYYY-MM-DD or DD-MM-YYYY
+    const datePattern = /(\d{4}[-/]\d{2}[-/]\d{2}|\d{2}[-/]\d{2}[-/]\d{4})/;
+    const dateMatch = fileName.match(datePattern);
+    
+    if (dateMatch) {
+      try {
+        // Attempt to parse and format the date
+        const extractedDate = new Date(dateMatch[0]);
+        if (!isNaN(extractedDate.getTime())) {
+          setDueDate(extractedDate.toISOString().split('T')[0]);
+        }
+      } catch (error) {
+        console.error('Error parsing detected date:', error);
+      }
+    }
+  };
+
+  // Create a URL for the selected file
+  const createFileURL = (file: File) => {
+    return URL.createObjectURL(file);
+  };
+
+  // Get file extension
+  const getFileExtension = (fileName: string) => {
+    return fileName.split('.').pop()?.toLowerCase() || '';
+  };
+  
+  // Save a new document
+  const saveNewDocument = () => {
+    if (!newTitle.trim()) {
+      toast({
+        title: 'Title Required',
+        description: 'Please enter a title for your document.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    const now = new Date().toISOString();
+    const newDoc: SecureDocument = {
+      id: `doc_${Date.now()}`,
+      title: newTitle,
+      content: newContent,
+      createdAt: now,
+      updatedAt: now,
+    };
+    
+    // Add due date if set
+    if (dueDate) {
+      newDoc.dueDate = dueDate;
+    }
+    
+    // Add category if set
+    if (category) {
+      newDoc.category = category;
+    }
+    
+    // Add file information if a file was selected
+    if (selectedFile) {
+      const fileURL = createFileURL(selectedFile);
+      newDoc.fileURL = fileURL;
+      newDoc.fileName = selectedFile.name;
+      newDoc.fileType = getFileExtension(selectedFile.name);
+      newDoc.fileSize = selectedFile.size;
+    }
+    
+    const updatedDocs = [...secureDocuments, newDoc];
+    setSecureDocuments(updatedDocs);
+    saveSecureDocuments(updatedDocs);
+    
+    setIsCreating(false);
+    setNewTitle('');
+    setNewContent('');
+    setSelectedFile(null);
+    setDueDate('');
+    setCategory('');
+    
+    toast({
+      title: 'Document Saved',
+      description: 'Your secure document has been saved.',
+    });
+  };
+  
+  // View a document
+  const viewDocument = (doc: SecureDocument) => {
+    setCurrentDocument(doc);
+    setNewTitle(doc.title);
+    setNewContent(doc.content);
+    setDueDate(doc.dueDate || '');
+    setCategory(doc.category || '');
+    setIsEditing(false);
+    setIsCreating(false);
+  };
+  
+  // Start editing a document
+  const startEditingDocument = () => {
+    setIsEditing(true);
+  };
+  
+  // Save edited document
+  const saveEditedDocument = () => {
+    if (!currentDocument) return;
+    
+    if (!newTitle.trim()) {
+      toast({
+        title: 'Title Required',
+        description: 'Please enter a title for your document.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    const updatedDoc = {
+      ...currentDocument,
+      title: newTitle,
+      content: newContent,
+      updatedAt: new Date().toISOString(),
+      dueDate: dueDate || undefined,
+      category: category || undefined,
+    };
+    
+    // Update file information if a file was selected
+    if (selectedFile) {
+      const fileURL = createFileURL(selectedFile);
+      updatedDoc.fileURL = fileURL;
+      updatedDoc.fileName = selectedFile.name;
+      updatedDoc.fileType = getFileExtension(selectedFile.name);
+      updatedDoc.fileSize = selectedFile.size;
+    }
+    
+    const updatedDocs = secureDocuments.map(doc => 
+      doc.id === currentDocument.id ? updatedDoc : doc
+    );
+    
+    setSecureDocuments(updatedDocs);
+    saveSecureDocuments(updatedDocs);
+    setCurrentDocument(updatedDoc);
+    setIsEditing(false);
+    setSelectedFile(null);
+    
+    toast({
+      title: 'Document Updated',
+      description: 'Your secure document has been updated.',
+    });
+  };
+  
+  // Delete a document
+  const deleteDocument = (id: string) => {
+    const updatedDocs = secureDocuments.filter(doc => doc.id !== id);
+    setSecureDocuments(updatedDocs);
+    saveSecureDocuments(updatedDocs);
+    
+    if (currentDocument?.id === id) {
+      setCurrentDocument(null);
+      setIsEditing(false);
+    }
+    
+    toast({
+      title: 'Document Deleted',
+      description: 'Your secure document has been deleted.',
+    });
+  };
+  
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
+  // Download a document file if available
+  const downloadFile = (doc: SecureDocument) => {
+    if (doc.fileURL) {
+      const link = document.createElement('a');
+      link.href = doc.fileURL;
+      link.download = doc.fileName || doc.title;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: 'Document Downloaded',
+        description: `${doc.title} has been downloaded.`,
+      });
+    }
+  };
+
+  // Get file type icon or info
+  const getFileTypeInfo = (doc: SecureDocument) => {
+    if (!doc.fileType) return { icon: FileText, text: 'Document' };
+    
+    const type = doc.fileType.toLowerCase();
+    if (['pdf'].includes(type)) {
+      return { icon: FileText, text: 'PDF' };
+    } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(type)) {
+      return { icon: FileText, text: 'Image' };
+    } else if (['doc', 'docx'].includes(type)) {
+      return { icon: FileText, text: 'Word' };
+    } else if (['xls', 'xlsx'].includes(type)) {
+      return { icon: FileText, text: 'Excel' };
+    } else {
+      return { icon: FileText, text: 'File' };
+    }
+  };
+  
   return (
     <BlurContainer className="p-6 animate-fade-in dark:bg-slate-800/70 dark:border-slate-700">
       <div className="mb-4 flex items-center gap-3">
@@ -526,13 +649,24 @@ const SurakshaLocker = () => {
                         <p className="text-xs text-muted-foreground">
                           {formatDate(doc.updatedAt)}
                         </p>
-                        {doc.fileURL && (
-                          <div className="flex items-center gap-1 mt-1">
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                          {doc.fileURL && (
                             <span className="bg-indigo-100 text-indigo-800 text-xs px-1.5 py-0.5 rounded-full">
                               {getFileTypeInfo(doc).text}
                             </span>
-                          </div>
-                        )}
+                          )}
+                          {doc.category && (
+                            <span className="bg-purple-100 text-purple-800 text-xs px-1.5 py-0.5 rounded-full">
+                              {doc.category}
+                            </span>
+                          )}
+                          {doc.dueDate && (
+                            <span className="bg-amber-100 text-amber-800 text-xs px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                              <Calendar className="h-2.5 w-2.5" />
+                              {formatDate(doc.dueDate)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex gap-1">
                         {doc.fileURL && (
@@ -579,6 +713,31 @@ const SurakshaLocker = () => {
                       className="font-medium"
                     />
                   </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <Label htmlFor="due-date">Due Date (Optional)</Label>
+                      <Input
+                        id="due-date"
+                        type="date"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="category">Category (Optional)</Label>
+                      <Input
+                        id="category"
+                        type="text"
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="mt-1"
+                        placeholder="e.g. Tax, Passport, ID"
+                      />
+                    </div>
+                  </div>
+                  
                   <Textarea
                     placeholder="Enter your secure content here..."
                     value={newContent}
@@ -642,6 +801,8 @@ const SurakshaLocker = () => {
                       onClick={() => {
                         setIsCreating(false);
                         setSelectedFile(null);
+                        setDueDate('');
+                        setCategory('');
                       }}
                     >
                       Cancel
@@ -665,6 +826,31 @@ const SurakshaLocker = () => {
                           className="font-medium"
                         />
                       </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <Label htmlFor="edit-due-date">Due Date (Optional)</Label>
+                          <Input
+                            id="edit-due-date"
+                            type="date"
+                            value={dueDate}
+                            onChange={(e) => setDueDate(e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="edit-category">Category (Optional)</Label>
+                          <Input
+                            id="edit-category"
+                            type="text"
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+                            className="mt-1"
+                            placeholder="e.g. Tax, Passport, ID"
+                          />
+                        </div>
+                      </div>
+                      
                       <Textarea
                         value={newContent}
                         onChange={(e) => setNewContent(e.target.value)}
@@ -720,185 +906,4 @@ const SurakshaLocker = () => {
                                       );
                                       
                                       setSecureDocuments(updatedDocs);
-                                      saveSecureDocuments(updatedDocs);
-                                      setCurrentDocument(updatedDoc);
-                                    }
-                                  }}
-                                >
-                                  Remove
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => downloadFile(currentDocument)}
-                                >
-                                  <Download className="h-4 w-4 mr-1" /> Download
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-center">
-                              <div className="flex flex-col items-center justify-center space-y-2">
-                                <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                                  <Upload className="h-5 w-5 text-indigo-600" />
-                                </div>
-                                <div className="space-y-1">
-                                  <p className="text-sm font-medium">Upload a document</p>
-                                  <p className="text-xs text-muted-foreground">Drag and drop or click to browse</p>
-                                </div>
-                                <input 
-                                  type="file" 
-                                  ref={fileInputRef}
-                                  onChange={handleFileChange}
-                                  className="hidden" 
-                                />
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => fileInputRef.current?.click()}
-                                >
-                                  Select File
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-end gap-2 mt-auto">
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setIsEditing(false);
-                            setNewTitle(currentDocument.title);
-                            setNewContent(currentDocument.content);
-                            setSelectedFile(null);
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={saveEditedDocument}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                        >
-                          <Save className="h-4 w-4 mr-1" /> Save Changes
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-semibold">{currentDocument.title}</h3>
-                        <div className="flex items-center gap-2">
-                          {currentDocument.fileURL && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => downloadFile(currentDocument)}
-                              className="flex items-center gap-1.5"
-                            >
-                              <Download className="h-4 w-4" /> Download
-                            </Button>
-                          )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={startEditingDocument}
-                          >
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="flex-1 overflow-y-auto whitespace-pre-wrap mb-4">
-                        {currentDocument.content}
-                      </div>
-                      
-                      {/* Display file if available */}
-                      {currentDocument.fileURL && (
-                        <div className="mb-4 p-4 border rounded-md bg-slate-50 dark:bg-slate-800/50">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                              <FileText className="h-6 w-6 text-indigo-600" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium">{currentDocument.fileName || "Attached Document"}</p>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">
-                                  {currentDocument.fileType ? currentDocument.fileType.toUpperCase() : "Document"}
-                                </span>
-                                {currentDocument.fileSize && (
-                                  <span className="text-xs text-muted-foreground">
-                                    {(currentDocument.fileSize / 1024).toFixed(1)} KB
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="ml-auto">
-                              <Button
-                                size="sm"
-                                onClick={() => downloadFile(currentDocument)}
-                                className="flex items-center gap-1.5"
-                              >
-                                <Download className="h-4 w-4" /> Download
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Due date information */}
-                      {currentDocument.dueDate && (
-                        <div className="mb-4 p-4 border rounded-md bg-amber-50 dark:bg-amber-900/20">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                              <FileText className="h-6 w-6 text-amber-600" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium">Due Date</p>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-amber-700">
-                                  {formatDate(currentDocument.dueDate)}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Category information */}
-                      {currentDocument.category && (
-                        <div className="mb-4">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
-                            {currentDocument.category}
-                          </span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8">
-                  <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                    <FileText className="h-8 w-8 text-slate-400" />
-                  </div>
-                  <h3 className="text-lg font-medium mb-2">No document selected</h3>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Select a document from the list or create a new one.
-                  </p>
-                  <Button 
-                    onClick={startCreatingDocument}
-                    className="bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    <Plus className="h-4 w-4 mr-1" /> Create New Document
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </BlurContainer>
-  );
-};
-
-export default SurakshaLocker;
+                                      saveSecure

@@ -211,6 +211,54 @@ const SurakshaLocker = () => {
     });
   };
   
+  // Handle enabling two-factor authentication
+  const handleEnable2FA = () => {
+    toast({
+      title: '2FA Enabled',
+      description: 'Two-factor authentication has been enabled for your locker.',
+    });
+    
+    // In a real app, you would set up 2FA with a service like Authy or Google Authenticator
+    localStorage.setItem(`suraksha_2fa_enabled_${email}`, 'true');
+  };
+  
+  // Export all documents as JSON
+  const exportAllDocuments = () => {
+    try {
+      if (secureDocuments.length === 0) {
+        toast({
+          title: 'No Documents to Export',
+          description: 'Your secure locker does not contain any documents to export.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Create a JSON file with all documents
+      const dataStr = JSON.stringify(secureDocuments, null, 2);
+      const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
+      
+      // Create a download link and trigger it
+      const exportFileDefaultName = `suraksha_documents_${new Date().toISOString().split('T')[0]}.json`;
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
+      toast({
+        title: 'Documents Exported',
+        description: `${secureDocuments.length} documents have been exported successfully.`,
+      });
+    } catch (error) {
+      console.error('Error exporting documents:', error);
+      toast({
+        title: 'Export Failed',
+        description: 'An error occurred while exporting your documents.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
   // Start creating a new document
   const startCreatingDocument = () => {
     setIsCreating(true);
@@ -402,6 +450,43 @@ const SurakshaLocker = () => {
       return { icon: FileText, text: 'File' };
     }
   };
+
+  // Force a backup of all documents
+  const forceBackupNow = () => {
+    try {
+      // In a real app, this would connect to a cloud storage service
+      // For this demo, we'll create a backup in localStorage with a timestamp
+      const backupData = JSON.stringify({
+        documents: secureDocuments,
+        timestamp: new Date().toISOString(),
+        userId: email
+      });
+      
+      localStorage.setItem(`suraksha_backup_${Date.now()}`, backupData);
+      
+      // Update backup history
+      const backupHistory = JSON.parse(localStorage.getItem(`suraksha_backup_history_${email}`) || '[]');
+      backupHistory.push({
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        documentCount: secureDocuments.length,
+        size: new Blob([backupData]).size
+      });
+      localStorage.setItem(`suraksha_backup_history_${email}`, JSON.stringify(backupHistory));
+      
+      toast({
+        title: 'Backup Complete',
+        description: `${secureDocuments.length} documents backed up successfully.`
+      });
+    } catch (error) {
+      console.error('Backup error:', error);
+      toast({
+        title: 'Backup Failed',
+        description: 'An error occurred while backing up your documents.',
+        variant: 'destructive'
+      });
+    }
+  };
   
   return (
     <BlurContainer className="p-6 animate-fade-in dark:bg-slate-800/70 dark:border-slate-700">
@@ -567,6 +652,15 @@ const SurakshaLocker = () => {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => exportAllDocuments()}
+                className="text-xs"
+              >
+                <Download className="h-3.5 w-3.5 mr-1" /> Export Data
+              </Button>
               
               <Button
                 variant="outline"

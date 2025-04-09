@@ -11,8 +11,11 @@ import { toast } from "@/hooks/use-toast";
 import { useUser } from "@/contexts/UserContext";
 import { Shield, Bell, Palette, User, Chrome, Lock, Upload, Cloud, Key, Download } from "lucide-react";
 import BlurContainer from "@/components/ui/BlurContainer";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Settings = () => {
+  const navigate = useNavigate();
   const [currentTab, setCurrentTab] = useState("account");
   const { email, displayName, userSettings, updateUserSettings, updateProfile } = useUser();
   
@@ -79,6 +82,175 @@ const Settings = () => {
     { id: "extension", label: "Extension", icon: <Chrome /> },
     { id: "backup", label: "Backup", icon: <Cloud /> },
   ];
+  
+  // Handle enabling 2FA
+  const handleEnable2FA = () => {
+    // Store 2FA status in localStorage
+    localStorage.setItem("2fa_enabled", "true");
+    
+    toast({
+      title: "2FA Enabled",
+      description: "Two-factor authentication has been enabled for your account."
+    });
+  };
+  
+  // Handle exporting all data
+  const exportAllData = () => {
+    try {
+      // Gather all user data
+      const userData = {
+        profile: {
+          displayName: displayName,
+          email: email
+        },
+        settings: userSettings,
+        documents: JSON.parse(localStorage.getItem("documents") || "[]"),
+        secureDocuments: JSON.parse(localStorage.getItem(`suraksha_documents_${email}`) || "[]"),
+      };
+      
+      // Create and trigger download
+      const dataStr = JSON.stringify(userData, null, 2);
+      const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
+      
+      const exportFileDefaultName = `surakshitlocker_data_${new Date().toISOString().split('T')[0]}.json`;
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
+      toast({
+        title: "Data Exported",
+        description: "All your data has been exported successfully."
+      });
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      toast({
+        title: "Export Failed",
+        description: "An error occurred while exporting your data.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Handle force backup
+  const forceBackupNow = () => {
+    // Get documents from localStorage
+    const documents = JSON.parse(localStorage.getItem("documents") || "[]");
+    const secureDocuments = JSON.parse(localStorage.getItem(`suraksha_documents_${email}`) || "[]");
+    
+    // Create backup object
+    const backup = {
+      timestamp: new Date().toISOString(),
+      email: email,
+      documents: documents,
+      secureDocuments: secureDocuments,
+      userSettings: userSettings
+    };
+    
+    // Save backup to localStorage
+    const backupId = `backup_${Date.now()}`;
+    localStorage.setItem(backupId, JSON.stringify(backup));
+    
+    // Update backup history
+    const backupHistory = JSON.parse(localStorage.getItem("backup_history") || "[]");
+    backupHistory.push({
+      id: backupId,
+      timestamp: backup.timestamp,
+      documentCount: documents.length + secureDocuments.length,
+      size: JSON.stringify(backup).length
+    });
+    localStorage.setItem("backup_history", JSON.stringify(backupHistory));
+    
+    toast({
+      title: "Backup Complete",
+      description: `${documents.length + secureDocuments.length} documents backed up successfully.`
+    });
+  };
+  
+  // Handle upload backup file
+  const handleUploadBackup = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const backup = JSON.parse(e.target?.result as string);
+        
+        // Basic validation
+        if (!backup.timestamp || !backup.documents) {
+          throw new Error("Invalid backup file format");
+        }
+        
+        // Store backup
+        const backupId = `backup_${Date.now()}`;
+        localStorage.setItem(backupId, JSON.stringify(backup));
+        
+        // Update backup history
+        const backupHistory = JSON.parse(localStorage.getItem("backup_history") || "[]");
+        backupHistory.push({
+          id: backupId,
+          timestamp: backup.timestamp,
+          documentCount: backup.documents.length + (backup.secureDocuments?.length || 0),
+          size: e.target?.result?.toString().length || 0
+        });
+        localStorage.setItem("backup_history", JSON.stringify(backupHistory));
+        
+        toast({
+          title: "Backup Uploaded",
+          description: "Your backup file has been successfully uploaded."
+        });
+      } catch (error) {
+        console.error("Error parsing backup file:", error);
+        toast({
+          title: "Upload Failed",
+          description: "The selected file is not a valid backup file.",
+          variant: "destructive"
+        });
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset the input
+    event.target.value = '';
+  };
+  
+  // Handle restore backup
+  const handleRestoreBackup = (backupId: string) => {
+    try {
+      const backup = JSON.parse(localStorage.getItem(backupId) || "");
+      
+      // Basic validation
+      if (!backup.timestamp || !backup.documents) {
+        throw new Error("Invalid backup data");
+      }
+      
+      // Restore documents
+      localStorage.setItem("documents", JSON.stringify(backup.documents));
+      
+      // Restore secure documents if available
+      if (backup.secureDocuments && backup.email === email) {
+        localStorage.setItem(`suraksha_documents_${email}`, JSON.stringify(backup.secureDocuments));
+      }
+      
+      // Restore settings if available
+      if (backup.userSettings) {
+        updateUserSettings(backup.userSettings);
+      }
+      
+      toast({
+        title: "Backup Restored",
+        description: "Your data has been successfully restored from the backup."
+      });
+    } catch (error) {
+      console.error("Error restoring backup:", error);
+      toast({
+        title: "Restore Failed",
+        description: "An error occurred while restoring your backup.",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <Container>
@@ -160,7 +332,10 @@ const Settings = () => {
             <p className="text-sm text-muted-foreground mb-4">
               Download all your data in JSON format.
             </p>
-            <button className="w-full py-2 text-sm font-medium border rounded-lg border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400">
+            <button 
+              className="w-full py-2 text-sm font-medium border rounded-lg border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400"
+              onClick={exportAllData}
+            >
               Export All Data
             </button>
           </BlurContainer>
@@ -197,6 +372,25 @@ const Settings = () => {
               <BlurContainer variant="default" className="p-6">
                 <h2 className="text-2xl font-semibold mb-6">Security Vault</h2>
                 <SurakshaLocker />
+                <div className="mt-6 border-t border-dashed pt-6">
+                  <h3 className="text-md font-medium mb-4 flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-indigo-500" />
+                    Additional Security Options
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Two-Factor Authentication</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleEnable2FA}
+                        className="border-green-200 hover:border-green-300 dark:border-green-800/40 dark:hover:border-green-700/40 text-green-700 dark:text-green-500"
+                      >
+                        Enable 2FA
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </BlurContainer>
             </TabsContent>
 
@@ -222,7 +416,10 @@ const Settings = () => {
                     <p className="text-sm text-muted-foreground mb-4">
                       Your data is automatically backed up to our secure cloud every day.
                     </p>
-                    <button className="w-full py-2 text-sm font-medium rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300">
+                    <button
+                      onClick={forceBackupNow}
+                      className="w-full py-2 text-sm font-medium rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300"
+                    >
                       Force Backup Now
                     </button>
                   </div>
@@ -240,40 +437,67 @@ const Settings = () => {
                     <p className="text-sm text-muted-foreground mb-4">
                       Upload backup files to restore your data from a previous backup.
                     </p>
-                    <button className="w-full py-2 text-sm font-medium rounded-lg bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">
-                      Upload Backup File
-                    </button>
+                    <label htmlFor="upload-backup-file">
+                      <input
+                        type="file"
+                        id="upload-backup-file"
+                        accept=".json"
+                        onChange={handleUploadBackup}
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => document.getElementById('upload-backup-file')?.click()}
+                        className="w-full py-2 text-sm font-medium rounded-lg bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300"
+                      >
+                        Upload Backup File
+                      </button>
+                    </label>
                   </div>
                 </div>
                 
                 <div className="mt-6 border-t border-dashed pt-6">
                   <h3 className="font-medium mb-4">Backup History</h3>
                   <div className="space-y-3">
-                    {[
-                      { date: "Today, 2:30 PM", size: "2.4 MB", status: "Complete" },
-                      { date: "Yesterday, 3:15 PM", size: "2.3 MB", status: "Complete" },
-                      { date: "May 2, 2023", size: "2.2 MB", status: "Complete" }
-                    ].map((backup, i) => (
-                      <div key={i} className="flex items-center justify-between py-2 px-4 rounded-lg bg-white/30 dark:bg-slate-800/30">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                            <Cloud className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    {(JSON.parse(localStorage.getItem("backup_history") || "[]") as { id: string, timestamp: string, documentCount: number }[]).length > 0 ? (
+                      (JSON.parse(localStorage.getItem("backup_history") || "[]") as { id: string, timestamp: string, documentCount: number }[])
+                        .slice(0, 3) // Show only last 3 backups
+                        .map((backup) => (
+                          <div key={backup.id} className="flex items-center justify-between py-2 px-4 rounded-lg bg-white/30 dark:bg-slate-800/30">
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                                <Cloud className="h-4 w-4 text-green-600 dark:text-green-400" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">
+                                  {new Date(backup.timestamp).toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                                <p className="text-xs text-muted-foreground">{backup.documentCount} documents</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+                                Complete
+                              </span>
+                              <button 
+                                className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+                                onClick={() => handleRestoreBackup(backup.id)}
+                              >
+                                Restore
+                              </button>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium">{backup.date}</p>
-                            <p className="text-xs text-muted-foreground">{backup.size}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-                            {backup.status}
-                          </span>
-                          <button className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
-                            Restore
-                          </button>
-                        </div>
+                        ))
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground">
+                        No backup history available
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </BlurContainer>

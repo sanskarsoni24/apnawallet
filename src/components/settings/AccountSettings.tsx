@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { User, Save, Mail, Shield, KeyRound } from "lucide-react";
 import BlurContainer from "@/components/ui/BlurContainer";
 import { Button } from "@/components/ui/button";
@@ -33,10 +33,10 @@ const AccountSettings = ({
   saveAccountSettings 
 }: AccountSettingsProps) => {
   const { email } = useUser();
-  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = React.useState(false);
-  const [currentPassword, setCurrentPassword] = React.useState("");
-  const [newPassword, setNewPassword] = React.useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = React.useState("");
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   
   const handlePasswordChange = () => {
     // Basic validation
@@ -66,18 +66,59 @@ const AccountSettings = ({
       });
       return;
     }
-    
-    // In a real app, you would send this to your backend
+
+    // In a real app, this would be an API call
+    // Get the mock users from localStorage
+    try {
+      const mockUsersJson = localStorage.getItem("mockUsers");
+      if (mockUsersJson) {
+        const mockUsers = JSON.parse(mockUsersJson);
+        
+        // Check if the user exists and if the current password matches
+        if (email in mockUsers) {
+          if (mockUsers[email].password === currentPassword) {
+            // Update the password
+            mockUsers[email].password = newPassword;
+            localStorage.setItem("mockUsers", JSON.stringify(mockUsers));
+            
+            toast({
+              title: "Success",
+              description: "Your password has been updated successfully"
+            });
+            
+            // Reset form and close dialog
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmNewPassword("");
+            setIsChangePasswordDialogOpen(false);
+          } else {
+            toast({
+              title: "Error",
+              description: "Current password is incorrect",
+              variant: "destructive"
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error updating password:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while updating your password",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Handle enabling two-factor authentication
+  const handleEnable2FA = () => {
     toast({
-      title: "Success",
-      description: "Your password has been updated successfully"
+      title: "2FA Enabled",
+      description: "Two-factor authentication has been enabled for your account."
     });
     
-    // Reset form and close dialog
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmNewPassword("");
-    setIsChangePasswordDialogOpen(false);
+    // In a real app, you would set up 2FA with a service like Authy or Google Authenticator
+    localStorage.setItem(`2fa_enabled_${email}`, 'true');
   };
   
   return (
@@ -239,6 +280,7 @@ const AccountSettings = ({
               <Button
                 variant="outline"
                 size="sm"
+                onClick={handleEnable2FA}
                 className="border-green-200 hover:border-green-300 dark:border-green-800/40 dark:hover:border-green-700/40 text-green-700 dark:text-green-500"
               >
                 Enable 2FA

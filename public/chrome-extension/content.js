@@ -6,11 +6,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const documents = JSON.parse(localStorage.getItem("documents") || "[]");
       const userSettings = JSON.parse(localStorage.getItem("userSettings") || "{}");
       const userEmail = localStorage.getItem("userEmail") || "";
+      const backupHistory = JSON.parse(localStorage.getItem("backup_history") || "[]");
       
       sendResponse({
         documents,
         userSettings,
-        userEmail
+        userEmail,
+        backupHistory
       });
     } catch (e) {
       sendResponse({error: e.toString()});
@@ -21,7 +23,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Inform extension when document data changes in the web app
 window.addEventListener("storage", function(e) {
-  if (e.key === "documents" || e.key === "userSettings") {
+  if (e.key === "documents" || e.key === "userSettings" || e.key === "backup_history") {
     chrome.runtime.sendMessage({
       action: "webAppDataChanged",
       key: e.key,

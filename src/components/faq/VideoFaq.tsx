@@ -6,6 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Play, Pause, X, VideoIcon, FileVideo, HelpCircle } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export interface VideoFaqItem {
   id: string;
@@ -20,7 +21,7 @@ const faqData: VideoFaqItem[] = [
   {
     id: "upload-doc",
     question: "How do I upload documents?",
-    answer: "You can upload documents by dragging and dropping files onto the upload area or by clicking the select documents button. The app supports various formats including PDF, JPG, and PNG.",
+    answer: "You can upload documents by dragging and dropping files onto the upload area or by clicking the upload button. The app supports various formats including PDF, JPG, and PNG.",
     videoUrl: "/videos/upload-document.mp4",
     thumbnail: "/images/upload-thumbnail.jpg",
     category: "Documents"
@@ -87,12 +88,46 @@ const VideoFaq = () => {
   };
 
   const togglePlayPause = () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current) {
+      toast({
+        title: "Video Error",
+        description: "There was a problem playing this video. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    if (isPlaying) {
-      videoRef.current.pause();
-    } else {
-      videoRef.current.play();
+    try {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        // Add error handling for play promise
+        const playPromise = videoRef.current.play();
+        
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              // Play started successfully
+              setIsPlaying(true);
+            })
+            .catch(error => {
+              // Play failed
+              console.error("Video playback failed:", error);
+              toast({
+                title: "Playback Error",
+                description: "Could not play the video. The file may be missing or in an unsupported format.",
+                variant: "destructive"
+              });
+            });
+        }
+      }
+    } catch (error) {
+      console.error("Video control error:", error);
+      toast({
+        title: "Video Error",
+        description: "There was a problem controlling the video playback.",
+        variant: "destructive"
+      });
     }
     
     setIsPlaying(!isPlaying);
@@ -105,6 +140,15 @@ const VideoFaq = () => {
     }
   };
 
+  const onVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+    console.error("Video loading error:", e);
+    toast({
+      title: "Video Not Available",
+      description: "This tutorial video could not be loaded. Please try again later.",
+      variant: "destructive"
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -114,7 +158,7 @@ const VideoFaq = () => {
             Video Assisted FAQs
           </CardTitle>
           <CardDescription>
-            Watch video guides to help you navigate SurakshitLocker
+            Watch video guides to help you navigate ApnaWallet
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -193,9 +237,11 @@ const VideoFaq = () => {
                 ref={videoRef}
                 src={selectedVideo.videoUrl}
                 className="w-full h-full"
+                controls
                 onEnded={onVideoEnded}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
+                onError={onVideoError}
               />
             )}
             

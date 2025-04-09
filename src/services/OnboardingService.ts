@@ -3,8 +3,9 @@ import { toast } from "@/hooks/use-toast";
 import { GuideStep } from "@/components/onboarding/GuidedMessage";
 
 // Store which guides the user has seen
-const GUIDES_STORAGE_KEY = 'surakshitlocker_completed_guides';
-const ONBOARDING_COMPLETE_KEY = 'surakshitlocker_onboarding_complete';
+const GUIDES_STORAGE_KEY = 'apnawallet_completed_guides';
+const ONBOARDING_COMPLETE_KEY = 'apnawallet_onboarding_complete';
+const ALL_GUIDES_SHOWN_KEY = 'all_guides_shown';
 
 export interface Guide {
   id: string;
@@ -20,14 +21,14 @@ export interface Guide {
 const guides: Guide[] = [
   {
     id: "welcome",
-    title: "Welcome to SurakshitLocker",
+    title: "Welcome to ApnaWallet",
     showOnce: true,
     priority: 100,
     triggerPath: "/dashboard",
     steps: [
       {
         id: "welcome-1",
-        title: "Welcome to SurakshitLocker",
+        title: "Welcome to ApnaWallet",
         description: "Your secure document manager that helps you keep track of all your important documents in one place.",
         placement: "center",
       },
@@ -115,6 +116,11 @@ export const getGuideById = (id: string): Guide | undefined => {
 
 // Get guides for the current path
 export const getGuidesForPath = (path: string): Guide[] => {
+  // Check if all guides have been shown already
+  if (localStorage.getItem(ALL_GUIDES_SHOWN_KEY) === 'true') {
+    return [];
+  }
+  
   return guides
     .filter(guide => guide.triggerPath === path)
     .sort((a, b) => (b.priority || 0) - (a.priority || 0));
@@ -122,6 +128,11 @@ export const getGuidesForPath = (path: string): Guide[] => {
 
 // Check if a guide should be shown
 export const shouldShowGuide = (guideId: string): boolean => {
+  // Check if all guides are marked as shown
+  if (localStorage.getItem(ALL_GUIDES_SHOWN_KEY) === 'true') {
+    return false;
+  }
+  
   // Check if onboarding is complete
   const onboardingComplete = localStorage.getItem(ONBOARDING_COMPLETE_KEY) === 'true';
   
@@ -155,6 +166,9 @@ export const markGuideAsCompleted = (guideId: string): void => {
   if (guideId === 'welcome') {
     localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
   }
+  
+  // Mark all guides as shown to prevent them from appearing again
+  localStorage.setItem(ALL_GUIDES_SHOWN_KEY, 'true');
 };
 
 // Get all completed guides
@@ -167,6 +181,7 @@ export const getCompletedGuides = (): string[] => {
 export const resetAllGuides = (): void => {
   localStorage.removeItem(GUIDES_STORAGE_KEY);
   localStorage.removeItem(ONBOARDING_COMPLETE_KEY);
+  localStorage.removeItem(ALL_GUIDES_SHOWN_KEY);
   toast({
     title: "Guides Reset",
     description: "All guides have been reset and will be shown again.",

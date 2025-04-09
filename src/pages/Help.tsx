@@ -17,7 +17,7 @@ const Help = () => {
             Help Center
           </h1>
           <p className="text-muted-foreground mb-6">
-            Find answers to common questions and watch video tutorials to help you get the most out of SurakshitLocker.
+            Find answers to common questions and watch video tutorials to help you get the most out of ApnaWallet.
           </p>
           
           <Tabs defaultValue="video-faqs" className="w-full">
@@ -44,15 +44,15 @@ const Help = () => {
                     Frequently Asked Questions
                   </CardTitle>
                   <CardDescription>
-                    Common questions about using SurakshitLocker
+                    Common questions about using ApnaWallet
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-lg font-medium">What is SurakshitLocker?</h3>
+                      <h3 className="text-lg font-medium">What is ApnaWallet?</h3>
                       <p className="text-muted-foreground">
-                        SurakshitLocker is a secure document management system that helps you keep track of your important documents,
+                        ApnaWallet is a secure document management system that helps you keep track of your important documents,
                         their expiry dates, and sends you timely reminders.
                       </p>
                     </div>
@@ -60,14 +60,14 @@ const Help = () => {
                     <div>
                       <h3 className="text-lg font-medium">Is my data secure?</h3>
                       <p className="text-muted-foreground">
-                        Yes, SurakshitLocker uses end-to-end encryption to ensure that your documents are secure and can only be accessed by you.
+                        Yes, ApnaWallet uses end-to-end encryption to ensure that your documents are secure and can only be accessed by you.
                       </p>
                     </div>
                     
                     <div>
                       <h3 className="text-lg font-medium">Can I access my documents offline?</h3>
                       <p className="text-muted-foreground">
-                        Yes, with the SurakshitLocker mobile app, you can access your documents even when you're offline.
+                        Yes, with the ApnaWallet mobile app, you can access your documents even when you're offline.
                         Download the app from the Mobile App page.
                       </p>
                     </div>
@@ -91,7 +91,7 @@ const Help = () => {
                     <div>
                       <h3 className="text-lg font-medium">How do I upload multiple documents at once?</h3>
                       <p className="text-muted-foreground">
-                        You can upload multiple documents by selecting multiple files when clicking the "Select documents" button,
+                        You can upload multiple documents by selecting multiple files when clicking the "Upload" button,
                         or by dragging and dropping multiple files at once.
                       </p>
                     </div>

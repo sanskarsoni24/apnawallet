@@ -1,48 +1,86 @@
+import { useState, useEffect } from 'react';
+import { isMobileApp } from '../utils/capacitor';
 
-import * as React from "react"
-
-const MOBILE_BREAKPOINT = 768
-
+// Custom hook to detect mobile browser
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
-
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
-
-  return !!isMobile
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkIfMobile = () => {
+      const mobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
+  
+  return isMobile;
 }
 
-// Function to check if a media query matches
-export function useMediaQuery(query: string) {
-  const [matches, setMatches] = React.useState<boolean>(false)
+// Keep for backward compatibility 
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false);
 
-  React.useEffect(() => {
-    const media = window.matchMedia(query)
-    
-    // Set initial state
-    setMatches(media.matches)
-    
-    // Define callback for media query change events
-    const listener = (e: MediaQueryListEvent) => {
-      setMatches(e.matches)
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
     }
-    
-    // Add event listener
-    media.addEventListener("change", listener)
-    
-    // Cleanup
-    return () => media.removeEventListener("change", listener)
-  }, [query])
 
-  return matches
+    const listener = () => setMatches(media.matches);
+    media.addEventListener('change', listener);
+    
+    return () => media.removeEventListener('change', listener);
+  }, [matches, query]);
+
+  return matches;
 }
 
-// Add an alias export to prevent future imports from breaking
-export const useMobile = useIsMobile;
+// Hook to check if running in native app via Capacitor
+export function useIsNativeApp() {
+  const [isNative, setIsNative] = useState(false);
+  
+  useEffect(() => {
+    setIsNative(isMobileApp());
+  }, []);
+  
+  return isNative;
+}
+
+// Hook for mobile-optimized platform detection
+export function usePlatform() {
+  const [platform, setPlatform] = useState<'web' | 'android' | 'ios' | 'desktop'>('web');
+  
+  useEffect(() => {
+    const detectPlatform = async () => {
+      // Check if native mobile app
+      if (isMobileApp()) {
+        try {
+          const { Device } = await import('@capacitor/device');
+          const info = await Device.getInfo();
+          setPlatform(info.platform as 'android' | 'ios');
+        } catch (err) {
+          console.error('Error detecting mobile platform:', err);
+          setPlatform('web');
+        }
+        return;
+      }
+      
+      // Check if desktop or mobile web
+      if (window.innerWidth >= 1024) {
+        setPlatform('desktop');
+      } else {
+        setPlatform('web');
+      }
+    };
+    
+    detectPlatform();
+  }, []);
+  
+  return platform;
+}

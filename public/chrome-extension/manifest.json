@@ -24,7 +24,8 @@
     "notifications", 
     "alarms", 
     "activeTab", 
-    "scripting"
+    "scripting",
+    "downloads"
   ],
   "host_permissions": [
     "https://*.lovableproject.com/*"
@@ -34,7 +35,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://*.lovableproject.com/*"],
+      "matches": ["https://*.lovableproject.com/*", "https://*.google.com/*", "https://*.gmail.com/*"],
       "js": ["content.js"]
     }
   ]

@@ -188,11 +188,11 @@ const DownloadApp = () => {
                     <div>
                       <h5 className="font-medium text-amber-700 dark:text-amber-300 mb-1">Troubleshooting APK Installation</h5>
                       <p className="text-xs text-amber-600 dark:text-amber-400 mb-2">
-                        If you encounter a "Parse Error" or "Problem parsing package":
+                        If you encounter a &quot;Parse Error&quot; or &quot;Problem parsing package&quot;:
                       </p>
                       <ol className="text-xs text-amber-600 dark:text-amber-400 list-decimal pl-4 space-y-1">
                         <li>Ensure your Android version is compatible (Android 5.0+)</li>
-                        <li>Go to Settings > Security/Privacy and enable "Install from Unknown Sources"</li>
+                        <li>Go to Settings &gt; Security/Privacy and enable &quot;Install from Unknown Sources&quot;</li>
                         <li>Try a different download method from the options above</li>
                         <li>If using Chrome, check that downloads are allowed in site settings</li>
                         <li>Clear your browser cache and try downloading again</li>

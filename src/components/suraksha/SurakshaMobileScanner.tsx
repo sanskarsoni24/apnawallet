@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { AlertCircle, Smartphone, Check, Loader2 } from "lucide-react";
@@ -182,7 +183,7 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
               
               <div className="relative w-full max-w-sm overflow-hidden rounded-lg border">
                 <Scanner
-                  onDecode={handleScan}
+                  onResult={handleScan}
                   onError={handleError}
                   containerStyle={{ borderRadius: '0.5rem' }}
                 />

@@ -1,15 +1,16 @@
+
 import React from "react";
 import Container from "@/components/layout/Container";
 import { useUser } from "@/contexts/UserContext";
 import BlurContainer from "@/components/ui/BlurContainer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Shield, Mail, Calendar, User, Settings, LogOut } from "lucide-react";
+import { Shield, Mail, Calendar, User, Settings, LogOut, CreditCard } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 
 const UserProfile = () => {
-  const { email, displayName, logout } = useUser();
+  const { email, displayName, logout, userSettings, updateUserSettings } = useUser();
   const navigate = useNavigate();
   
   // Get initial letters for avatar fallback
@@ -33,6 +34,27 @@ const UserProfile = () => {
     });
     navigate("/");
   };
+
+  // Convert subscription plan to display name
+  const getSubscriptionDisplay = () => {
+    switch(userSettings?.subscriptionPlan) {
+      case "basic": return "Basic Plan";
+      case "premium": return "Premium Plan";
+      case "enterprise": return "Enterprise Plan";
+      default: return "Free Plan";
+    }
+  };
+  
+  // Function to upgrade to premium
+  const upgradeToPremium = () => {
+    updateUserSettings({ subscriptionPlan: 'premium' });
+    toast({
+      title: "Welcome to Premium!",
+      description: "You've successfully upgraded to the Premium plan.",
+    });
+  };
+
+  const isPremium = userSettings?.subscriptionPlan === 'premium' || userSettings?.subscriptionPlan === 'enterprise';
 
   return (
     <Container>
@@ -62,8 +84,12 @@ const UserProfile = () => {
                 </div>
                 
                 <div className="flex flex-wrap gap-2">
-                  <div className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-full text-xs">
-                    <Shield className="h-3 w-3" /> Pro Plan
+                  <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                    isPremium 
+                      ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300" 
+                      : "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
+                  }`}>
+                    <Shield className="h-3 w-3" /> {getSubscriptionDisplay()}
                   </div>
                   <div className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full text-xs">
                     <Mail className="h-3 w-3" /> Email Verified
@@ -112,6 +138,22 @@ const UserProfile = () => {
                     </div>
                   </div>
                 </div>
+                
+                {!isPremium && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+                        <CreditCard className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Documents</p>
+                        <p className="text-xs text-muted-foreground">
+                          Limit: {userSettings?.documentLimit || 10} / Max size: {userSettings?.documentSizeLimit || 5}MB
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="mt-6 pt-6 border-t">
@@ -121,25 +163,54 @@ const UserProfile = () => {
               </div>
             </BlurContainer>
             
-            <Link to="/pricing">
-              <BlurContainer 
-                className="p-6 relative overflow-hidden cursor-pointer hover:shadow-lg transition-all"
-                gradient
-              >
-                <div className="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-indigo-600/10 dark:bg-indigo-600/5"></div>
-                <div className="absolute -left-4 -top-4 w-16 h-16 rounded-full bg-purple-600/10 dark:bg-purple-600/5"></div>
-                
+            {!isPremium ? (
+              <button onClick={upgradeToPremium}>
+                <BlurContainer 
+                  className="p-6 relative overflow-hidden cursor-pointer hover:shadow-lg transition-all"
+                  gradient
+                >
+                  <div className="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-indigo-600/10 dark:bg-indigo-600/5"></div>
+                  <div className="absolute -left-4 -top-4 w-16 h-16 rounded-full bg-purple-600/10 dark:bg-purple-600/5"></div>
+                  
+                  <div className="relative">
+                    <h3 className="font-semibold text-lg mb-2">Upgrade to Premium</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Get unlimited documents, automatic backups, and more premium features.
+                    </p>
+                    <Button variant="default" className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
+                      Upgrade Now
+                    </Button>
+                  </div>
+                </BlurContainer>
+              </button>
+            ) : (
+              <BlurContainer className="p-6 relative overflow-hidden bg-gradient-to-br from-amber-50/50 to-yellow-50/50 dark:from-amber-900/30 dark:to-yellow-900/20 border border-amber-100/50 dark:border-amber-800/30">
                 <div className="relative">
-                  <h3 className="font-semibold text-lg mb-2">Upgrade Your Plan</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Get access to premium features with our Pro or Enterprise plans.
-                  </p>
-                  <Button variant="default" className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-                    View Plans
-                  </Button>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Shield className="h-5 w-5 text-amber-700 dark:text-amber-400" />
+                    <h3 className="font-semibold text-lg">Premium Features</h3>
+                  </div>
+                  <ul className="space-y-2">
+                    <li className="flex items-center gap-2 text-sm">
+                      <div className="h-1.5 w-1.5 rounded-full bg-amber-500"></div>
+                      <span>Unlimited document storage</span>
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <div className="h-1.5 w-1.5 rounded-full bg-amber-500"></div>
+                      <span>Automatic weekly backups</span>
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <div className="h-1.5 w-1.5 rounded-full bg-amber-500"></div>
+                      <span>Cloud storage export</span>
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <div className="h-1.5 w-1.5 rounded-full bg-amber-500"></div>
+                      <span>Advanced sharing controls</span>
+                    </li>
+                  </ul>
                 </div>
               </BlurContainer>
-            </Link>
+            )}
           </div>
         </div>
       </div>

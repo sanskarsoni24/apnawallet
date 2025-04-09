@@ -43,7 +43,6 @@ const GoogleSignIn = () => {
       disabled={isLoading}
       className="w-full border-slate-300"
       onClick={handleGoogleSignIn}
-      loading={isLoading}
     >
       {!isLoading && <CircleUser className="mr-2 h-4 w-4" />}
       {isLoading ? "Signing in..." : "Sign in with Google"}

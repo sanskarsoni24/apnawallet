@@ -23,10 +23,11 @@ const Settings = () => {
   // Update local state when user profile changes
   useEffect(() => {
     setLocalDisplayName(displayName);
-    setLocalEmail(email);
+    setLocalEmail(setLocalEmail);
   }, [displayName, email]);
   
-  const isPremiumUser = false; // This would be determined by the user's subscription
+  // Check if user has premium subscription
+  const isPremiumUser = userSettings?.subscriptionPlan === 'premium' || userSettings?.subscriptionPlan === 'enterprise';
   
   // Save account settings
   const saveAccountSettings = () => {
@@ -54,15 +55,39 @@ const Settings = () => {
       description: `Your theme has been set to ${theme}.`,
     });
   };
+
+  // Handle premium upgrade
+  const handleUpgrade = () => {
+    updateUserSettings({ subscriptionPlan: 'premium' });
+    toast({
+      title: "Welcome to Premium!",
+      description: "You've successfully upgraded to the Premium plan.",
+    });
+  };
   
   return (
     <Container>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-          <p className="text-muted-foreground">
-            Manage your account settings and preferences
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+            <p className="text-muted-foreground">
+              Manage your account settings and preferences
+            </p>
+          </div>
+          {!isPremiumUser && (
+            <button 
+              onClick={handleUpgrade}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-md hover:from-indigo-700 hover:to-purple-700 transition-all"
+            >
+              Upgrade to Premium
+            </button>
+          )}
+          {isPremiumUser && (
+            <div className="bg-gradient-to-r from-amber-200 to-amber-400 dark:from-amber-700 dark:to-amber-500 text-amber-900 dark:text-amber-100 px-4 py-2 rounded-md">
+              Premium Account
+            </div>
+          )}
         </div>
 
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -101,7 +126,13 @@ const Settings = () => {
 
           <TabsContent value="notifications" className="space-y-6">
             <NotificationSettings 
-              settings={userSettings}
+              settings={userSettings || {
+                emailNotifications: true,
+                pushNotifications: false,
+                voiceReminders: false,
+                reminderDays: 3,
+                voiceType: 'default'
+              }}
               saveSettings={saveSettings}
             />
           </TabsContent>
@@ -120,7 +151,7 @@ const Settings = () => {
 
           <TabsContent value="appearance" className="space-y-6">
             <AppearanceSettings 
-              theme={userSettings.theme || 'system'} 
+              theme={userSettings?.theme || 'system'} 
               saveTheme={saveTheme} 
             />
           </TabsContent>

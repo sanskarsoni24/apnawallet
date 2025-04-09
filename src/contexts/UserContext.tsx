@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 
@@ -12,6 +13,9 @@ interface UserSettings {
   theme?: string;
   lastLogin?: string;
   voiceType?: string;
+  subscriptionPlan?: 'free' | 'basic' | 'premium' | 'enterprise';
+  documentLimit?: number;
+  documentSizeLimit?: number;
 }
 
 interface UserContextType {
@@ -42,6 +46,19 @@ const UserContext = createContext<UserContextType>(defaultContextValue);
 
 export const useUser = () => useContext(UserContext);
 
+const getDocumentLimits = (plan: string = 'free') => {
+  switch(plan) {
+    case 'basic':
+      return { documentLimit: 50, documentSizeLimit: 15 };
+    case 'premium':
+      return { documentLimit: 1000000, documentSizeLimit: 25 }; // Virtually unlimited
+    case 'enterprise':
+      return { documentLimit: 1000000, documentSizeLimit: 100 }; // Virtually unlimited
+    default: // free
+      return { documentLimit: 10, documentSizeLimit: 5 };
+  }
+};
+
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialize state from localStorage
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -52,7 +69,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Get user info from localStorage if available
   const [userSettings, setUserSettings] = useState<UserSettings>(() => {
     const savedSettings = localStorage.getItem("userSettings");
-    return savedSettings ? JSON.parse(savedSettings) : {
+    const parsedSettings = savedSettings ? JSON.parse(savedSettings) : {
       displayName: "",
       email: "",
       isLoggedIn: false,
@@ -62,7 +79,18 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       reminderDays: 3,
       theme: "system",
       voiceType: "default",
+      subscriptionPlan: "free",
+      ...getDocumentLimits("free")
     };
+    
+    // Ensure document limits match the subscription plan
+    if (parsedSettings.subscriptionPlan && !parsedSettings.documentLimit) {
+      const limits = getDocumentLimits(parsedSettings.subscriptionPlan);
+      parsedSettings.documentLimit = limits.documentLimit;
+      parsedSettings.documentSizeLimit = limits.documentSizeLimit;
+    }
+    
+    return parsedSettings;
   });
   
   const [displayName, setDisplayName] = useState(userSettings.displayName || "");
@@ -120,6 +148,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       displayName: name,
       isLoggedIn: true,
       lastLogin: new Date().toISOString(),
+      subscriptionPlan: "free",
+      ...getDocumentLimits("free")
     };
     
     // Save to localStorage
@@ -156,12 +186,18 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userName = mockUsers[userEmail].name;
     setDisplayName(userName);
     
+    // If this is Google sign-in user, assign premium by default for demo
+    const isGoogleUser = userEmail === "demo@example.com";
+    const plan = isGoogleUser ? "premium" : (userSettings.subscriptionPlan || "free");
+    
     const updatedSettings = {
       ...userSettings,
       email: userEmail,
       displayName: userName,
       isLoggedIn: true,
       lastLogin: new Date().toISOString(),
+      subscriptionPlan: plan,
+      ...getDocumentLimits(plan)
     };
     
     // Save to localStorage
@@ -213,9 +249,16 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Update user settings
   const updateUserSettings = (settings: Partial<UserSettings>) => {
+    // If subscription plan changes, update document limits accordingly
+    let updatedLimits = {};
+    if (settings.subscriptionPlan && settings.subscriptionPlan !== userSettings.subscriptionPlan) {
+      updatedLimits = getDocumentLimits(settings.subscriptionPlan);
+    }
+    
     const updatedSettings = {
       ...userSettings,
       ...settings,
+      ...updatedLimits
     };
     
     localStorage.setItem("userSettings", JSON.stringify(updatedSettings));

@@ -2,9 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import BlurContainer from '@/components/ui/BlurContainer';
-import { Download, Check, Chrome, AlertCircle, ExternalLink, RefreshCw } from 'lucide-react';
+import { Download, Check, Chrome, AlertCircle, ExternalLink, RefreshCw, Bell, FileText, Clock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import JSZip from 'jszip';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { useUser } from '@/contexts/UserContext';
 
 // Properly define the Chrome extension interface for TypeScript
 declare global {
@@ -18,9 +23,15 @@ declare global {
 }
 
 const ChromeExtensionDownload = () => {
+  const { userSettings } = useUser();
   const [downloading, setDownloading] = useState(false);
   const [installed, setInstalled] = useState(false);
   const [chromeDetected, setChromeDetected] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
+  const [notifications, setNotifications] = useState(true);
+  const [documentSync, setDocumentSync] = useState(true);
+  const [reminderSync, setReminderSync] = useState(true);
+  const [extensionStatus, setExtensionStatus] = useState<'not_installed' | 'installed' | 'connected'>('not_installed');
   
   useEffect(() => {
     // Check if using Chrome browser
@@ -30,6 +41,19 @@ const ChromeExtensionDownload = () => {
     // Check if extension is potentially installed
     const hasExtensionDownloaded = localStorage.getItem("surakshitlocker-extension-installed") === "true";
     setInstalled(hasExtensionDownloaded);
+    
+    if (hasExtensionDownloaded) {
+      setExtensionStatus('installed');
+      
+      // Simulate extension connecting after a delay
+      setTimeout(() => {
+        setExtensionStatus('connected');
+        toast({
+          title: "Extension Connected",
+          description: "Chrome extension is now syncing with your account"
+        });
+      }, 3000);
+    }
     
     // Check for Chrome extension API
     if (typeof window !== 'undefined' && window.chrome && window.chrome.runtime) {
@@ -91,7 +115,7 @@ const ChromeExtensionDownload = () => {
       const url = URL.createObjectURL(content);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "surakshitlocker-chrome-extension.zip";
+      link.download = "docuninja-chrome-extension.zip";
       document.body.appendChild(link);
       link.click();
       URL.revokeObjectURL(url);
@@ -100,6 +124,7 @@ const ChromeExtensionDownload = () => {
       // Show success message
       setDownloading(false);
       setInstalled(true);
+      setExtensionStatus('installed');
       
       // Store in localStorage that we've downloaded the extension
       window.localStorage.setItem("surakshitlocker-extension-installed", "true");
@@ -108,6 +133,15 @@ const ChromeExtensionDownload = () => {
         title: "Chrome Extension Downloaded",
         description: "Follow the instructions below to install the extension."
       });
+      
+      // Simulate extension connecting after a delay
+      setTimeout(() => {
+        setExtensionStatus('connected');
+        toast({
+          title: "Extension Connected",
+          description: "Chrome extension is now syncing with your account"
+        });
+      }, 5000);
     })
     .catch(error => {
       console.error("Error generating extension ZIP:", error);
@@ -134,14 +168,20 @@ const ChromeExtensionDownload = () => {
       
       <div className="flex items-center justify-between my-6 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
         <div className="flex-1">
-          <h4 className="font-medium mb-1.5 text-lg dark:text-white">SurakshitLocker Browser Extension</h4>
+          <h4 className="font-medium mb-1.5 text-lg dark:text-white">DocuNinja Browser Extension</h4>
           <p className="text-sm text-muted-foreground dark:text-slate-300 max-w-md">
             Get notifications, view upcoming deadlines, and access your documents directly from your browser.
           </p>
           
-          {installed && (
+          {extensionStatus === 'connected' && (
             <div className="mt-3 flex items-center text-sm text-green-600 dark:text-green-400">
-              <Check className="h-4 w-4 mr-1.5" /> Extension downloaded
+              <Check className="h-4 w-4 mr-1.5" /> Extension connected and syncing
+            </div>
+          )}
+          
+          {extensionStatus === 'installed' && !extensionStatus === 'connected' && (
+            <div className="mt-3 flex items-center text-sm text-amber-600 dark:text-amber-400">
+              <Clock className="h-4 w-4 mr-1.5" /> Extension installed, waiting for connection...
             </div>
           )}
         </div>
@@ -183,6 +223,103 @@ const ChromeExtensionDownload = () => {
         </div>
       </div>
       
+      {extensionStatus === 'connected' && (
+        <div className="mb-8">
+          <Card className="border border-green-100 dark:border-green-900/50 bg-green-50/50 dark:bg-green-900/10">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Badge variant="outline" className="bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400 border-green-200 dark:border-green-800">
+                  Connected
+                </Badge>
+                <p className="text-sm text-green-700 dark:text-green-400">Extension is active and syncing with DocuNinja</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                    <Label htmlFor="notifications" className="cursor-pointer">
+                      Browser Notifications
+                    </Label>
+                  </div>
+                  <Switch 
+                    id="notifications" 
+                    checked={notifications} 
+                    onCheckedChange={setNotifications} 
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                    <Label htmlFor="document-sync" className="cursor-pointer">
+                      Document Sync
+                    </Label>
+                  </div>
+                  <Switch 
+                    id="document-sync" 
+                    checked={documentSync} 
+                    onCheckedChange={setDocumentSync} 
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                    <Label htmlFor="reminder-sync" className="cursor-pointer">
+                      Reminder Sync
+                    </Label>
+                  </div>
+                  <Switch 
+                    id="reminder-sync" 
+                    checked={reminderSync} 
+                    onCheckedChange={setReminderSync} 
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Button 
+            variant="link" 
+            onClick={() => setShowDemo(!showDemo)} 
+            className="mt-2 p-0 h-auto text-blue-600 dark:text-blue-400"
+          >
+            {showDemo ? "Hide Demo Notifications" : "Show Demo Notifications"}
+          </Button>
+          
+          {showDemo && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+              <div className="bg-white dark:bg-slate-800 p-3 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 dark:text-red-400">
+                    <AlertCircle className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Passport expires soon</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Your passport will expire in 30 days</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">2 minutes ago</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white dark:bg-slate-800 p-3 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">New document shared</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Tax Return 2022 was shared with you</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">10 minutes ago</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      
       <div className="bg-slate-50 dark:bg-slate-800/70 p-6 rounded-xl dark:border dark:border-slate-700 shadow-sm">
         <h4 className="font-medium flex items-center mb-4 dark:text-white">
           <AlertCircle className="h-4 w-4 mr-2 text-indigo-500" />
@@ -219,7 +356,7 @@ const ChromeExtensionDownload = () => {
             <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground dark:text-slate-300 ml-1">
               <li>Make sure all extension files were extracted properly</li>
               <li>If you don't see notifications, check your browser notification permissions</li>
-              <li>For security reasons, you may need to reload your SurakshitLocker web app after installing</li>
+              <li>For security reasons, you may need to reload your DocuNinja web app after installing</li>
             </ul>
             
             <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground dark:text-slate-300 ml-1">

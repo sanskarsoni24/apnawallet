@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LucideGoogle } from "lucide-react"; 
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";

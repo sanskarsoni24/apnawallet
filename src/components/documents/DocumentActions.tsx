@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Download, Share2 } from "lucide-react";
-import DocumentSharing from "./DocumentSharing";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useUser } from "@/contexts/UserContext";
 import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface DocumentActionsProps {
   documentId: string;
@@ -39,6 +39,8 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareEmail, setShareEmail] = useState("");
   const [allowEdit, setAllowEdit] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [sharedUsers, setSharedUsers] = useState<{email: string, access: string}[]>([]);
   
   const userIsPremium = isPremium || userSettings?.subscriptionPlan === 'premium' || userSettings?.subscriptionPlan === 'enterprise';
   
@@ -52,15 +54,37 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
       return;
     }
     
-    // Simulate sharing document
-    toast({
-      title: "Document shared",
-      description: `${documentName} has been shared with ${shareEmail}${allowEdit ? ' with edit permissions' : ''}`,
-    });
+    setShareLoading(true);
     
-    setShareEmail("");
-    setAllowEdit(false);
-    setShowShareDialog(false);
+    // Simulate API call to share document
+    setTimeout(() => {
+      // Add user to shared users list
+      setSharedUsers([
+        ...sharedUsers,
+        {
+          email: shareEmail, 
+          access: allowEdit ? "edit" : "view"
+        }
+      ]);
+      
+      toast({
+        title: "Document shared",
+        description: `${documentName} has been shared with ${shareEmail}${allowEdit ? ' with edit permissions' : ''}`,
+      });
+      
+      setShareEmail("");
+      setAllowEdit(false);
+      setShareLoading(false);
+    }, 1000);
+  };
+
+  const removeSharedUser = (email: string) => {
+    setSharedUsers(sharedUsers.filter(user => user.email !== email));
+    
+    toast({
+      title: "Access revoked",
+      description: `${email} no longer has access to this document`,
+    });
   };
 
   return (
@@ -82,7 +106,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
             Share
           </Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Share "{documentName}"</DialogTitle>
             <DialogDescription>
@@ -93,13 +117,21 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="colleague@example.com"
-                value={shareEmail}
-                onChange={(e) => setShareEmail(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="colleague@example.com"
+                  value={shareEmail}
+                  onChange={(e) => setShareEmail(e.target.value)}
+                />
+                <Button 
+                  onClick={handleShare} 
+                  disabled={!shareEmail || shareLoading}
+                >
+                  {shareLoading ? "Sharing..." : "Share"}
+                </Button>
+              </div>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -119,6 +151,36 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
               </div>
             </div>
             
+            {sharedUsers.length > 0 && (
+              <div className="mt-4 border-t pt-4">
+                <h4 className="text-sm font-medium mb-3">People with access</h4>
+                <div className="space-y-3">
+                  {sharedUsers.map((user) => (
+                    <div key={user.email} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>{user.email[0].toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm font-medium">{user.email}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {user.access === "edit" ? "Can edit" : "Can view"}
+                          </p>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => removeSharedUser(user.email)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             {userIsPremium && (
               <div className="rounded-md bg-muted p-4">
                 <div className="text-sm font-medium">Premium sharing options</div>
@@ -129,12 +191,9 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
             )}
           </div>
           
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setShowShareDialog(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={handleShare}>
-              Share Document
+          <DialogFooter className="sm:justify-start">
+            <Button type="button" variant="secondary" onClick={() => setShowShareDialog(false)}>
+              Done
             </Button>
           </DialogFooter>
         </DialogContent>

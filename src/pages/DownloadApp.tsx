@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Container from "@/components/layout/Container";
 import { Button } from "@/components/ui/button";
-import { Download, Smartphone, ArrowLeft } from "lucide-react";
+import { Download, Smartphone, ArrowLeft, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import BlurContainer from "@/components/ui/BlurContainer";
 import SurakshitLogo from "@/components/ui/SurakshitLogo";
@@ -28,29 +28,35 @@ const DownloadApp = () => {
     // Set the direct download URL
     const origin = window.location.origin;
     setDownloadUrl(`${origin}/downloads/surakshitlocker.apk`);
+    
+    console.log("Download URL set to:", `${origin}/downloads/surakshitlocker.apk`);
   }, []);
 
   const handleDownload = () => {
     setDownloading(true);
+    console.log("Starting download from URL:", downloadUrl);
     
     try {
       if (platform === "android") {
-        // For Android, create and trigger a download link
-        const downloadLink = document.createElement('a');
-        downloadLink.href = downloadUrl;
-        downloadLink.download = 'surakshitlocker.apk';
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+        // First try: window.location approach for mobile browsers
+        window.location.href = downloadUrl;
+        console.log("Redirecting to:", downloadUrl);
         
-        // Fallback to direct navigation if the above doesn't work
+        // Second try: Create and trigger a download link
         setTimeout(() => {
-          window.location.href = downloadUrl;
-        }, 100);
+          const downloadLink = document.createElement('a');
+          downloadLink.href = downloadUrl;
+          downloadLink.download = 'surakshitlocker.apk';
+          downloadLink.setAttribute('type', 'application/vnd.android.package-archive');
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          console.log("Download link clicked");
+        }, 300);
         
         toast({
           title: "Download Started",
-          description: "The app is downloading now. Check your downloads and install when complete."
+          description: "The app is downloading now. Check your downloads folder to install."
         });
       } else if (platform === "ios") {
         // For iOS, redirect to TestFlight
@@ -133,6 +139,23 @@ const DownloadApp = () => {
                   <Download className="h-4 w-4" />
                   Download APK File
                 </a>
+                
+                <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h5 className="font-medium text-amber-700 dark:text-amber-300 mb-1">Download Troubleshooting</h5>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mb-2">
+                        If the download doesn't start automatically:
+                      </p>
+                      <ol className="text-xs text-amber-600 dark:text-amber-400 list-decimal pl-4 space-y-1">
+                        <li>Try opening this page in Chrome or your default browser</li>
+                        <li>Long-press the Download APK button and select "Download link"</li>
+                        <li>Check your Downloads folder after download completes</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
                 
                 <a 
                   href={downloadUrl}

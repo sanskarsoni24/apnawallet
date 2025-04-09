@@ -4,7 +4,7 @@ import Container from "@/components/layout/Container";
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { Download, Smartphone, Info } from "lucide-react";
 import BlurContainer from "@/components/ui/BlurContainer";
@@ -13,7 +13,6 @@ import SurakshitLogo from "@/components/ui/SurakshitLogo";
 import { Link } from "react-router-dom";
 
 const MobileApp = () => {
-  const [downloadPageLink, setDownloadPageLink] = useState("");
   const [directApkLink, setDirectApkLink] = useState("");
   const [activeTab, setActiveTab] = useState<"android" | "ios">("android");
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -21,30 +20,30 @@ const MobileApp = () => {
   useEffect(() => {
     // Get current domain for QR code
     const domain = window.location.origin;
-    const downloadPage = `${domain}/download-app`;
-    const directApkLink = `${domain}/downloads/surakshitlocker.apk`;
+    const apkLink = `${domain}/downloads/surakshitlocker.apk`;
+    setDirectApkLink(apkLink);
     
-    setDownloadPageLink(downloadPage);
-    setDirectApkLink(directApkLink);
-    
-    console.log("App download link:", downloadPage);
-    console.log("Direct APK link:", directApkLink);
+    console.log("Direct APK link:", apkLink);
   }, []);
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(downloadPageLink);
+    navigator.clipboard.writeText(directApkLink);
     toast({
       title: "Link copied",
-      description: "App download link copied to clipboard"
+      description: "Direct APK download link copied to clipboard"
     });
   };
 
   const handleDirectDownload = () => {
     if (isMobile) {
-      // On mobile, redirect to the download page
-      window.location.href = downloadPageLink;
+      // On mobile, directly go to the APK
+      window.location.href = directApkLink;
+      toast({
+        title: "Download Started",
+        description: "The app is downloading now. Check your notifications."
+      });
     } else {
-      // On desktop, just copy the link
+      // On desktop, copy the link
       navigator.clipboard.writeText(directApkLink);
       toast({
         title: "Link copied",
@@ -88,8 +87,9 @@ const MobileApp = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col items-center justify-center p-8">
+              {/* QR Code that links directly to the APK file */}
               <QRCodeSVG 
-                value={isMobile ? directApkLink : downloadPageLink} 
+                value={directApkLink} 
                 size={isMobile ? 200 : 250}
                 bgColor={"#ffffff"}
                 fgColor={"#000000"}
@@ -97,7 +97,7 @@ const MobileApp = () => {
                 includeMargin={true}
               />
               <p className="text-sm text-muted-foreground mt-4 text-center">
-                Scan this QR code with your device's camera
+                Scan this QR code with your device's camera to download the app
               </p>
               
               <div className="flex flex-col sm:flex-row gap-2 mt-4">
@@ -121,10 +121,17 @@ const MobileApp = () => {
                 )}
               </div>
               
+              {/* Direct download links */}
               {isMobile && activeTab === "android" && (
-                <Link to="/download-app" className="mt-4 text-indigo-600 dark:text-indigo-400 hover:underline">
-                  Go to Download Page
-                </Link>
+                <div className="mt-4 text-center">
+                  <a 
+                    href={directApkLink} 
+                    download="surakshitlocker.apk" 
+                    className="inline-block bg-indigo-600 text-white rounded-lg px-4 py-2 mt-2 hover:bg-indigo-700"
+                  >
+                    Direct Download
+                  </a>
+                </div>
               )}
             </Card>
 
@@ -147,12 +154,29 @@ const MobileApp = () => {
                     </h3>
                     <ol className="list-decimal pl-5 space-y-2 text-sm text-green-700 dark:text-green-300">
                       <li>Scan the QR code with your Android device</li>
-                      <li>Tap the download link that appears</li>
+                      <li>Tap to download the APK file</li>
+                      <li>Tap on the download notification when complete</li>
                       <li>Allow installation from unknown sources if prompted</li>
                       <li>Open the APK file and install the app</li>
                       <li>Launch SurakshitLocker from your app drawer</li>
                     </ol>
                   </div>
+                  
+                  {/* Manual download button for mobile devices */}
+                  {isMobile && (
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg text-center">
+                      <p className="text-indigo-700 dark:text-indigo-300 mb-3">
+                        If scanning doesn't work, download directly:
+                      </p>
+                      <a 
+                        href={directApkLink} 
+                        download="surakshitlocker.apk" 
+                        className="inline-block bg-indigo-600 text-white rounded-lg px-4 py-2 hover:bg-indigo-700"
+                      >
+                        Download APK File
+                      </a>
+                    </div>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="ios" className="mt-4 space-y-4">

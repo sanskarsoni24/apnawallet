@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 const DownloadApp = () => {
   const [platform, setPlatform] = useState<"android" | "ios" | "unknown">("unknown");
   const [downloading, setDownloading] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState("");
 
   useEffect(() => {
     // Detect the user's platform
@@ -23,6 +24,10 @@ const DownloadApp = () => {
     } else {
       setPlatform("unknown");
     }
+
+    // Set the direct download URL
+    const apkUrl = `${window.location.origin}/downloads/surakshitlocker.apk`;
+    setDownloadUrl(apkUrl);
   }, []);
 
   const handleDownload = async () => {
@@ -30,34 +35,29 @@ const DownloadApp = () => {
     
     if (platform === "android") {
       try {
-        // Direct link to the APK file
-        const apkUrl = `${window.location.origin}/downloads/surakshitlocker.apk`;
-        
-        // Method 1: Use fetch to download binary file
-        const response = await fetch(apkUrl);
-        const blob = await response.blob();
-        
-        // Create a link element and trigger download
-        const downloadLink = document.createElement('a');
-        downloadLink.href = window.URL.createObjectURL(blob);
-        downloadLink.download = "surakshitlocker.apk";
-        downloadLink.style.display = 'none';
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-        
-        // Method 2: Direct link as backup
-        window.location.href = apkUrl;
+        // Direct method - open the APK file directly
+        window.location.href = downloadUrl;
         
         toast({
           title: "Download Started",
-          description: "The APK file should start downloading. Check your downloads folder if it doesn't start automatically."
+          description: "The app is downloading now. Please check your notifications and allow installation when prompted."
         });
+        
+        // Create a hidden download link as a fallback
+        setTimeout(() => {
+          const downloadLink = document.createElement('a');
+          downloadLink.href = downloadUrl;
+          downloadLink.download = "surakshitlocker.apk";
+          downloadLink.style.display = 'none';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+        }, 1000);
       } catch (error) {
         console.error("Download error:", error);
         toast({
           title: "Download Failed",
-          description: "There was a problem downloading the app. Please try again.",
+          description: "There was a problem downloading the app. Please try again or use a different browser.",
           variant: "destructive"
         });
       } finally {
@@ -103,22 +103,38 @@ const DownloadApp = () => {
           <Download className="mr-2 h-5 w-5" />
           {downloading ? "Starting Download..." : `Download for ${platform === "android" ? "Android" : "iOS"}`}
         </Button>
-        <p className="text-sm text-muted-foreground mt-4">
-          {platform === "android" 
-            ? "This will download the SurakshitLocker APK to your device."
-            : "This will redirect you to TestFlight to download the app."}
-        </p>
         
         {platform === "android" && (
-          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30">
-            <h4 className="font-medium text-blue-800 dark:text-blue-400 mb-2">Installation Instructions:</h4>
-            <ol className="text-sm text-blue-700 dark:text-blue-300 list-decimal pl-5">
-              <li>After downloading, tap on the APK file</li>
-              <li>If prompted, allow installation from unknown sources</li>
-              <li>Follow the installation prompts</li>
-              <li>Once installed, open SurakshitLocker from your app drawer</li>
-            </ol>
-          </div>
+          <>
+            <p className="text-sm text-muted-foreground mt-4">
+              This will download the SurakshitLocker APK directly to your device.
+            </p>
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30">
+              <h4 className="font-medium text-blue-800 dark:text-blue-400 mb-2">Installation Instructions:</h4>
+              <ol className="text-sm text-blue-700 dark:text-blue-300 list-decimal pl-5">
+                <li>After downloading, tap on the notification to begin installation</li>
+                <li>If prompted, allow installation from unknown sources</li>
+                <li>Follow the installation prompts</li>
+                <li>Once installed, open SurakshitLocker from your app drawer</li>
+              </ol>
+            </div>
+            
+            <div className="mt-4">
+              <a 
+                href={downloadUrl}
+                download="surakshitlocker.apk"
+                className="text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                Click here if download doesn't start automatically
+              </a>
+            </div>
+          </>
+        )}
+        
+        {platform === "ios" && (
+          <p className="text-sm text-muted-foreground mt-4">
+            This will redirect you to TestFlight to download the app.
+          </p>
         )}
       </div>
     );

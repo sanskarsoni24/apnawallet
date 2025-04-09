@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.surakshitlocker',
+  appId: 'app.surakshitlocker.secure',
   appName: 'SurakshitLocker',
   webDir: 'dist',
   server: {

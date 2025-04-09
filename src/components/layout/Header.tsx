@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
-import { useMediaQuery } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import SurakshitLogo from "@/components/ui/SurakshitLogo";
 import { Menu, X, Settings, LayoutDashboard, FileText, Shield, LogOut, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,7 @@ const Header = () => {
   const { isLoggedIn, logout, displayName } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(localStorage.getItem("theme") === "dark");
 

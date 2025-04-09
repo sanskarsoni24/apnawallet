@@ -19,5 +19,30 @@ export function useIsMobile() {
   return !!isMobile
 }
 
+// Function to check if a media query matches
+export function useMediaQuery(query: string) {
+  const [matches, setMatches] = React.useState<boolean>(false)
+
+  React.useEffect(() => {
+    const media = window.matchMedia(query)
+    
+    // Set initial state
+    setMatches(media.matches)
+    
+    // Define callback for media query change events
+    const listener = (e: MediaQueryListEvent) => {
+      setMatches(e.matches)
+    }
+    
+    // Add event listener
+    media.addEventListener("change", listener)
+    
+    // Cleanup
+    return () => media.removeEventListener("change", listener)
+  }, [query])
+
+  return matches
+}
+
 // Add an alias export to prevent future imports from breaking
 export const useMobile = useIsMobile;

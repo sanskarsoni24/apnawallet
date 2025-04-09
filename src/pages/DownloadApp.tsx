@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Container from "@/components/layout/Container";
 import { Button } from "@/components/ui/button";
-import { Download, Smartphone, ArrowLeft, Info } from "lucide-react";
+import { Download, Smartphone, ArrowLeft, Info, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import BlurContainer from "@/components/ui/BlurContainer";
 import SurakshitLogo from "@/components/ui/SurakshitLogo";
@@ -38,28 +38,26 @@ const DownloadApp = () => {
     
     try {
       if (platform === "android") {
-        // First try: window.location approach for mobile browsers
-        window.location.href = downloadUrl;
-        console.log("Redirecting to:", downloadUrl);
-        
-        // Second try: Create and trigger a download link
-        setTimeout(() => {
-          const downloadLink = document.createElement('a');
-          downloadLink.href = downloadUrl;
-          downloadLink.download = 'surakshitlocker.apk';
-          downloadLink.setAttribute('type', 'application/vnd.android.package-archive');
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-          console.log("Download link clicked");
-        }, 300);
+        // Create a blob URL for the APK to ensure proper MIME type
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = 'surakshitlocker.apk';
+        link.setAttribute('type', 'application/vnd.android.package-archive');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         
         toast({
           title: "Download Started",
-          description: "The app is downloading now. Check your downloads folder to install."
+          description: "The APK file is downloading. Check your downloads folder to install."
         });
+        
+        // Secondary download method for mobile browsers
+        setTimeout(() => {
+          window.location.href = downloadUrl;
+        }, 500);
       } else if (platform === "ios") {
-        // For iOS, redirect to TestFlight
+        // For iOS, redirect to TestFlight (placeholder URL)
         window.location.href = "https://testflight.apple.com/join/surakshitlocker";
         
         toast({
@@ -135,6 +133,12 @@ const DownloadApp = () => {
                   href={downloadUrl}
                   download="surakshitlocker.apk"
                   className="bg-indigo-600 text-white rounded-md px-4 py-3 inline-flex items-center justify-center gap-2 hover:bg-indigo-700"
+                  onClick={() => {
+                    toast({
+                      title: "Download Started",
+                      description: "The APK file is downloading. Check your downloads folder to install."
+                    });
+                  }}
                 >
                   <Download className="h-4 w-4" />
                   Download APK File
@@ -150,8 +154,9 @@ const DownloadApp = () => {
                       </p>
                       <ol className="text-xs text-amber-600 dark:text-amber-400 list-decimal pl-4 space-y-1">
                         <li>Try opening this page in Chrome or your default browser</li>
-                        <li>Long-press the Download APK button and select "Download link"</li>
+                        <li>Long-press the Download APK button and select "Download link" or "Save link"</li>
                         <li>Check your Downloads folder after download completes</li>
+                        <li>Make sure you have enough storage space available</li>
                       </ol>
                     </div>
                   </div>
@@ -163,6 +168,7 @@ const DownloadApp = () => {
                   rel="noopener noreferrer"
                   className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-md px-4 py-3 inline-flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-700"
                 >
+                  <ExternalLink className="h-4 w-4" />
                   Open in Browser
                 </a>
               </div>

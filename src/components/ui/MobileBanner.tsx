@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Download } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -6,7 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
-const MobileBanner = () => {
+interface MobileBannerProps {
+  onDismiss?: () => void;
+}
+
+const MobileBanner: React.FC<MobileBannerProps> = ({ onDismiss }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [directApkUrl, setDirectApkUrl] = useState('');
@@ -38,6 +41,9 @@ const MobileBanner = () => {
   const dismissBanner = () => {
     setIsVisible(false);
     localStorage.setItem('mobile_banner_dismissed', 'true');
+    if (onDismiss) {
+      onDismiss();
+    }
   };
   
   const handleDirectApkDownload = (e) => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MobileNav } from "../ui/mobile-nav";
+import MobileNav from "../ui/mobile-nav";
 import SurakshitLogo from "../ui/SurakshitLogo";
 import { Bell, Menu, User, HelpCircle } from "lucide-react";
 import { ModeToggle } from "../ui/mode-toggle";
@@ -62,7 +62,7 @@ const Header = () => {
       }
     }
   }, []);
-
+  
   const handleDismissBanner = () => {
     setShowBanner(false);
     localStorage.setItem("mobile_banner_dismissed", "true");

@@ -1,8 +1,9 @@
+
 import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, AlertCircle } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, isValid, parseISO } from "date-fns";
 import DocumentActions from "./DocumentActions";
 import { toast } from "@/hooks/use-toast";
 
@@ -87,6 +88,31 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
     return "text-green-500";
   };
 
+  // Format the date safely
+  const getFormattedDate = () => {
+    try {
+      // First try to parse the date string
+      const parsedDate = new Date(date);
+      
+      // Check if the date is valid
+      if (isValid(parsedDate)) {
+        return formatDistanceToNow(parsedDate, { addSuffix: true });
+      }
+      
+      // If the first method fails, try using parseISO
+      const isoParsed = parseISO(date);
+      if (isValid(isoParsed)) {
+        return formatDistanceToNow(isoParsed, { addSuffix: true });
+      }
+      
+      // If all else fails, return a fallback string
+      return "Date unknown";
+    } catch (error) {
+      console.error("Error formatting date:", date, error);
+      return "Date unknown";
+    }
+  };
+
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
       <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
@@ -103,7 +129,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
       <CardContent className="p-4 pt-2">
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">
-            Added {formatDistanceToNow(new Date(date), { addSuffix: true })}
+            Added {getFormattedDate()}
           </span>
           <Badge
             variant="secondary"

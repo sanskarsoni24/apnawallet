@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMediaQuery } from "@/hooks/use-mobile";
-import { Download, Smartphone, QrCode, InfoCircle } from "lucide-react";
+import { Download, Smartphone, QrCode, Info } from "lucide-react";
 import BlurContainer from "@/components/ui/BlurContainer";
 import { toast } from "@/hooks/use-toast";
 
@@ -98,7 +98,7 @@ const MobileApp = () => {
                 <TabsContent value="android" className="mt-4 space-y-4">
                   <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-900/50">
                     <h3 className="font-semibold text-green-800 dark:text-green-400 mb-2 flex items-center gap-2">
-                      <InfoCircle className="h-4 w-4" />
+                      <Info className="h-4 w-4" />
                       Android Installation
                     </h3>
                     <ol className="list-decimal pl-5 space-y-2 text-sm text-green-700 dark:text-green-300">
@@ -114,7 +114,7 @@ const MobileApp = () => {
                 <TabsContent value="ios" className="mt-4 space-y-4">
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-900/50">
                     <h3 className="font-semibold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2">
-                      <InfoCircle className="h-4 w-4" />
+                      <Info className="h-4 w-4" />
                       iOS Installation
                     </h3>
                     <ol className="list-decimal pl-5 space-y-2 text-sm text-blue-700 dark:text-blue-300">

@@ -179,7 +179,7 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
               
               <div className="relative w-full max-w-sm overflow-hidden rounded-lg border">
                 <Scanner
-                  onResult={handleScan}
+                  onScan={handleScan}
                   onError={handleError}
                   containerStyle={{ borderRadius: '0.5rem' }}
                 />

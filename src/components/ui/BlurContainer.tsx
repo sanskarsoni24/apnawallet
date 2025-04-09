@@ -42,4 +42,6 @@ const BlurContainer = ({
   );
 };
 
+// Export as both default and named export to maintain compatibility
+export { BlurContainer };
 export default BlurContainer;

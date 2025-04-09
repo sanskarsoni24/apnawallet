@@ -1,6 +1,5 @@
-
 import React from "react";
-import { BlurContainer } from "@/components/ui/BlurContainer";
+import BlurContainer from "@/components/ui/BlurContainer";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -92,7 +91,7 @@ const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsPr
           )}
           
           {!localSettings.emailNotifications && !localSettings.pushNotifications && (
-            <Alert variant="warning" className="mt-4">
+            <Alert variant="destructive" className="mt-4">
               <AlertTitle>No notifications enabled</AlertTitle>
               <AlertDescription>
                 You won't receive any alerts about document expirations. We recommend enabling at least one notification method.

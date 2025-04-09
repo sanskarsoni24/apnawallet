@@ -134,7 +134,7 @@ export const getOfflineDocuments = async (): Promise<any[]> => {
           directory: Directory.Documents
         });
         
-        documents.push(JSON.parse(content.data));
+        documents.push(JSON.parse(content.data as string));
       }
     }
     
@@ -172,6 +172,7 @@ export const checkAppUpdate = async (): Promise<{hasUpdate: boolean, updateUrl?:
   
   try {
     const appInfo = await App.getInfo();
+    const deviceInfo = await Device.getInfo();
     
     // In a real app, you'd check against a server endpoint
     // This is a simplified example
@@ -183,7 +184,7 @@ export const checkAppUpdate = async (): Promise<{hasUpdate: boolean, updateUrl?:
       body: JSON.stringify({
         version: appInfo.version,
         build: appInfo.build,
-        platform: (await Device.getInfo()).platform
+        platform: deviceInfo.platform
       })
     });
     

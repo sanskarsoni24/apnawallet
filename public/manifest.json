@@ -65,5 +65,12 @@
   ],
   "chrome_settings_overrides": {
     "homepage": "https://surakshitlocker.com/dashboard"
+  },
+  "oauth2": {
+    "client_id": "demo-client-id.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
   }
 }

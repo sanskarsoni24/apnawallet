@@ -1,242 +1,268 @@
-
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import Container from "@/components/layout/Container";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, ArrowLeft, Check, CheckCircle, Download, FileDown, Smartphone } from "lucide-react";
+import { Download, Smartphone, ArrowLeft, Info, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
+import BlurContainer from "@/components/ui/BlurContainer";
+import SurakshitLogo from "@/components/ui/SurakshitLogo";
 import { toast } from "@/hooks/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const DownloadApp = () => {
-  const navigate = useNavigate();
-  const [downloadProgress, setDownloadProgress] = useState(0);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [isDownloaded, setIsDownloaded] = useState(false);
-  const [downloadError, setDownloadError] = useState(false);
-  
-  // Check if already downloaded
+  const [platform, setPlatform] = useState<"android" | "ios" | "unknown">("unknown");
+  const [downloading, setDownloading] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState("");
+
   useEffect(() => {
-    const alreadyDownloaded = localStorage.getItem("app-downloaded") === "true";
-    if (alreadyDownloaded) {
-      setIsDownloaded(true);
-      setDownloadProgress(100);
+    // Detect the user's platform
+    const userAgent = navigator.userAgent || navigator.vendor;
+    
+    if (/android/i.test(userAgent)) {
+      setPlatform("android");
+    } else if (/iPad|iPhone|iPod/.test(userAgent)) {
+      setPlatform("ios");
+    } else {
+      setPlatform("unknown");
     }
+
+    // Set the direct download URL with absolute path
+    const origin = window.location.origin;
+    setDownloadUrl(`${origin}/downloads/surakshitlocker.apk`);
+    
+    console.log("Download URL set to:", `${origin}/downloads/surakshitlocker.apk`);
   }, []);
-  
+
   const handleDownload = () => {
-    setIsDownloading(true);
-    setDownloadError(false);
-    setDownloadProgress(0);
-    
-    // Simulate download progress
-    const interval = setInterval(() => {
-      setDownloadProgress(prev => {
-        const newProgress = prev + Math.floor(Math.random() * 15);
-        
-        if (newProgress >= 100) {
-          clearInterval(interval);
-          setIsDownloading(false);
-          setIsDownloaded(true);
-          localStorage.setItem("app-downloaded", "true");
-          
-          // Trigger the actual file download
-          const link = document.createElement('a');
-          link.href = '/downloads/surakshitlocker.apk';
-          link.download = 'surakshitlocker.apk';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          
-          toast({
-            title: "Download complete",
-            description: "The app has been downloaded successfully"
-          });
-          
-          return 100;
-        }
-        
-        return newProgress;
-      });
-    }, 400);
-    
-    // For demo purposes, we'll simulate a 50% chance of error
-    const shouldError = false; // Set to false for demo readiness
-    
-    if (shouldError) {
-      setTimeout(() => {
-        clearInterval(interval);
-        setIsDownloading(false);
-        setDownloadError(true);
-        setDownloadProgress(32); // Stuck progress
-        
-        toast({
-          title: "Download failed",
-          description: "There was an error downloading the app. Please try again.",
-          variant: "destructive"
-        });
-      }, 3000);
-    }
-  };
+    setDownloading(true);
+    console.log("Starting download from URL:", downloadUrl);
   
-  const handleOpenApp = () => {
-    // In a real app, this might use deep linking to open the installed app
+  try {
+    if (platform === "android") {
+      // Show download toast
+      toast({
+        title: "Starting Download",
+        description: "Preparing your APK file..."
+      });
+      
+      // For Android: Direct download method
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = 'surakshitlocker.apk';
+      link.setAttribute('type', 'application/vnd.android.package-archive');
+      link.setAttribute('target', '_blank');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Show success message
+      toast({
+        title: "Download Started",
+        description: "Check your notifications to install the APK."
+      });
+      
+      setTimeout(() => {
+        setDownloading(false);
+      }, 1500);
+    } else if (platform === "ios") {
+      // For iOS, redirect to TestFlight (placeholder URL)
+      window.location.href = "https://testflight.apple.com/join/surakshitlocker";
+      
+      toast({
+        title: "Redirecting to iOS Download",
+        description: "You'll be redirected to download the app via TestFlight."
+      });
+      
+      setTimeout(() => {
+        setDownloading(false);
+      }, 1500);
+    }
+  } catch (error) {
+    console.error("Download error:", error);
     toast({
-      title: "Opening app",
-      description: "If the app is installed, it would open now"
+      title: "Download Failed",
+      description: "There was a problem downloading the app. Try the direct links below.",
+      variant: "destructive"
     });
     
-    // For demo purposes, we'll navigate to the mobile app page
     setTimeout(() => {
-      navigate("/dashboard");
-    }, 1000);
-  };
-  
-  const getDownloadStatusText = () => {
-    if (isDownloading) return "Downloading...";
-    if (isDownloaded) return "Downloaded";
-    if (downloadError) return "Download failed";
-    return "Ready to download";
-  };
-  
-  return (
-    <Container className="max-w-2xl py-10">
-      <Button
-        variant="ghost"
-        className="mb-6"
-        onClick={() => navigate("/mobile-app")}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to App Page
-      </Button>
-      
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Download SurakshitLocker</h1>
-        <p className="text-muted-foreground">
-          Get our secure document management app for your device
-        </p>
-      </div>
-      
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Smartphone className="h-5 w-5 text-primary" />
-            SurakshitLocker Mobile App
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center">
-              <img
-                src="/android-chrome-192x192.png"
-                alt="App icon"
-                className="w-12 h-12"
-              />
+      setDownloading(false);
+    }, 1500);
+  }
+};
+
+  const renderDownloadButton = () => {
+    if (platform === "unknown") {
+      return (
+        <div className="text-center p-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 rounded-lg">
+          <h3 className="text-lg font-semibold mb-2 text-amber-800 dark:text-amber-400">
+            Desktop Device Detected
+          </h3>
+          <p className="text-amber-700 dark:text-amber-300 mb-4">
+            Please visit this page from a mobile device or scan the QR code from the Mobile App page.
+          </p>
+          <Button
+            variant="outline"
+            className="bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300"
+            onClick={() => window.history.back()}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Go Back
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="text-center">
+        <Button 
+          size="lg" 
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-7 h-auto text-lg font-semibold"
+          onClick={handleDownload}
+          disabled={downloading}
+        >
+          <Download className="mr-2 h-5 w-5" />
+          {downloading ? "Starting Download..." : `Download for ${platform === "android" ? "Android" : "iOS"}`}
+        </Button>
+        
+        {platform === "android" && (
+          <>
+            <p className="text-sm text-muted-foreground mt-4">
+              This will download the SurakshitLocker APK directly to your device.
+            </p>
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30">
+              <h4 className="font-medium text-blue-800 dark:text-blue-400 mb-2">Installation Instructions:</h4>
+              <ol className="text-sm text-blue-700 dark:text-blue-300 list-decimal pl-5">
+                <li>After downloading, tap on the file in your downloads folder</li>
+                <li>If prompted, allow installation from unknown sources</li>
+                <li>Follow the installation prompts</li>
+                <li>Once installed, open SurakshitLocker from your app drawer</li>
+              </ol>
             </div>
-            <div className="flex-1">
-              <h3 className="font-medium text-lg">SurakshitLocker</h3>
-              <p className="text-sm text-muted-foreground">Version 1.0.3</p>
-              <div className="flex items-center mt-1 text-sm">
-                <span className="flex items-center text-green-600">
-                  <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                  Verified Publisher
-                </span>
-                <span className="mx-2">•</span>
-                <span>15MB</span>
+            
+            <div className="mt-8 border-t border-gray-200 dark:border-gray-800 pt-6">
+              <h4 className="font-medium mb-4">Multiple Download Options:</h4>
+              <div className="flex flex-col gap-4">
+                {/* Method 1: Direct link using anchor with download attribute */}
+                <a 
+                  href={downloadUrl}
+                  download="surakshitlocker.apk"
+                  className="bg-indigo-600 text-white rounded-md px-4 py-3 inline-flex items-center justify-center gap-2 hover:bg-indigo-700"
+                  onClick={() => {
+                    toast({
+                      title: "Download Started",
+                      description: "The APK file is downloading. Check your downloads folder to install."
+                    });
+                  }}
+                >
+                  <Download className="h-4 w-4" />
+                  Download APK (Method 1)
+                </a>
+                
+                {/* Method 2: Direct link in new tab */}
+                <a 
+                  href={downloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-indigo-500 text-white rounded-md px-4 py-3 inline-flex items-center justify-center gap-2 hover:bg-indigo-600"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open Download Link (Method 2)
+                </a>
+                
+                {/* Method 3: Fetch and blob download */}
+                <Button 
+                  className="bg-indigo-700 hover:bg-indigo-800"
+                  onClick={() => {
+                    fetch(downloadUrl)
+                      .then(response => response.blob())
+                      .then(blob => {
+                        const blobUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = 'surakshitlocker.apk';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(blobUrl);
+                        
+                        toast({
+                          title: "Download Initiated",
+                          description: "Download started via fetch method. Check your notifications."
+                        });
+                      })
+                      .catch(err => {
+                        console.error("Fetch download failed:", err);
+                        toast({
+                          title: "Download Failed",
+                          description: "There was a problem with the fetch download method.",
+                          variant: "destructive"
+                        });
+                      });
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download APK (Method 3)
+                </Button>
+                
+                <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h5 className="font-medium text-amber-700 dark:text-amber-300 mb-1">Troubleshooting APK Installation</h5>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mb-2">
+                        If you encounter a &quot;Parse Error&quot; or &quot;Problem parsing package&quot;:
+                      </p>
+                      <ol className="text-xs text-amber-600 dark:text-amber-400 list-decimal pl-4 space-y-1">
+                        <li>Ensure your Android version is compatible (Android 5.0+)</li>
+                        <li>Go to Settings &gt; Security/Privacy and enable &quot;Install from Unknown Sources&quot;</li>
+                        <li>Try a different download method from the options above</li>
+                        <li>If using Chrome, check that downloads are allowed in site settings</li>
+                        <li>Clear your browser cache and try downloading again</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span>{getDownloadStatusText()}</span>
-              <span>{downloadProgress}%</span>
-            </div>
-            <Progress value={downloadProgress} className="h-2" />
-          </div>
-          
-          {downloadError && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Download Failed</AlertTitle>
-              <AlertDescription>
-                There was an error downloading the app. Please check your connection and try again.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {isDownloaded && !downloadError && (
-            <Alert className="bg-green-50 border-green-100 dark:bg-green-900/20 dark:border-green-800">
-              <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
-              <AlertTitle className="text-green-800 dark:text-green-400">Download Complete</AlertTitle>
-              <AlertDescription className="text-green-700 dark:text-green-300">
-                The app has been downloaded successfully. Please follow the installation instructions below.
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-        <CardFooter className="flex gap-3">
-          {!isDownloaded ? (
-            <Button 
-              className="flex-1" 
-              onClick={handleDownload} 
-              disabled={isDownloading}
-            >
-              {isDownloading ? (
-                <>
-                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-                  Downloading...
-                </>
-              ) : (
-                <>
-                  <Download className="mr-2 h-4 w-4" />
-                  Download Now
-                </>
-              )}
-            </Button>
-          ) : (
-            <>
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={handleDownload}
-              >
-                <FileDown className="mr-2 h-4 w-4" />
-                Download Again
-              </Button>
-              <Button 
-                className="flex-1"
-                onClick={handleOpenApp}
-              >
-                <Smartphone className="mr-2 h-4 w-4" />
-                Open App
-              </Button>
-            </>
-          )}
-        </CardFooter>
-      </Card>
-      
-      <div className="space-y-4 mb-8">
-        <h2 className="text-xl font-semibold">Installation Instructions</h2>
-        <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
-          <h3 className="font-medium text-blue-800 dark:text-blue-300 mb-2">Android Instructions</h3>
-          <ol className="text-blue-700 dark:text-blue-400 text-sm space-y-2 list-decimal list-inside">
-            <li>After downloading, open the APK file</li>
-            <li>If prompted, allow installation from unknown sources</li>
-            <li>Follow the on-screen instructions to complete installation</li>
-            <li>Once installed, open the app and sign in with your account</li>
-          </ol>
-        </div>
+          </>
+        )}
+        
+        {platform === "ios" && (
+          <p className="text-sm text-muted-foreground mt-4">
+            This will redirect you to TestFlight to download the app.
+          </p>
+        )}
       </div>
-      
-      <div className="text-center space-y-3">
-        <p className="text-sm text-muted-foreground">
-          Need help with installation? Contact our support team.
-        </p>
-        <Button variant="outline" onClick={() => navigate("/help")}>
-          Get Help With Installation
-        </Button>
+    );
+  };
+
+  return (
+    <Container>
+      <div className="max-w-xl mx-auto py-12">
+        <BlurContainer 
+          variant="elevated" 
+          className="p-8 flex flex-col items-center text-center"
+        >
+          <SurakshitLogo size="lg" className="mb-4" />
+          <h1 className="text-3xl font-bold mb-2">SurakshitLocker Mobile App</h1>
+          <div className="h-16 w-16 bg-indigo-100 dark:bg-indigo-900/50 rounded-full flex items-center justify-center my-6">
+            <Smartphone className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <p className="text-lg mb-8 text-muted-foreground">
+            Your secure document vault, now available on your mobile device.
+          </p>
+          
+          {renderDownloadButton()}
+          
+          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800 w-full">
+            <Link 
+              to="/mobile-app" 
+              className="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Return to Mobile App Page
+            </Link>
+          </div>
+        </BlurContainer>
       </div>
     </Container>
   );

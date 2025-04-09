@@ -27,21 +27,15 @@
     "scripting"
   ],
   "host_permissions": [
-    "*://*.lovableproject.com/*"
+    "https://*.lovableproject.com/*"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["*://*.lovableproject.com/*"],
+      "matches": ["https://*.lovableproject.com/*"],
       "js": ["content.js"]
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["icon-48.png"],
-      "matches": ["*://*.lovableproject.com/*"]
     }
   ]
 }

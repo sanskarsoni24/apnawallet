@@ -32,11 +32,6 @@
       "platform": "play",
       "url": "https://play.google.com/store/apps/details?id=app.surakshitlocker.secure",
       "id": "app.surakshitlocker.secure"
-    },
-    {
-      "platform": "chrome_web_store",
-      "url": "https://chrome.google.com/webstore/detail/surakshitlocker-extension/abcdefghijklmnopqrstuvwxyz",
-      "id": "abcdefghijklmnopqrstuvwxyz"
     }
   ],
   "prefer_related_applications": false,
@@ -62,17 +57,5 @@
       "url": "/documents?upload=true",
       "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     }
-  ],
-  "chrome_settings_overrides": {
-    "homepage": "https://surakshitlocker.com/dashboard"
-  },
-  "oauth2": {
-    "client_id": "demo-client-id.apps.googleusercontent.com",
-    "scopes": [
-      "https://www.googleapis.com/auth/userinfo.email",
-      "https://www.googleapis.com/auth/userinfo.profile"
-    ],
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token"
-  }
+  ]
 }

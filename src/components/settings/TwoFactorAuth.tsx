@@ -7,20 +7,16 @@ import { useUser } from "@/contexts/UserContext";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, Shield, Copy, CheckCircle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 
 const TwoFactorAuth = () => {
-  const { userSettings, enableTwoFactor, disableTwoFactor, email } = useUser();
+  const { userSettings, enableTwoFactor, disableTwoFactor } = useUser();
   const [showQRCode, setShowQRCode] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState("");
-  const [backupCodes, setBackupCodes] = useState<string[]>([]);
-  const [showBackupCodes, setShowBackupCodes] = useState(false);
-  const [backupCodesCopied, setBackupCodesCopied] = useState(false);
   
   const isTwoFactorEnabled = userSettings?.twoFactorEnabled || false;
   
@@ -29,29 +25,11 @@ const TwoFactorAuth = () => {
     setError("");
   }, [verificationCode]);
   
-  // Generate backup codes when enabling 2FA
-  useEffect(() => {
-    if (showQRCode && !backupCodes.length) {
-      generateBackupCodes();
-    }
-  }, [showQRCode]);
-  
-  const generateBackupCodes = () => {
-    const codes = [];
-    for (let i = 0; i < 8; i++) {
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      codes.push(code);
-    }
-    setBackupCodes(codes);
-  };
-  
   const handleToggle = () => {
     if (isTwoFactorEnabled) {
       disableTwoFactor();
       setShowQRCode(false);
       setVerificationCode("");
-      setBackupCodes([]);
-      setShowBackupCodes(false);
       toast({
         title: "Two-factor authentication disabled",
         description: "Your account is now less secure but easier to access"
@@ -59,9 +37,8 @@ const TwoFactorAuth = () => {
     } else {
       enableTwoFactor();
       setShowQRCode(true);
-      generateBackupCodes();
       toast({
-        title: "Two-factor authentication setup started",
+        title: "Two-factor authentication enabled",
         description: "Scan the QR code with your authenticator app to complete setup"
       });
     }
@@ -76,7 +53,6 @@ const TwoFactorAuth = () => {
       // Success scenario
       setTimeout(() => {
         setVerifying(false);
-        setShowBackupCodes(true);
         toast({
           title: "Verification successful",
           description: "Two-factor authentication has been fully configured"
@@ -90,37 +66,11 @@ const TwoFactorAuth = () => {
       }, 1000);
     }
   };
-  
-  const copyBackupCodes = () => {
-    navigator.clipboard.writeText(backupCodes.join('\n'));
-    setBackupCodesCopied(true);
-    toast({
-      title: "Backup codes copied",
-      description: "Store these codes in a safe place"
-    });
-    
-    setTimeout(() => {
-      setBackupCodesCopied(false);
-    }, 3000);
-  };
-  
-  const getSecretKey = () => {
-    // In a real app, this would be a cryptographically secure key
-    return "DEMO" + Math.random().toString(36).substring(2, 10).toUpperCase();
-  };
-  
-  const getProgressValue = () => {
-    if (!verificationCode) return 0;
-    return Math.min(verificationCode.length * 16.6, 100);
-  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-indigo-500" />
-          Two-Factor Authentication
-        </CardTitle>
+        <CardTitle>Two-Factor Authentication</CardTitle>
         <CardDescription>
           Add an extra layer of security to your account with two-factor authentication
         </CardDescription>
@@ -143,7 +93,7 @@ const TwoFactorAuth = () => {
             </p>
             <div className="flex justify-center bg-white p-4 rounded-md">
               <QRCodeSVG
-                value={`otpauth://totp/SurakshitLocker:${userSettings?.email || email}?secret=${getSecretKey()}&issuer=SurakshitLocker`}
+                value={`otpauth://totp/DocuNinja:${userSettings?.email}?secret=DEMOSECRETKEY&issuer=DocuNinja`}
                 size={200}
               />
             </div>
@@ -156,10 +106,8 @@ const TwoFactorAuth = () => {
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value)}
                 maxLength={6}
-                className="font-mono text-center text-lg tracking-widest"
+                className="font-mono text-center"
               />
-              
-              <Progress value={getProgressValue()} className="h-1.5 mt-1" />
               
               {error && (
                 <Alert variant="destructive" className="mt-2">
@@ -181,69 +129,21 @@ const TwoFactorAuth = () => {
                 Note: For this demo, any 6-digit code will work
               </p>
             </div>
-          </div>
-        )}
-        
-        {showBackupCodes && (
-          <div className="mt-4 p-4 border rounded-md bg-gray-50 dark:bg-gray-900">
-            <div className="mb-4">
-              <h4 className="font-medium mb-2">Backup Codes</h4>
-              <p className="text-sm text-muted-foreground">
-                Save these backup codes in a secure place. You can use these codes to access your account if you lose your authentication device.
-              </p>
-            </div>
             
-            <div className="bg-white dark:bg-slate-800 p-4 rounded border grid grid-cols-2 gap-2">
-              {backupCodes.map((code, index) => (
-                <div key={index} className="font-mono text-sm p-2 bg-gray-50 dark:bg-gray-900 rounded">
-                  {code}
-                </div>
-              ))}
-            </div>
-            
-            <Button 
-              variant="outline" 
-              className="w-full mt-4 flex items-center justify-center gap-2"
-              onClick={copyBackupCodes}
-            >
-              {backupCodesCopied ? (
-                <>
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>Codes Copied</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  <span>Copy Backup Codes</span>
-                </>
-              )}
-            </Button>
-            
-            <p className="text-xs text-center mt-4 text-muted-foreground">
-              Each code can only be used once. New codes can be generated in settings.
+            <p className="text-sm text-center mt-4 text-muted-foreground">
+              This is a demo QR code. In a real app, a unique secret would be generated for your account.
             </p>
           </div>
         )}
       </CardContent>
-      {isTwoFactorEnabled && !showQRCode && !showBackupCodes && (
-        <CardFooter className="flex flex-col space-y-4">
+      {isTwoFactorEnabled && !showQRCode && (
+        <CardFooter>
           <Button 
             variant="outline" 
             className="w-full" 
             onClick={() => setShowQRCode(!showQRCode)}
           >
             {showQRCode ? "Hide QR Code" : "Show QR Code"}
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="w-full"
-            onClick={() => {
-              generateBackupCodes();
-              setShowBackupCodes(true);
-            }}
-          >
-            Generate New Backup Codes
           </Button>
         </CardFooter>
       )}

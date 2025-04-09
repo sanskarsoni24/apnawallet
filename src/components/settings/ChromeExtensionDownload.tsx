@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -8,7 +7,7 @@ import {
   Loader2, 
   XCircle, 
   Chrome, 
-  FileZip,
+  Archive,
   ExternalLink
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -326,7 +325,7 @@ const ChromeExtensionDownload = () => {
                     </>
                   ) : (
                     <>
-                      <FileZip className="mr-2 h-4 w-4" />
+                      <Archive className="mr-2 h-4 w-4" />
                       Download Extension
                     </>
                   )}

@@ -34,7 +34,7 @@
       "id": "app.surakshitlocker.secure"
     }
   ],
-  "prefer_related_applications": true,
+  "prefer_related_applications": false,
   "shortcuts": [
     {
       "name": "Dashboard",
@@ -48,6 +48,13 @@
       "short_name": "Documents",
       "description": "Manage your documents",
       "url": "/documents",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Upload",
+      "short_name": "Upload",
+      "description": "Upload a new document",
+      "url": "/documents?upload=true",
       "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     }
   ]

@@ -1,553 +1,307 @@
 
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Container from "@/components/layout/Container";
-import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { QRCodeCanvas } from "qrcode.react";
+import { Share, Download, Smartphone, Tablet, Laptop, ArrowRight, PhoneCall } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
-import { useMediaQuery } from "@/hooks/use-mobile";
-import { Download, Smartphone, Info, ExternalLink, Share2, Plus } from "lucide-react";
-import BlurContainer from "@/components/ui/BlurContainer";
 import { toast } from "@/hooks/use-toast";
-import SurakshitLogo from "@/components/ui/SurakshitLogo";
-import { Link } from "react-router-dom";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogDescription 
-} from "@/components/ui/dialog";
+
+// Define a global type for the deferredPrompt
+declare global {
+  interface Window {
+    deferredPrompt: any;
+  }
+}
 
 const MobileApp = () => {
-  const [downloadUrl, setDownloadUrl] = useState("");
-  const [directApkUrl, setDirectApkUrl] = useState("");
-  const [activeTab, setActiveTab] = useState<"android" | "ios">("android");
-  const [showInstallDialog, setShowInstallDialog] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("android");
+  const [canInstall, setCanInstall] = useState(false);
+  
+  // Current page URL to create QR code
+  const downloadUrl = `${window.location.origin}/download-app`;
   
   useEffect(() => {
-    // Set download page URL for QR code
-    const domain = window.location.origin;
-    const downloadPage = `${domain}/download-app`;
-    setDownloadUrl(downloadPage);
-
-    // Set direct APK download URL
-    const apkUrl = `${domain}/downloads/surakshitlocker.apk`;
-    setDirectApkUrl(apkUrl);
-    
-    // Listen for PWA install prompt
-    const handleInstallPrompt = (e) => {
-      setShowInstallDialog(true);
-    };
-    
-    document.addEventListener('showInstallPrompt', handleInstallPrompt);
-    
-    // Capture the deferred prompt event
+    // Check if the app can be installed as PWA
     if (window.deferredPrompt) {
-      setDeferredPrompt(window.deferredPrompt);
+      setCanInstall(true);
     }
     
-    // Listen for future prompt events
-    window.addEventListener('beforeinstallprompt', (e) => {
+    // Listen for the beforeinstallprompt event
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      setDeferredPrompt(e);
-    });
+      // Store the event so it can be triggered later
+      window.deferredPrompt = e;
+      setCanInstall(true);
+    };
+    
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     
     return () => {
-      document.removeEventListener('showInstallPrompt', handleInstallPrompt);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(downloadUrl);
-    toast({
-      title: "Link copied",
-      description: "Download page link copied to clipboard"
-    });
-  };
-
-  const handleDirectDownload = () => {
-    if (isMobile) {
-      // Navigate to download page on mobile
-      window.location.href = "/download-app";
-      
-      toast({
-        title: "Redirecting to download page",
-        description: "You'll be able to download the app directly"
-      });
-    } else {
-      // On desktop, copy the link
+  
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'SurakshitLocker Mobile App',
+          text: 'Check out the SurakshitLocker mobile app for secure document management!',
+          url: downloadUrl,
+        });
+        toast({
+          title: "Shared successfully",
+          description: "The app download link has been shared",
+        });
+      } else {
+        // Fallback for browsers that don't support navigator.share
+        navigator.clipboard.writeText(downloadUrl);
+        toast({
+          title: "Link copied to clipboard",
+          description: "Share this link to download the mobile app",
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      // Fallback to clipboard
       navigator.clipboard.writeText(downloadUrl);
       toast({
-        title: "Link copied",
-        description: "Download page link copied to clipboard. Share this with your mobile device."
+        title: "Link copied to clipboard",
+        description: "Share this link to download the mobile app",
       });
     }
   };
-
-  // Install PWA function
+  
   const handleInstallPWA = async () => {
-    if (!deferredPrompt) {
-      // If no deferred prompt is available, provide instructions
-      setShowInstallDialog(true);
+    if (!window.deferredPrompt) {
+      toast({
+        title: "Installation not available",
+        description: "Your browser doesn't support app installation or the app is already installed",
+        variant: "destructive",
+      });
       return;
     }
     
     // Show the install prompt
-    deferredPrompt.prompt();
+    window.deferredPrompt.prompt();
     
     // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to install prompt: ${outcome}`);
+    const choiceResult = await window.deferredPrompt.userChoice;
     
-    // Clear the deferred prompt variable
-    setDeferredPrompt(null);
-    window.deferredPrompt = null;
-  };
-
-  // New direct APK download function
-  const handleDirectApkDownload = () => {
-    // Only attempt direct download on mobile Android devices
-    if (isMobile && /android/i.test(navigator.userAgent)) {
-      console.log("Starting direct APK download from MobileApp");
-    
-      // Show loading toast
+    if (choiceResult.outcome === 'accepted') {
       toast({
-        title: "Starting Download",
-        description: "Preparing your APK file..."
+        title: "Installation started",
+        description: "The app is being installed on your device",
       });
-    
-      try {
-        // Create a temporary anchor element
-        const link = document.createElement('a');
-        link.href = directApkUrl;
-        link.download = 'surakshitlocker.apk';
-        link.setAttribute('type', 'application/vnd.android.package-archive');
-        document.body.appendChild(link);
-        
-        // Trigger the click
-        link.click();
-        
-        // Clean up
-        document.body.removeChild(link);
-        
-        // Show success toast
-        toast({
-          title: "Download Started",
-          description: "The APK file is downloading. Check your notifications."
-        });
-      } catch (error) {
-        console.error("Direct download error:", error);
-        
-        // Try alternative method with fetch
-        fetch(directApkUrl)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            return response.blob();
-          })
-          .then(blob => {
-            const blobUrl = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = 'surakshitlocker.apk';
-            a.setAttribute('type', 'application/vnd.android.package-archive');
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(blobUrl);
-            
-            toast({
-              title: "Download Started (Alternative Method)",
-              description: "The APK file is downloading with alternative method."
-            });
-          })
-          .catch(err => {
-            console.error("Fetch download failed:", err);
-            toast({
-              title: "Download Failed",
-              description: "Redirecting to download page for better options.",
-              variant: "destructive"
-            });
-            
-            // Fallback to download page
-            window.location.href = "/download-app";
-          });
-      }
     } else {
-      // Non-Android mobile or desktop users get sent to download page
-      window.location.href = "/download-app";
-    }
-  };
-
-  // Function to add web app to home screen (iOS)
-  const showAddToHomeScreenInstructions = () => {
-    setShowInstallDialog(true);
-  };
-
-  const detectOS = () => {
-    const userAgent = navigator.userAgent || navigator.vendor;
-    
-    if (/android/i.test(userAgent)) {
-      return "android";
+      toast({
+        title: "Installation cancelled",
+        description: "You can install the app later from the browser menu",
+      });
     }
     
-    if (/iPad|iPhone|iPod/.test(userAgent)) {
-      return "ios";
-    }
-    
-    return "android"; // Default
+    // Clear the deferredPrompt so it can't be used again
+    window.deferredPrompt = null;
+    setCanInstall(false);
   };
-
-  useEffect(() => {
-    setActiveTab(detectOS());
-  }, []);
 
   return (
-    <Container>
-      <div className="max-w-4xl mx-auto">
-        <BlurContainer variant="elevated" className="p-8 mb-8">
-          <div className="flex flex-col items-center text-center mb-8">
-            <SurakshitLogo size="lg" className="mb-4" />
-            <div className="h-16 w-16 bg-indigo-100 dark:bg-indigo-900/50 rounded-full flex items-center justify-center mb-4">
-              <Smartphone className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <h1 className="text-3xl font-bold mb-2">Download SurakshitLocker Mobile App</h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Access your secure documents and passwords on the go. Scan the QR code or use the direct download link below.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-            <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col items-center justify-center p-8">
-              {/* QR Code that links to the download page */}
-              <QRCodeSVG 
-                value={downloadUrl} 
-                size={isMobile ? 200 : 250}
-                bgColor={"#ffffff"}
-                fgColor={"#000000"}
-                level={"H"}
-                includeMargin={true}
-              />
-              <p className="text-sm text-muted-foreground mt-4 text-center">
-                Scan this QR code with your device's camera to go to the download page
+    <Container className="max-w-5xl">
+      <div className="space-y-8">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            SurakshitLocker Mobile App
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            Access your secure document vault on the go with our mobile app
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-8 items-center">
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold">Get Started Now</h2>
+              <p className="text-muted-foreground">
+                Download the SurakshitLocker app to securely access and manage your 
+                important documents from anywhere.
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-2 mt-4 w-full">
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2 flex-1 justify-center"
-                  onClick={handleCopyLink}
-                >
-                  <Share2 className="h-4 w-4" />
-                  <span>Copy Link</span>
-                </Button>
+              <div className="grid grid-cols-3 gap-4 my-6">
+                <div className="flex flex-col items-center text-center space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Smartphone className="h-6 w-6 text-primary" />
+                  </div>
+                  <span className="text-sm font-medium">Mobile</span>
+                  <span className="text-xs text-muted-foreground">iOS & Android</span>
+                </div>
                 
-                <Button 
-                  className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2 flex-1 justify-center"
-                  onClick={handleDirectDownload}
-                >
-                  <Download className="h-4 w-4" />
-                  <span>{isMobile ? "Download Now" : "Copy Download Link"}</span>
-                </Button>
-              </div>
-              
-              {/* Direct link to download page and direct APK download for mobile devices */}
-              {isMobile && (
-                <div className="mt-4 text-center space-y-3 w-full">
-                  <Link 
-                    to="/download-app" 
-                    className="inline-block bg-indigo-600 text-white rounded-lg px-4 py-2 w-full hover:bg-indigo-700 flex items-center justify-center gap-2"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    <span>Go to Download Page</span>
-                  </Link>
-                  
-                  {/android/i.test(navigator.userAgent) && (
-                    <a 
-                      href={directApkUrl}
-                      download="surakshitlocker.apk"
-                      className="inline-block bg-green-600 text-white rounded-lg px-4 py-2 w-full hover:bg-green-700 flex items-center justify-center gap-2"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleDirectApkDownload();
-                      }}
-                    >
-                      <Download className="h-4 w-4" />
-                      <span>Download APK Directly</span>
-                    </a>
-                  )}
-                  
-                  {/* Add to Home Screen button */}
-                  <Button
-                    onClick={isMobile ? showAddToHomeScreenInstructions : handleCopyLink}
-                    className="w-full bg-purple-600 hover:bg-purple-700 flex items-center justify-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Add to Home Screen</span>
-                  </Button>
+                <div className="flex flex-col items-center text-center space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Tablet className="h-6 w-6 text-primary" />
+                  </div>
+                  <span className="text-sm font-medium">Tablet</span>
+                  <span className="text-xs text-muted-foreground">iPad & Android</span>
                 </div>
-              )}
-              
-              {/* Manual alternative links */}
-              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800 w-full">
-                <p className="text-sm font-medium mb-2">Alternative Methods:</p>
-                <div className="flex flex-col gap-2">
-                  <Link 
-                    to="/download-app" 
-                    className="text-indigo-600 dark:text-indigo-400 hover:underline text-sm flex items-center gap-1"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    <span>Go to download page</span>
-                  </Link>
-                  
-                  {isMobile && /android/i.test(navigator.userAgent) && (
-                    <a 
-                      href={directApkUrl}
-                      download="surakshitlocker.apk"
-                      className="text-green-600 dark:text-green-400 hover:underline text-sm flex items-center gap-1"
-                    >
-                      <Download className="h-3 w-3" />
-                      <span>Direct APK download link</span>
-                    </a>
-                  )}
+                
+                <div className="flex flex-col items-center text-center space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Laptop className="h-6 w-6 text-primary" />
+                  </div>
+                  <span className="text-sm font-medium">Desktop</span>
+                  <span className="text-xs text-muted-foreground">Windows & Mac</span>
                 </div>
               </div>
-            </Card>
-
-            <div className="space-y-6">
-              <Tabs 
-                value={activeTab} 
-                onValueChange={(v) => setActiveTab(v as "android" | "ios")}
-                className="w-full"
-              >
-                <TabsList className="grid grid-cols-2 w-full">
-                  <TabsTrigger value="android">Android</TabsTrigger>
-                  <TabsTrigger value="ios">iOS</TabsTrigger>
+            </div>
+            
+            <div className="space-y-4">
+              <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid grid-cols-2">
+                  <TabsTrigger value="android">
+                    Android
+                  </TabsTrigger>
+                  <TabsTrigger value="ios">
+                    iOS
+                  </TabsTrigger>
                 </TabsList>
-                
-                <TabsContent value="android" className="mt-4 space-y-4">
-                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-900/50">
-                    <h3 className="font-semibold text-green-800 dark:text-green-400 mb-2 flex items-center gap-2">
-                      <Info className="h-4 w-4" />
-                      <span>Android Installation</span>
-                    </h3>
-                    <ol className="list-decimal pl-5 space-y-2 text-sm text-green-700 dark:text-green-300">
-                      <li>Scan the QR code with your Android device</li>
-                      <li>Tap <strong>Download Now</strong> on the download page</li>
-                      <li>When download completes, tap the APK file to install</li>
-                      <li>Allow installation from unknown sources if prompted</li>
-                      <li>Follow the installation prompts</li>
-                      <li>Launch SurakshitLocker from your app drawer</li>
-                    </ol>
-                  </div>
-                  
-                  {/* Add to Home Screen Instructions for Android */}
-                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-900/50">
-                    <h3 className="font-semibold text-purple-800 dark:text-purple-400 mb-2 flex items-center gap-2">
-                      <Plus className="h-4 w-4" />
-                      <span>Add Web App to Home Screen</span>
-                    </h3>
-                    <ol className="list-decimal pl-5 space-y-2 text-sm text-purple-700 dark:text-purple-300">
-                      <li>Open SurakshitLocker in Chrome browser</li>
-                      <li>Tap the menu icon (three dots) in the top right</li>
-                      <li>Select <strong>Add to Home screen</strong> or <strong>Install app</strong></li>
-                      <li>Confirm by tapping <strong>Add</strong> or <strong>Install</strong></li>
-                      <li>The app icon will appear on your home screen</li>
-                      <li>Tap the icon to launch the web app in standalone mode</li>
-                    </ol>
-                  </div>
-                  
-                  {/* Manual download button for mobile devices */}
-                  {isMobile && /android/i.test(navigator.userAgent) && (
-                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg text-center">
-                      <p className="text-indigo-700 dark:text-indigo-300 mb-3">
-                        Tap below for direct installation:
-                      </p>
-                      <Button
-                        className="bg-green-600 hover:bg-green-700 w-full flex items-center justify-center gap-2"
-                        onClick={handleDirectApkDownload}
+                <TabsContent value="android" className="space-y-4">
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      onClick={() => navigate("/download-app")}
+                      size="lg" 
+                      className="w-full"
+                    >
+                      <Download className="mr-2 h-5 w-5" />
+                      Download APK
+                    </Button>
+                    
+                    {canInstall && (
+                      <Button 
+                        onClick={handleInstallPWA} 
+                        variant="outline" 
+                        size="lg"
+                        className="w-full"
                       >
-                        <Download className="h-4 w-4" />
-                        <span>Download APK File</span>
+                        <Smartphone className="mr-2 h-5 w-5" />
+                        Install as App
                       </Button>
-                    </div>
-                  )}
-                  
-                  {isMobile && !/android/i.test(navigator.userAgent) && (
-                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg text-center">
-                      <p className="text-indigo-700 dark:text-indigo-300 mb-3">
-                        Tap below to visit the download page:
-                      </p>
-                      <Link 
-                        to="/download-app" 
-                        className="inline-block bg-indigo-600 text-white rounded-lg px-4 py-2 hover:bg-indigo-700 w-full flex items-center justify-center gap-2"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        <span>Go to Download Page</span>
-                      </Link>
-                    </div>
-                  )}
-                  
-                  {/* Only show this on desktop */}
-                  {!isMobile && (
-                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg text-center">
-                      <p className="font-medium mb-2">Using Desktop?</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                        Share this link or visit this page on your Android device:
-                      </p>
-                      <div className="bg-white dark:bg-gray-800 p-2 rounded border">
-                        <code className="text-xs break-all">{downloadUrl}</code>
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </TabsContent>
-                
-                <TabsContent value="ios" className="mt-4 space-y-4">
-                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-900/50">
-                    <h3 className="font-semibold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2">
-                      <Info className="h-4 w-4" />
-                      <span>iOS Installation</span>
-                    </h3>
-                    <ol className="list-decimal pl-5 space-y-2 text-sm text-blue-700 dark:text-blue-300">
-                      <li>Scan the QR code with your iOS device camera</li>
-                      <li>Tap the notification that appears</li>
-                      <li>Follow the on-screen installation prompts</li>
-                      <li>If prompted, trust the developer in Settings</li>
-                      <li>Launch SurakshitLocker from your home screen</li>
+                <TabsContent value="ios" className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      On iOS, you can install the app directly from your Safari browser:
+                    </p>
+                    <ol className="list-decimal text-sm pl-5 space-y-2">
+                      <li>Open this page in Safari</li>
+                      <li>Tap the Share button</li>
+                      <li>Scroll down and tap "Add to Home Screen"</li>
+                      <li>Tap "Add" in the top-right corner</li>
                     </ol>
                   </div>
-                  
-                  {/* Add to Home Screen Instructions for iOS */}
-                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-900/50">
-                    <h3 className="font-semibold text-purple-800 dark:text-purple-400 mb-2 flex items-center gap-2">
-                      <Plus className="h-4 w-4" />
-                      <span>Add Web App to Home Screen</span>
-                    </h3>
-                    <ol className="list-decimal pl-5 space-y-2 text-sm text-purple-700 dark:text-purple-300">
-                      <li>Open SurakshitLocker in Safari browser</li>
-                      <li>Tap the Share icon (rectangle with arrow) at the bottom</li>
-                      <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
-                      <li>Customize the name if desired, then tap <strong>Add</strong></li>
-                      <li>The app icon will appear on your home screen</li>
-                      <li>Tap the icon to launch the web app in standalone mode</li>
-                    </ol>
-                  </div>
-                  
-                  {isMobile && /iPad|iPhone|iPod/i.test(navigator.userAgent) && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center">
-                      <p className="text-blue-700 dark:text-blue-300 mb-3">
-                        Tap below to visit the download page:
-                      </p>
-                      <Link 
-                        to="/download-app" 
-                        className="inline-block bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700 w-full flex items-center justify-center gap-2"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        <span>Go to Download Page</span>
-                      </Link>
-                    </div>
-                  )}
                 </TabsContent>
               </Tabs>
-
-              <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
-                <h3 className="font-medium mb-2">App Features</h3>
-                <ul className="space-y-2">
-                  <li className="flex items-center gap-2 text-sm">
-                    <div className="h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400"></div>
-                    <span>Secure document storage and management</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <div className="h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400"></div>
-                    <span>Password vault with end-to-end encryption</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <div className="h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400"></div>
-                    <span>Document reminders and notifications</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <div className="h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400"></div>
-                    <span>Offline access to your important information</span>
-                  </li>
-                </ul>
+              
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleShare} 
+                  variant="outline" 
+                  className="flex-1"
+                >
+                  <Share className="mr-2 h-4 w-4" />
+                  Share App Link
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => navigate("/help")}
+                >
+                  <PhoneCall className="mr-2 h-4 w-4" />
+                  Need Help?
+                </Button>
               </div>
             </div>
           </div>
-        </BlurContainer>
-      </div>
-      
-      {/* Add to Home Screen Dialog */}
-      <Dialog open={showInstallDialog} onOpenChange={setShowInstallDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add to Home Screen</DialogTitle>
-            <DialogDescription>
-              Add SurakshitLocker to your home screen for quick access.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            {/iPad|iPhone|iPod/i.test(navigator.userAgent) ? (
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">iOS Installation Steps:</h3>
-                <ol className="list-decimal pl-5 space-y-2 text-sm">
-                  <li>Tap the Share icon <span className="inline-block bg-gray-200 rounded-md px-1">📤</span> at the bottom of the screen</li>
-                  <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
-                  <li>Tap <strong>Add</strong> in the top right corner</li>
-                </ol>
-                <img 
-                  src="https://developer.apple.com/design/human-interface-guidelines/foundations/app-icons/images/app-icon-anatomy_2x.png" 
-                  alt="iOS Add to Home Screen" 
-                  className="max-w-full rounded-md border border-gray-300 dark:border-gray-700"
+          
+          <Card className="border-2 border-primary/20">
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-xl">Scan to Download</CardTitle>
+              <CardDescription>
+                Use your phone's camera to scan this QR code
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center p-8">
+              <div className="p-4 bg-white rounded-lg">
+                <QRCodeCanvas
+                  value={downloadUrl}
+                  size={200}
+                  bgColor="#ffffff"
+                  fgColor="#000000"
+                  level="L"
+                  includeMargin={false}
                 />
               </div>
-            ) : /Android/i.test(navigator.userAgent) ? (
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Android Installation Steps:</h3>
-                <ol className="list-decimal pl-5 space-y-2 text-sm">
-                  <li>Tap the menu icon <span className="inline-block bg-gray-200 rounded-md px-1">⋮</span> in Chrome</li>
-                  <li>Tap <strong>Add to Home screen</strong> or <strong>Install app</strong></li>
-                  <li>Follow the on-screen prompts</li>
-                </ol>
-                <Button 
-                  onClick={handleInstallPWA} 
-                  disabled={!deferredPrompt}
-                  className="w-full"
-                >
-                  Install Web App
-                </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  {!deferredPrompt ? "Your browser doesn't support automatic installation. Please follow the manual steps above." : "Click to install the app on your device"}
+            </CardContent>
+            <CardFooter className="flex-col gap-4">
+              <div className="flex flex-col gap-1 text-center">
+                <p className="text-sm font-medium">Direct link:</p>
+                <p className="text-xs text-muted-foreground break-all">
+                  {downloadUrl}
                 </p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Desktop Installation:</h3>
-                <p className="text-sm">
-                  Visit this page on your mobile device to install the app, or scan the QR code from the main page.
-                </p>
-                <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-md text-center">
-                  <code className="text-xs break-all">{window.location.href}</code>
-                </div>
-                <Button onClick={handleCopyLink} className="w-full">
-                  Copy Link to Share
-                </Button>
-              </div>
-            )}
-          </div>
-          <div className="flex justify-center border-t pt-4">
-            <Button 
-              onClick={() => setShowInstallDialog(false)}
-              variant="outline"
-            >
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+              <Button 
+                onClick={() => navigate("/download-app")}
+                className="w-full"
+                variant="outline"
+              >
+                Go to Download Page
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+        
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Sync Everywhere</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Access your documents across all your devices with real-time syncing and seamless backup.
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Offline Access</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                View and manage your important documents even when you're offline or have poor internet connection.
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Secure Sharing</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Share documents securely with anyone, anywhere, with end-to-end encryption and access controls.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </Container>
   );
 };

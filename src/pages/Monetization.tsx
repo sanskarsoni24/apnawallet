@@ -1,218 +1,378 @@
 
-import React, { useState } from "react";
+import React from "react";
 import Container from "@/components/layout/Container";
+import { 
+  Trophy, 
+  CreditCard, 
+  ListChecks, 
+  Download, 
+  HelpCircle, 
+  Upload, 
+  Clock, 
+  Shield
+} from "lucide-react";
+import SubscriptionPlans from "@/components/premium/SubscriptionPlans";
+import PremiumFeatures from "@/components/premium/PremiumFeatures";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { useUser } from "@/contexts/UserContext";
-import { CreditCard, CheckCircle, DollarSign, Zap, Crown } from "lucide-react";
-import BlurContainer from "@/components/ui/BlurContainer";
-import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const Monetization = () => {
-  const { isLoggedIn } = useUser();
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  const handlePlanSelect = (plan: string) => {
-    setSelectedPlan(plan);
-  };
-
-  const handlePurchase = () => {
-    if (!selectedPlan) {
-      toast({
-        title: "Please select a plan",
-        description: "Choose a pricing plan before proceeding",
-      });
-      return;
-    }
-
-    if (!isLoggedIn) {
-      toast({
-        title: "Sign in required",
-        description: "Please sign in to subscribe to a plan",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Convert plan name to URL parameter for checkout
-    const planParam = selectedPlan.toLowerCase();
-    navigate(`/checkout?plan=${planParam}`);
-    
-    toast({
-      title: "Redirecting to checkout",
-      description: `Setting up your ${selectedPlan} plan subscription`,
-      variant: "default",
-    });
-  };
-
+  
   return (
     <Container>
-      <div className="animate-fade-in">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight">Pricing Plans</h1>
-          <p className="text-muted-foreground">
-            Choose the perfect plan for managing your documents
-          </p>
+      <div className="space-y-12">
+        <div className="space-y-6">
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Choose the Right Plan
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              Select a plan that's right for your document management needs
+            </p>
+          </div>
         </div>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          {/* Free Plan */}
-          <BlurContainer 
-            className={`p-6 ${selectedPlan === 'Free' ? 'ring-2 ring-indigo-500' : ''} transition-all cursor-pointer hover:shadow-md`}
-            onClick={() => handlePlanSelect('Free')}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <div className="h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-gray-600 dark:text-gray-400" />
-              </div>
-              {selectedPlan === 'Free' && <CheckCircle className="h-6 w-6 text-green-500" />}
-            </div>
-            <h2 className="text-xl font-medium mb-2">Free Plan</h2>
-            <p className="text-3xl font-bold mb-4">$0<span className="text-sm font-normal text-gray-500">/month</span></p>
-            <ul className="space-y-2 mb-6">
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>5 document uploads</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Basic reminders</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Email support</span>
-              </li>
-            </ul>
-            <Button 
-              variant={selectedPlan === 'Free' ? "default" : "outline"} 
-              className="w-full"
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePlanSelect('Free');
-              }}
-            >
-              Current Plan
-            </Button>
-          </BlurContainer>
-
-          {/* Pro Plan */}
-          <BlurContainer 
-            className={`p-6 ${selectedPlan === 'Pro' ? 'ring-2 ring-indigo-500' : ''} transition-all cursor-pointer hover:shadow-md relative bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/30 dark:to-purple-950/30`}
-            onClick={() => handlePlanSelect('Pro')}
-          >
-            <div className="absolute -top-3 right-4 bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-medium">
-              POPULAR
-            </div>
-            <div className="flex justify-between items-center mb-4">
-              <div className="h-12 w-12 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
-                <Zap className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              {selectedPlan === 'Pro' && <CheckCircle className="h-6 w-6 text-green-500" />}
-            </div>
-            <h2 className="text-xl font-medium mb-2">Pro Plan</h2>
-            <p className="text-3xl font-bold mb-4">$9.99<span className="text-sm font-normal text-gray-500">/month</span></p>
-            <ul className="space-y-2 mb-6">
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>50 document uploads</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Advanced notifications</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Priority support</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Document analytics</span>
-              </li>
-            </ul>
-            <Button 
-              variant={selectedPlan === 'Pro' ? "default" : "outline"} 
-              className="w-full bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white transition-all duration-300"
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePlanSelect('Pro');
-              }}
-            >
-              Select Plan
-            </Button>
-          </BlurContainer>
-
-          {/* Enterprise Plan */}
-          <BlurContainer 
-            className={`p-6 ${selectedPlan === 'Enterprise' ? 'ring-2 ring-indigo-500' : ''} transition-all cursor-pointer hover:shadow-md bg-gradient-to-br from-purple-50/50 to-indigo-50/50 dark:from-purple-950/30 dark:to-indigo-950/30`}
-            onClick={() => handlePlanSelect('Enterprise')}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                <Crown className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              {selectedPlan === 'Enterprise' && <CheckCircle className="h-6 w-6 text-green-500" />}
-            </div>
-            <h2 className="text-xl font-medium mb-2">Enterprise</h2>
-            <p className="text-3xl font-bold mb-4">$29.99<span className="text-sm font-normal text-gray-500">/month</span></p>
-            <ul className="space-y-2 mb-6">
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Unlimited documents</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>All Pro features</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>API access</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Dedicated support</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Custom integrations</span>
-              </li>
-            </ul>
-            <Button 
-              variant={selectedPlan === 'Enterprise' ? "default" : "outline"} 
-              className="w-full bg-gradient-to-r hover:from-purple-600 hover:to-indigo-600 hover:text-white transition-all duration-300"
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePlanSelect('Enterprise');
-              }}
-            >
-              Select Plan
-            </Button>
-          </BlurContainer>
-        </div>
-
-        <div className="mt-8 flex justify-center">
-          {isLoggedIn ? (
-            <Button 
-              onClick={handlePurchase} 
-              disabled={!selectedPlan || selectedPlan === 'Free'}
-              className="px-8 py-6 text-lg flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
-            >
-              <CreditCard className="h-5 w-5" />
-              {selectedPlan === 'Free' ? 'Continue with Free Plan' : 'Subscribe Now'}
-            </Button>
-          ) : (
-            <div className="p-6 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800/30">
-              <h3 className="text-lg font-medium mb-2">Sign in required</h3>
-              <p className="mb-4">Please sign in to subscribe to a plan.</p>
+        
+        <Tabs defaultValue="plans" className="w-full">
+          <TabsList className="w-full max-w-md grid grid-cols-2 mb-8 mx-auto">
+            <TabsTrigger value="plans" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              <span>Plans & Pricing</span>
+            </TabsTrigger>
+            <TabsTrigger value="features" className="flex items-center gap-2">
+              <ListChecks className="h-4 w-4" />
+              <span>Feature Comparison</span>
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="plans" className="space-y-8">
+            <SubscriptionPlans />
+            
+            <div className="text-center">
               <Button 
                 variant="outline" 
-                onClick={() => navigate('/sign-in')}
-                className="border-amber-500 text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/30 transition-all"
+                onClick={() => navigate("/help")}
+                className="gap-2"
               >
-                Sign In
+                <HelpCircle className="h-4 w-4" />
+                <span>Have questions? Visit our help center</span>
               </Button>
             </div>
-          )}
+          </TabsContent>
+          
+          <TabsContent value="features" className="space-y-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div>
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium flex items-center gap-2 mb-1">
+                    <Shield className="h-5 w-5 text-primary" />
+                    Security Features
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Keep your documents safe and secure with our advanced security features
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Password Protection</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Available on all plans</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Encryption Key Backup</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-muted"></span>
+                        <span className="w-3 h-3 rounded-full bg-muted"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Premium & Enterprise only</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Two-Factor Authentication</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-muted"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Basic, Premium & Enterprise</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium flex items-center gap-2 mb-1">
+                    <Upload className="h-5 w-5 text-primary" />
+                    Storage Features
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Store and manage your documents with ease
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Document Limit</span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="text-xs font-medium">
+                          <span className="text-muted-foreground">Free:</span> 10
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground"></span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="text-xs font-medium">
+                          <span className="text-muted-foreground">Basic:</span> 50
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground"></span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="text-xs font-medium">
+                          <span className="text-muted-foreground">Premium+:</span> Unlimited
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Max Document Size</span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="text-xs font-medium">
+                          <span className="text-muted-foreground">Free:</span> 5MB
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground"></span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="text-xs font-medium">
+                          <span className="text-muted-foreground">Basic:</span> 15MB
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground"></span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="text-xs font-medium">
+                          <span className="text-muted-foreground">Premium:</span> 25MB
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground"></span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="text-xs font-medium">
+                          <span className="text-muted-foreground">Enterprise:</span> 100MB
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium flex items-center gap-2 mb-1">
+                    <Download className="h-5 w-5 text-primary" />
+                    Backup & Export
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Keep your documents safe with automatic backups
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Manual Backup</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Available on all plans</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Automatic Backups</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-muted"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Basic, Premium & Enterprise</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Cloud Export</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-muted"></span>
+                        <span className="w-3 h-3 rounded-full bg-muted"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Premium & Enterprise only</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium flex items-center gap-2 mb-1">
+                    <Clock className="h-5 w-5 text-primary" />
+                    Sharing Features
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Share your documents securely with others
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Basic Sharing</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Available on all plans</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Password Protection</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Available on all plans</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Permission Controls</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-muted"></span>
+                        <span className="w-3 h-3 rounded-full bg-muted"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Premium & Enterprise only</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Access Tracking</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-muted"></span>
+                        <span className="w-3 h-3 rounded-full bg-muted"></span>
+                        <span className="w-3 h-3 rounded-full bg-primary"></span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Premium & Enterprise only</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <PremiumFeatures showTitle={false} />
+          </TabsContent>
+        </Tabs>
+        
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+            <HelpCircle className="h-5 w-5 text-primary" />
+            Frequently Asked Questions
+          </h2>
+          
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="item-1">
+              <AccordionTrigger>
+                How does the document limit work?
+              </AccordionTrigger>
+              <AccordionContent>
+                Each subscription plan has a maximum number of documents you can store:
+                <ul className="list-disc pl-5 mt-2 space-y-1">
+                  <li>Free users: Up to 10 documents</li>
+                  <li>Basic plan: Up to 50 documents</li>
+                  <li>Premium plan: Unlimited documents</li>
+                  <li>Enterprise plan: Unlimited documents</li>
+                </ul>
+                If you reach your limit, you'll need to delete some documents or upgrade your plan.
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="item-2">
+              <AccordionTrigger>
+                What happens to my documents if I downgrade?
+              </AccordionTrigger>
+              <AccordionContent>
+                If you downgrade to a plan with a lower document limit, and you have more documents 
+                than the new plan allows, you'll be prompted to delete some documents to meet the 
+                new limit. We recommend backing up any documents you need to delete before downgrading.
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="item-3">
+              <AccordionTrigger>
+                Can I upgrade or downgrade at any time?
+              </AccordionTrigger>
+              <AccordionContent>
+                Yes, you can change your subscription plan at any time. When upgrading, 
+                you'll get immediate access to all the features of your new plan. When downgrading, 
+                the change will take effect at the end of your current billing cycle.
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="item-4">
+              <AccordionTrigger>
+                How do I cancel my subscription?
+              </AccordionTrigger>
+              <AccordionContent>
+                You can cancel your subscription at any time from the Settings → Subscription page. 
+                Your subscription will remain active until the end of your current billing cycle, 
+                after which you'll be downgraded to the Free plan.
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="item-5">
+              <AccordionTrigger>
+                Is my payment information secure?
+              </AccordionTrigger>
+              <AccordionContent>
+                Yes, we use Stripe, a PCI-compliant payment processor, to handle all payments. 
+                We never store your complete credit card information on our servers.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </div>
     </Container>

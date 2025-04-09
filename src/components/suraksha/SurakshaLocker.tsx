@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from '../ui/label';
 
-// Document types and interfaces
 interface SecureDocument {
   id: string;
   title: string;
@@ -28,396 +27,297 @@ interface SecureDocument {
   fileName?: string;
   fileType?: string;
   fileSize?: number;
+  dueDate?: string;
+  category?: string;
 }
 
 const SurakshaLocker = () => {
-  const { email } = useUser();
   const [isLocked, setIsLocked] = useState(true);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [storedPassword, setStoredPassword] = useState('');
+  const [storedPassword, setStoredPassword] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [secureDocuments, setSecureDocuments] = useState<SecureDocument[]>([]);
   const [currentDocument, setCurrentDocument] = useState<SecureDocument | null>(null);
-  const [newTitle, setNewTitle] = useState('');
-  const [newContent, setNewContent] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newContent, setNewContent] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // Password change dialog states
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  
-  // Load stored password and documents from localStorage
+  const { user } = useUser();
+
   useEffect(() => {
-    const savedPassword = localStorage.getItem(`suraksha_password_${email}`);
-    if (savedPassword) {
-      setStoredPassword(savedPassword);
+    const storedPass = localStorage.getItem('lockerPassword');
+    if (storedPass) {
+      setStoredPassword(storedPass);
+      setIsLocked(true);
+    } else {
+      setIsLocked(true);
     }
-    
-    // Only load documents if user is authenticated
-    if (!isLocked) {
-      loadSecureDocuments();
+
+    const storedDocs = localStorage.getItem('secureDocuments');
+    if (storedDocs) {
+      setSecureDocuments(JSON.parse(storedDocs));
     }
-  }, [email, isLocked]);
-  
-  // Load secure documents from localStorage
-  const loadSecureDocuments = () => {
-    try {
-      const encryptedDocs = localStorage.getItem(`suraksha_documents_${email}`);
-      if (encryptedDocs) {
-        // In a real app, you would decrypt the data here
-        const decryptedDocs = JSON.parse(encryptedDocs);
-        setSecureDocuments(decryptedDocs);
-      }
-    } catch (error) {
-      console.error('Error loading secure documents:', error);
-    }
-  };
-  
-  // Save secure documents to localStorage
-  const saveSecureDocuments = (docs: SecureDocument[]) => {
-    try {
-      // In a real app, you would encrypt the data here
-      const encryptedDocs = JSON.stringify(docs);
-      localStorage.setItem(`suraksha_documents_${email}`, encryptedDocs);
-    } catch (error) {
-      console.error('Error saving secure documents:', error);
-    }
-  };
-  
-  // Enhanced password change function with proper validation
-  const handleChangePassword = () => {
-    // Validate current password
-    if (currentPassword !== storedPassword) {
-      toast({
-        title: 'Incorrect Password',
-        description: 'The current password you entered is incorrect.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    // Validate new password
-    if (newPassword.length < 6) {
-      toast({
-        title: 'Password Too Short',
-        description: 'New password must be at least 6 characters.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    // Validate password confirmation
-    if (newPassword !== confirmNewPassword) {
-      toast({
-        title: 'Password Mismatch',
-        description: 'New password and confirmation do not match.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    // Password strength validation (optional but recommended)
-    const hasUpperCase = /[A-Z]/.test(newPassword);
-    const hasLowerCase = /[a-z]/.test(newPassword);
-    const hasNumbers = /\d/.test(newPassword);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
-    
-    if (!(hasUpperCase && hasLowerCase && hasNumbers) && newPassword.length < 8) {
-      toast({
-        title: 'Weak Password',
-        description: 'Consider using a stronger password with uppercase, lowercase, numbers, and special characters.',
-        variant: 'warning',
-      });
-      // Continue anyway - this is just a warning
-    }
-    
-    // Update password in localStorage
-    localStorage.setItem(`suraksha_password_${email}`, newPassword);
-    setStoredPassword(newPassword);
-    
-    // Reset form fields
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmNewPassword('');
-    
-    // Close dialog
-    setIsChangePasswordOpen(false);
-    
-    toast({
-      title: 'Password Updated',
-      description: 'Your Suraksha Locker password has been changed successfully.',
-    });
-  };
-  
-  // Handle password setup or validation
+  }, []);
+
   const handleUnlock = () => {
     if (!storedPassword) {
-      // First time setup - create password
-      if (password !== confirmPassword) {
+      if (password === confirmPassword) {
+        localStorage.setItem('lockerPassword', password);
+        setStoredPassword(password);
+        setIsLocked(false);
         toast({
-          title: 'Password Mismatch',
-          description: 'Passwords do not match. Please try again.',
-          variant: 'destructive',
+          title: "Locker Created",
+          description: "Your Suraksha Locker has been created successfully!",
         });
-        return;
-      }
-      
-      if (password.length < 6) {
+      } else {
         toast({
-          title: 'Password Too Short',
-          description: 'Password must be at least 6 characters.',
-          variant: 'destructive',
+          title: "Error",
+          description: "Passwords do not match.",
+          variant: "destructive",
         });
-        return;
       }
-      
-      // In a real app, you would hash the password
-      localStorage.setItem(`suraksha_password_${email}`, password);
-      setStoredPassword(password);
-      setIsLocked(false);
-      
-      toast({
-        title: 'Suraksha Locker Created',
-        description: 'Your secure locker is now set up and unlocked.',
-      });
     } else {
-      // Validate existing password
-      if (password !== storedPassword) {
+      if (password === storedPassword) {
+        setIsLocked(false);
         toast({
-          title: 'Incorrect Password',
-          description: 'The password you entered is incorrect.',
-          variant: 'destructive',
+          title: "Locker Unlocked",
+          description: "Your Suraksha Locker has been unlocked!",
         });
-        return;
+      } else {
+        toast({
+          title: "Error",
+          description: "Incorrect password.",
+          variant: "destructive",
+        });
       }
-      
-      setIsLocked(false);
-      loadSecureDocuments();
-      
-      toast({
-        title: 'Suraksha Locker Unlocked',
-        description: 'You now have access to your secure documents.',
-      });
     }
-    
-    // Reset password fields
     setPassword('');
     setConfirmPassword('');
   };
-  
-  // Lock the secure locker
+
   const handleLock = () => {
     setIsLocked(true);
     setCurrentDocument(null);
     setIsCreating(false);
     setIsEditing(false);
-    
     toast({
-      title: 'Suraksha Locker Locked',
-      description: 'Your secure locker has been locked.',
+      title: "Locker Locked",
+      description: "Your Suraksha Locker has been locked.",
     });
   };
-  
-  // Start creating a new document
+
+  const saveSecureDocuments = (docs: SecureDocument[]) => {
+    localStorage.setItem('secureDocuments', JSON.stringify(docs));
+  };
+
+  const viewDocument = (doc: SecureDocument) => {
+    setCurrentDocument(doc);
+    setNewTitle(doc.title);
+    setNewContent(doc.content);
+  };
+
   const startCreatingDocument = () => {
     setIsCreating(true);
     setIsEditing(false);
     setCurrentDocument(null);
     setNewTitle('');
     setNewContent('');
-    setSelectedFile(null);
   };
-  
-  // Handle file selection
+
+  const startEditingDocument = () => {
+    if (currentDocument) {
+      setIsEditing(true);
+      setIsCreating(false);
+      setNewTitle(currentDocument.title);
+      setNewContent(currentDocument.content);
+    }
+  };
+
+  const saveNewDocument = () => {
+    if (!newTitle.trim() || !newContent.trim()) {
+      toast({
+        title: "Error",
+        description: "Title and content cannot be empty.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newDoc: SecureDocument = {
+      id: Math.random().toString(36).substring(7),
+      title: newTitle,
+      content: newContent,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      fileURL: selectedFile ? URL.createObjectURL(selectedFile) : undefined,
+      fileName: selectedFile ? selectedFile.name : undefined,
+      fileType: selectedFile ? selectedFile.type : undefined,
+      fileSize: selectedFile ? selectedFile.size : undefined,
+    };
+
+    const updatedDocs = [...secureDocuments, newDoc];
+    setSecureDocuments(updatedDocs);
+    saveSecureDocuments(updatedDocs);
+    setCurrentDocument(newDoc);
+    setIsCreating(false);
+    setSelectedFile(null);
+
+    toast({
+      title: "Document Saved",
+      description: "Your new document has been saved successfully!",
+    });
+  };
+
+  const saveEditedDocument = () => {
+    if (!newTitle.trim() || !newContent.trim()) {
+      toast({
+        title: "Error",
+        description: "Title and content cannot be empty.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!currentDocument) return;
+
+    const updatedDoc = {
+      ...currentDocument,
+      title: newTitle,
+      content: newContent,
+      updatedAt: new Date().toISOString(),
+      fileURL: selectedFile ? URL.createObjectURL(selectedFile) : currentDocument.fileURL,
+      fileName: selectedFile ? selectedFile.name : currentDocument.fileName,
+      fileType: selectedFile ? selectedFile.type : currentDocument.fileType,
+      fileSize: selectedFile ? selectedFile.size : currentDocument.fileSize,
+    };
+
+    const updatedDocs = secureDocuments.map(doc =>
+      doc.id === currentDocument.id ? updatedDoc : doc
+    );
+
+    setSecureDocuments(updatedDocs);
+    saveSecureDocuments(updatedDocs);
+    setCurrentDocument(updatedDoc);
+    setIsEditing(false);
+    setSelectedFile(null);
+
+    toast({
+      title: "Document Updated",
+      description: "Your document has been updated successfully!",
+    });
+  };
+
+  const deleteDocument = (id: string) => {
+    const updatedDocs = secureDocuments.filter(doc => doc.id !== id);
+    setSecureDocuments(updatedDocs);
+    saveSecureDocuments(updatedDocs);
+    setCurrentDocument(null);
+    setIsEditing(false);
+    setIsCreating(false);
+
+    toast({
+      title: "Document Deleted",
+      description: "The document has been deleted successfully!",
+    });
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setSelectedFile(e.target.files[0]);
     }
   };
 
-  // Create a URL for the selected file
-  const createFileURL = (file: File) => {
-    return URL.createObjectURL(file);
-  };
-
-  // Get file extension
-  const getFileExtension = (fileName: string) => {
-    return fileName.split('.').pop()?.toLowerCase() || '';
-  };
-  
-  // Save a new document
-  const saveNewDocument = () => {
-    if (!newTitle.trim()) {
-      toast({
-        title: 'Title Required',
-        description: 'Please enter a title for your document.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    const now = new Date().toISOString();
-    const newDoc: SecureDocument = {
-      id: `doc_${Date.now()}`,
-      title: newTitle,
-      content: newContent,
-      createdAt: now,
-      updatedAt: now,
-    };
-    
-    // Add file information if a file was selected
-    if (selectedFile) {
-      const fileURL = createFileURL(selectedFile);
-      newDoc.fileURL = fileURL;
-      newDoc.fileName = selectedFile.name;
-      newDoc.fileType = getFileExtension(selectedFile.name);
-      newDoc.fileSize = selectedFile.size;
-    }
-    
-    const updatedDocs = [...secureDocuments, newDoc];
-    setSecureDocuments(updatedDocs);
-    saveSecureDocuments(updatedDocs);
-    
-    setIsCreating(false);
-    setNewTitle('');
-    setNewContent('');
-    setSelectedFile(null);
-    
-    toast({
-      title: 'Document Saved',
-      description: 'Your secure document has been saved.',
-    });
-  };
-  
-  // View a document
-  const viewDocument = (doc: SecureDocument) => {
-    setCurrentDocument(doc);
-    setNewTitle(doc.title);
-    setNewContent(doc.content);
-    setIsEditing(false);
-    setIsCreating(false);
-  };
-  
-  // Start editing a document
-  const startEditingDocument = () => {
-    setIsEditing(true);
-  };
-  
-  // Save edited document
-  const saveEditedDocument = () => {
-    if (!currentDocument) return;
-    
-    if (!newTitle.trim()) {
-      toast({
-        title: 'Title Required',
-        description: 'Please enter a title for your document.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    const updatedDoc = {
-      ...currentDocument,
-      title: newTitle,
-      content: newContent,
-      updatedAt: new Date().toISOString(),
-    };
-    
-    // Update file information if a file was selected
-    if (selectedFile) {
-      const fileURL = createFileURL(selectedFile);
-      updatedDoc.fileURL = fileURL;
-      updatedDoc.fileName = selectedFile.name;
-      updatedDoc.fileType = getFileExtension(selectedFile.name);
-      updatedDoc.fileSize = selectedFile.size;
-    }
-    
-    const updatedDocs = secureDocuments.map(doc => 
-      doc.id === currentDocument.id ? updatedDoc : doc
-    );
-    
-    setSecureDocuments(updatedDocs);
-    saveSecureDocuments(updatedDocs);
-    setCurrentDocument(updatedDoc);
-    setIsEditing(false);
-    setSelectedFile(null);
-    
-    toast({
-      title: 'Document Updated',
-      description: 'Your secure document has been updated.',
-    });
-  };
-  
-  // Delete a document
-  const deleteDocument = (id: string) => {
-    const updatedDocs = secureDocuments.filter(doc => doc.id !== id);
-    setSecureDocuments(updatedDocs);
-    saveSecureDocuments(updatedDocs);
-    
-    if (currentDocument?.id === id) {
-      setCurrentDocument(null);
-      setIsEditing(false);
-    }
-    
-    toast({
-      title: 'Document Deleted',
-      description: 'Your secure document has been deleted.',
-    });
-  };
-  
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  // Download a document file if available
   const downloadFile = (doc: SecureDocument) => {
     if (doc.fileURL) {
       const link = document.createElement('a');
       link.href = doc.fileURL;
-      link.download = doc.fileName || doc.title;
+      link.download = doc.fileName || 'document';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+    } else {
       toast({
-        title: 'Document Downloaded',
-        description: `${doc.title} has been downloaded.`,
+        title: "Error",
+        description: "No file attached to this document.",
+        variant: "destructive",
       });
     }
   };
 
-  // Get file type icon or info
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
   const getFileTypeInfo = (doc: SecureDocument) => {
-    if (!doc.fileType) return { icon: FileText, text: 'Document' };
-    
-    const type = doc.fileType.toLowerCase();
-    if (['pdf'].includes(type)) {
-      return { icon: FileText, text: 'PDF' };
-    } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(type)) {
-      return { icon: FileText, text: 'Image' };
-    } else if (['doc', 'docx'].includes(type)) {
-      return { icon: FileText, text: 'Word' };
-    } else if (['xls', 'xlsx'].includes(type)) {
-      return { icon: FileText, text: 'Excel' };
+    if (!doc.fileType) return { text: 'Document', color: 'indigo' };
+
+    if (doc.fileType.startsWith('image')) {
+      return { text: 'Image', color: 'green' };
+    } else if (doc.fileType.startsWith('video')) {
+      return { text: 'Video', color: 'blue' };
+    } else if (doc.fileType === 'application/pdf') {
+      return { text: 'PDF', color: 'red' };
     } else {
-      return { icon: FileText, text: 'File' };
+      return { text: 'File', color: 'indigo' };
     }
   };
-  
+
+  const handleChangePassword = () => {
+    if (currentPassword !== storedPassword) {
+      toast({
+        title: "Error",
+        description: "Incorrect current password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      toast({
+        title: "Error",
+        description: "New passwords do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Error",
+        description: "New password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    localStorage.setItem('lockerPassword', newPassword);
+    setStoredPassword(newPassword);
+    setIsLocked(true);
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmNewPassword('');
+    setIsChangePasswordOpen(false);
+
+    toast({
+      title: "Password Changed",
+      description: "Your Suraksha Locker password has been changed successfully!",
+    });
+  };
+
   return (
     <BlurContainer className="p-6 animate-fade-in dark:bg-slate-800/70 dark:border-slate-700">
       <div className="mb-4 flex items-center gap-3">
@@ -485,7 +385,6 @@ const SurakshaLocker = () => {
         </div>
       ) : (
         <div>
-          {/* Important: Change Password button in the header actions */}
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-base font-medium">Your Secure Documents</h3>
             <div className="flex gap-2">
@@ -602,7 +501,6 @@ const SurakshaLocker = () => {
             </div>
           </div>
           
-          {/* ... keep existing code (document grid and other UI components) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1 border rounded-lg h-[500px] overflow-y-auto p-2">
               {secureDocuments.length === 0 ? (
@@ -919,4 +817,88 @@ const SurakshaLocker = () => {
                       {currentDocument.fileURL && (
                         <div className="mb-4 p-4 border rounded-md bg-slate-50 dark:bg-slate-800/50">
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-indigo-100 rounded-lg flex items-center
+                            <div className="h-10 w-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                              <FileText className="h-6 w-6 text-indigo-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{currentDocument.fileName || "Attached Document"}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">
+                                  {currentDocument.fileType ? currentDocument.fileType.toUpperCase() : "Document"}
+                                </span>
+                                {currentDocument.fileSize && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {(currentDocument.fileSize / 1024).toFixed(1)} KB
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="ml-auto">
+                              <Button
+                                size="sm"
+                                onClick={() => downloadFile(currentDocument)}
+                                className="flex items-center gap-1.5"
+                              >
+                                <Download className="h-4 w-4" /> Download
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Due date information */}
+                      {currentDocument.dueDate && (
+                        <div className="mb-4 p-4 border rounded-md bg-amber-50 dark:bg-amber-900/20">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                              <FileText className="h-6 w-6 text-amber-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Due Date</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-amber-700">
+                                  {formatDate(currentDocument.dueDate)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Category information */}
+                      {currentDocument.category && (
+                        <div className="mb-4">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                            {currentDocument.category}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                  <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
+                    <FileText className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">No document selected</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Select a document from the list or create a new one.
+                  </p>
+                  <Button 
+                    onClick={startCreatingDocument}
+                    className="bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Create New Document
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </BlurContainer>
+  );
+};
+
+export default SurakshaLocker;

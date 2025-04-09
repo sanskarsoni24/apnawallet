@@ -1,8 +1,13 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { ModeToggle } from "@/components/ui/mode-toggle";
+
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { MobileNav } from "../ui/sidebar";
+import SurakshitLogo from "../ui/SurakshitLogo";
+import { Bell, Menu, User, HelpCircle } from "lucide-react";
+import { ModeToggle } from "../ui/mode-toggle";
 import { useUser } from "@/contexts/UserContext";
+import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,228 +15,223 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
-import {
-  Menu,
-  X,
-  User,
-  LogOut,
-  Settings,
-  FileText,
-  Home,
-  Shield,
-  CreditCard,
-  Smartphone,
-} from "lucide-react";
-import SurakshitLogo from "../ui/SurakshitLogo";
+} from "../ui/dropdown-menu";
+import MobileBanner from "../ui/MobileBanner";
 
 const Header = () => {
-  const { isLoggedIn, displayName, logout } = useUser();
   const location = useLocation();
-  const isMobile = useIsMobile();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const { isAuthenticated, displayName, email, userSettings, avatarUrl, logout } = useUser();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
 
-  const closeMenu = () => {
-    setIsMenuOpen(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 20;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [scrolled]);
+
+  useEffect(() => {
+    // Close mobile menu when route changes
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Check if the user is on a mobile device
+  useEffect(() => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+    
+    // Show mobile banner if user is on mobile and hasn't dismissed it
+    if (isMobile) {
+      const dismissed = localStorage.getItem("mobile_banner_dismissed") === "true";
+      if (!dismissed) {
+        setShowBanner(true);
+      }
+    }
+  }, []);
+
+  const handleDismissBanner = () => {
+    setShowBanner(false);
+    localStorage.setItem("mobile_banner_dismissed", "true");
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-  };
-
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
-  const navLinks = [
-    {
-      name: "Dashboard",
-      path: "/dashboard",
-      icon: <Home className="h-4 w-4 mr-2" />,
-    },
-    {
-      name: "Documents",
-      path: "/documents",
-      icon: <FileText className="h-4 w-4 mr-2" />,
-    },
-    {
-      name: "Security Vault",
-      path: "/locker",
-      icon: <Shield className="h-4 w-4 mr-2" />,
-    },
-    {
-      name: "Pricing",
-      path: "/pricing",
-      icon: <CreditCard className="h-4 w-4 mr-2" />,
-    },
-    {
-      name: "Mobile App",
-      path: "/mobile-app",
-      icon: <Smartphone className="h-4 w-4 mr-2" />,
-    },
+  const navItems = [
+    { name: "Dashboard", path: "/dashboard" },
+    { name: "Documents", path: "/documents" },
+    { name: "Mobile App", path: "/mobile-app" },
+    { name: "Pricing", path: "/pricing" },
+    { name: "Help", path: "/help" },
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center gap-2">
-            <SurakshitLogo />
-            <span className="font-bold text-xl hidden sm:inline-block">
-              SurakshitLocker
-            </span>
-          </Link>
-        </div>
+    <>
+      {showBanner && <MobileBanner onDismiss={handleDismissBanner} />}
+      <header
+        className={`fixed top-0 left-0 right-0 z-40 ${
+          scrolled ? "bg-background/80 backdrop-blur-md shadow-sm" : "bg-transparent"
+        } transition-all duration-200`}
+      >
+        <div className="container flex h-16 items-center justify-between">
+          <div className="flex items-center gap-6">
+            <Link to="/" className="flex items-center gap-2">
+              <SurakshitLogo size="sm" />
+              <span className="font-semibold text-xl hidden sm:inline-block">
+                SurakshitLocker
+              </span>
+            </Link>
 
-        {/* Desktop Navigation */}
-        {!isMobile && (
-          <nav className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={cn(
-                  "flex items-center text-sm font-medium transition-colors hover:text-primary",
-                  isActive(link.path)
-                    ? "text-primary"
-                    : "text-muted-foreground"
-                )}
-              >
-                {link.name}
-              </Link>
-            ))}
-          </nav>
-        )}
-
-        <div className="flex items-center gap-2">
-          <ModeToggle />
-
-          {isLoggedIn ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-8 w-8 rounded-full"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/avatars/01.png" alt={displayName} />
-                    <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {displayName}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      User Account
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/profile" className="flex cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
+            <nav className="hidden md:flex items-center gap-6">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path || 
+                               (item.path === "/dashboard" && location.pathname === "/");
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`text-sm font-medium transition-colors hover:text-primary ${
+                      isActive
+                        ? "text-foreground"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {item.name}
                   </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/settings" className="flex cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => logout()}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" asChild>
-                <Link to="/sign-in">Sign In</Link>
-              </Button>
-              <Button asChild>
-                <Link to="/sign-up">Sign Up</Link>
-              </Button>
-            </div>
-          )}
+                );
+              })}
+            </nav>
+          </div>
 
-          {/* Mobile Menu */}
-          {isMobile && (
-            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-              <SheetTrigger asChild>
+          <div className="flex items-center gap-2">
+            <Link 
+              to="/help" 
+              className="md:hidden text-muted-foreground hover:text-primary transition-colors"
+            >
+              <HelpCircle className="h-5 w-5" />
+            </Link>
+
+            <ModeToggle />
+            
+            {isAuthenticated ? (
+              <>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="md:hidden"
-                  aria-label="Toggle Menu"
+                  className="relative"
+                  onClick={() => navigate("/settings?tab=notifications")}
                 >
-                  {isMenuOpen ? (
-                    <X className="h-5 w-5" />
-                  ) : (
-                    <Menu className="h-5 w-5" />
+                  <Bell className="h-5 w-5" />
+                  {userSettings?.unreadNotifications > 0 && (
+                    <span className="absolute top-1 right-1.5 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
                   )}
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="left">
-                <SheetHeader>
-                  <SheetTitle>
-                    <Link
-                      to="/"
-                      className="flex items-center gap-2"
-                      onClick={closeMenu}
-                    >
-                      <SurakshitLogo />
-                      <span className="font-bold text-xl">SurakshitLocker</span>
-                    </Link>
-                  </SheetTitle>
-                </SheetHeader>
-                <nav className="flex flex-col gap-4 mt-8">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.path}
-                      to={link.path}
-                      className={cn(
-                        "flex items-center px-4 py-2 text-sm font-medium rounded-md",
-                        isActive(link.path)
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:bg-muted"
-                      )}
-                      onClick={closeMenu}
-                    >
-                      {link.icon}
-                      {link.name}
-                    </Link>
-                  ))}
-                </nav>
-              </SheetContent>
-            </Sheet>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="overflow-hidden rounded-full">
+                      <Avatar className="h-8 w-8">
+                        {avatarUrl ? (
+                          <AvatarImage src={avatarUrl} alt={displayName || ""} />
+                        ) : (
+                          <AvatarFallback>
+                            {(displayName || email || "U").charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/profile")}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/documents")}>
+                      Documents
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/settings")}>
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link to="/sign-in">Login</Link>
+                </Button>
+                <Button asChild className="bg-indigo-600 hover:bg-indigo-700">
+                  <Link to="/sign-up">Sign up free</Link>
+                </Button>
+              </>
+            )}
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setMobileMenuOpen(true)}
+            >
+              <Menu className="h-6 w-6" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Navigation */}
+      <MobileNav open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)}>
+        <div className="flex flex-col gap-4 p-4">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className="flex items-center py-2 text-base font-medium"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {item.name}
+            </Link>
+          ))}
+          
+          {!isAuthenticated && (
+            <div className="flex flex-col gap-2 mt-4 pt-4 border-t">
+              <Link 
+                to="/sign-in" 
+                className="w-full py-2 text-center"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Login
+              </Link>
+              <Link 
+                to="/sign-up" 
+                className="w-full bg-indigo-600 text-white py-2 rounded-md text-center"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign up free
+              </Link>
+            </div>
           )}
         </div>
-      </div>
-    </header>
+      </MobileNav>
+
+      <div className="pb-16"></div>
+    </>
   );
 };
 

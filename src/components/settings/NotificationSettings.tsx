@@ -1,346 +1,380 @@
-import React, { useState, useEffect } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import BlurContainer from '@/components/ui/BlurContainer';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Bell, Volume2, VolumeX, Save, Mail, AlertCircle } from 'lucide-react';
-import { speakNotification, getAvailableVoices, updateVoiceSettings, getVoiceSettings, sendEmailNotification, verifyEmailNotifications } from '@/services/NotificationService';
-import { toast } from '@/hooks/use-toast';
-import { Slider } from '@/components/ui/slider';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { useUser } from '@/contexts/UserContext';
 
-interface NotificationSettingsProps {
-  settings: {
-    emailNotifications: boolean;
-    pushNotifications: boolean;
-    voiceReminders: boolean;
-    reminderDays: number;
-    voiceType: string;
-  };
-  saveSettings: (settings: any) => void;
-}
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { useUser } from "@/contexts/UserContext";
+import { Slider } from "@/components/ui/slider";
+import { getVoiceSettings, updateVoiceSettings, testVoiceSettings, getAvailableVoices, verifyEmailNotifications, sendEmailNotification } from "@/services/NotificationService";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info, AlertTriangle, Mail } from "lucide-react";
 
-const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsProps) => {
-  const [localSettings, setLocalSettings] = useState({
-    emailNotifications: settings.emailNotifications,
-    pushNotifications: settings.pushNotifications,
-    voiceReminders: settings.voiceReminders,
-    reminderDays: settings.reminderDays.toString(),
-    voiceType: settings.voiceType
-  });
-  
+export default function NotificationSettings() {
+  const { userSettings, updateUserSettings, email } = useUser();
+  const [reminderDays, setReminderDays] = useState<number>(3);
+  const [voiceVolume, setVoiceVolume] = useState<number>(80);
+  const [voiceRate, setVoiceRate] = useState<number>(100);
+  const [voicePitch, setVoicePitch] = useState<number>(100);
+  const [selectedVoice, setSelectedVoice] = useState<string>("");
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [voiceVolume, setVoiceVolume] = useState(0.8);
-  const [voiceRate, setVoiceRate] = useState(1.0);
-  const [voicePitch, setVoicePitch] = useState(1.0);
-  const [showEmailTest, setShowEmailTest] = useState(false);
-  const { email } = useUser();
-  
+  const [voiceSupported, setVoiceSupported] = useState<boolean>(false);
+  const [emailVerified, setEmailVerified] = useState<boolean>(false);
+  const [isTestingEmail, setIsTestingEmail] = useState<boolean>(false);
+  const [testEmailInput, setTestEmailInput] = useState<string>("");
+
   useEffect(() => {
-    // Get available voices
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      // Some browsers need a timeout to properly load the voices
-      setTimeout(() => {
-        const voices = getAvailableVoices();
-        setAvailableVoices(voices);
-      }, 200);
+    // Initialize values from userSettings
+    if (userSettings) {
+      setReminderDays(userSettings.reminderDays || 3);
       
-      // Load current voice settings
-      const currentSettings = getVoiceSettings();
-      setVoiceVolume(currentSettings.volume);
-      setVoiceRate(currentSettings.rate);
-      setVoicePitch(currentSettings.pitch);
+      const voiceSettings = getVoiceSettings();
+      setVoiceVolume(voiceSettings.volume * 100);
+      setVoiceRate(voiceSettings.rate * 100);
+      setVoicePitch(voiceSettings.pitch * 50);
+      setSelectedVoice(voiceSettings.voiceName || "");
+
+      // Check if voice synthesis is supported
+      setVoiceSupported(typeof window !== "undefined" && window.speechSynthesis !== undefined);
+      
+      // Load available voices
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        const loadVoices = () => {
+          const voices = getAvailableVoices();
+          setAvailableVoices(voices);
+          
+          // If we have voices and none is selected, select the first one
+          if (voices.length > 0 && !voiceSettings.voiceName) {
+            setSelectedVoice(voices[0].name);
+            updateVoiceSettings({ voiceName: voices[0].name });
+          }
+        };
+        
+        loadVoices();
+        
+        // Chrome loads voices asynchronously, so we need this event
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+          window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+      }
+      
+      // Check email verification status
+      if (email && userSettings.emailNotifications) {
+        const emailStatus = verifyEmailNotifications(email);
+        setEmailVerified(emailStatus.configured && emailStatus.enabled);
+      }
     }
-    
-    // Check if email notification was recently enabled
-    if (localSettings.emailNotifications) {
-      setShowEmailTest(true);
-    }
-  }, [localSettings.emailNotifications]);
-  
-  const handleCheck = (field: string, value: boolean) => {
-    setLocalSettings({ ...localSettings, [field]: value });
-    
-    // Show email test option when email notifications are enabled
-    if (field === 'emailNotifications' && value) {
-      setShowEmailTest(true);
-    }
-  };
-  
-  const handleChange = (field: string, value: string) => {
-    setLocalSettings({ ...localSettings, [field]: value });
-  };
-  
-  const handleSave = () => {
-    // Save notification settings
-    saveSettings({
-      emailNotifications: localSettings.emailNotifications,
-      pushNotifications: localSettings.pushNotifications,
-      voiceReminders: localSettings.voiceReminders,
-      reminderDays: parseInt(localSettings.reminderDays),
-      voiceType: localSettings.voiceType
+  }, [userSettings, email]);
+
+  const handleEmailToggle = (checked: boolean) => {
+    updateUserSettings({
+      ...userSettings,
+      emailNotifications: checked,
     });
     
-    // Save voice settings
-    updateVoiceSettings({
-      volume: voiceVolume,
-      rate: voiceRate,
-      pitch: voicePitch,
-      voiceName: localSettings.voiceType
-    });
-    
-    toast({
-      title: "Settings Saved",
-      description: "Your notification preferences have been updated.",
-    });
-    
-    if (localSettings.pushNotifications && Notification.permission !== 'granted') {
-      requestNotificationPermission();
-    }
-    
-    // Send test email notification if email notifications are enabled and we have a valid email
-    if (localSettings.emailNotifications && email && showEmailTest) {
-      sendTestEmailNotification();
-      setShowEmailTest(false); // Don't show test option again until re-enabled
-    }
-  };
-  
-  const requestNotificationPermission = () => {
-    if ('Notification' in window) {
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
+    if (checked && email) {
+      // Set a small delay so the user sees the loading state
+      setTimeout(() => {
+        const emailStatus = verifyEmailNotifications(email);
+        setEmailVerified(emailStatus.configured);
+        
+        if (emailStatus.configured) {
           toast({
-            title: "Notifications Enabled",
-            description: "You'll now receive push notifications for document reminders."
+            title: "Email notifications enabled",
+            description: "You will receive notifications about your documents via email."
+          });
+        }
+      }, 500);
+    }
+  };
+
+  const handlePushToggle = (checked: boolean) => {
+    updateUserSettings({
+      ...userSettings,
+      pushNotifications: checked,
+    });
+    
+    if (checked && "Notification" in window) {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          toast({
+            title: "Push notifications enabled",
+            description: "You will receive notifications about your documents."
           });
         } else {
-          toast({
-            title: "Notifications Declined",
-            description: "Push notifications were not allowed by your browser.",
-            variant: "destructive"
+          updateUserSettings({
+            ...userSettings,
+            pushNotifications: false,
           });
           
-          // Update local state to reflect actual status
-          setLocalSettings(prev => ({...prev, pushNotifications: false}));
+          toast({
+            title: "Permission denied",
+            description: "You need to allow notifications in your browser settings.",
+            variant: "destructive"
+          });
         }
       });
     }
   };
+
+  const handleVoiceToggle = (checked: boolean) => {
+    updateUserSettings({
+      ...userSettings,
+      voiceReminders: checked,
+    });
+    
+    if (checked && voiceSupported) {
+      // Test the voice
+      const testResult = testVoiceSettings();
+      
+      if (!testResult) {
+        toast({
+          title: "Voice synthesis not available",
+          description: "Your browser may not support voice synthesis.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
   
-  const sendTestEmailNotification = () => {
-    if (!email) {
+  const handleReminderDaysChange = (days: number) => {
+    setReminderDays(days);
+    updateUserSettings({
+      ...userSettings,
+      reminderDays: days,
+    });
+  };
+
+  const handleVoiceChange = (voice: string) => {
+    setSelectedVoice(voice);
+    updateVoiceSettings({ voiceName: voice });
+    updateUserSettings({
+      ...userSettings,
+      voiceType: voice,
+    });
+    
+    // Test the new voice
+    if (userSettings.voiceReminders) {
+      testVoiceSettings();
+    }
+  };
+
+  const handleVoiceVolumeChange = (value: number[]) => {
+    const volumeValue = value[0];
+    setVoiceVolume(volumeValue);
+    updateVoiceSettings({ volume: volumeValue / 100 });
+  };
+
+  const handleVoiceRateChange = (value: number[]) => {
+    const rateValue = value[0];
+    setVoiceRate(rateValue);
+    updateVoiceSettings({ rate: rateValue / 100 });
+  };
+
+  const handleVoicePitchChange = (value: number[]) => {
+    const pitchValue = value[0];
+    setVoicePitch(pitchValue);
+    updateVoiceSettings({ pitch: pitchValue / 50 });
+  };
+  
+  const testVoice = () => {
+    testVoiceSettings();
+  };
+  
+  const sendTestEmail = async () => {
+    if (!testEmailInput && !email) {
       toast({
-        title: "Email Required",
-        description: "Please add an email address in your account settings.",
-        variant: "destructive",
+        title: "Email required",
+        description: "Please enter an email address to send a test notification.",
+        variant: "destructive"
       });
       return;
     }
     
-    const emailBody = `
-Dear SurakshitLocker User,
-
-This is a test email to confirm that your email notifications are working correctly.
-
-You will now receive important notifications about your documents, including:
-- Documents that are due soon
-- Documents that have expired
-- Important security alerts
-
-Thank you for using SurakshitLocker!
-    `;
+    const targetEmail = testEmailInput || email;
     
-    const success = sendEmailNotification(
-      email,
-      "SurakshitLocker - Email Notifications Test",
-      emailBody
-    );
+    setIsTestingEmail(true);
     
-    if (success) {
+    try {
+      const result = sendEmailNotification(
+        targetEmail,
+        "SurakshitLocker - Test Notification",
+        `Hello,\n\nThis is a test email notification from SurakshitLocker.\n\nYou will receive notifications about your documents at this email address.\n\nThank you for using SurakshitLocker!`
+      );
+      
+      if (result) {
+        toast({
+          title: "Test email sent",
+          description: `A test notification was sent to ${targetEmail}`
+        });
+        
+        setEmailVerified(true);
+      } else {
+        toast({
+          title: "Failed to send test email",
+          description: "Please try again or contact support.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error sending test email:", error);
       toast({
-        title: "Test Email Sent",
-        description: `A test notification has been sent to ${email}`,
-      });
-    }
-  };
-  
-  const previewVoice = () => {
-    const previewText = "This is a preview of your voice reminder from SurakshitLocker. Your documents are due soon!";
-    
-    // Pass proper voice options
-    const voiceOptions = {
-      voiceName: localSettings.voiceType,
-      volume: voiceVolume,
-      rate: voiceRate,
-      pitch: voicePitch
-    };
-    
-    const success = speakNotification(previewText, voiceOptions);
-    
-    if (!success) {
-      toast({
-        title: "Voice Preview Failed",
-        description: "Your browser may not support speech synthesis.",
+        title: "Error sending email",
+        description: "Please try again later.",
         variant: "destructive"
       });
-    } else {
-      toast({
-        title: "Playing Voice Preview",
-        description: "Listen to your selected voice settings."
-      });
+    } finally {
+      setIsTestingEmail(false);
     }
   };
-  
+
   return (
-    <BlurContainer className="p-8 dark:bg-slate-800/70 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900/80 dark:to-slate-800/80">
-      <div className="mb-6 flex items-center gap-3">
-        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/40 flex items-center justify-center shadow-sm">
-          <Bell className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400 bg-clip-text text-transparent">Notification Settings</h2>
-          <p className="text-sm text-muted-foreground dark:text-slate-400">Configure how you want to be notified about document expiries</p>
-        </div>
-      </div>
-      
-      <div className="space-y-6">
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
-          <h3 className="font-medium mb-4 text-slate-800 dark:text-slate-200">Notification Channels</h3>
-          
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <Checkbox
-                id="emailNotifications"
-                checked={localSettings.emailNotifications}
-                onCheckedChange={(checked) => handleCheck('emailNotifications', checked as boolean)}
-              />
-              <div className="grid gap-1.5">
-                <label
-                  htmlFor="emailNotifications"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-white"
-                >
-                  Email Notifications
-                </label>
-                <p className="text-sm text-muted-foreground dark:text-slate-400">
-                  Receive email notifications for important document reminders
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Notifications</CardTitle>
+          <CardDescription>Configure how you want to be notified about your documents.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Email Notifications */}
+          <div className="flex flex-col space-y-1.5">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="email-notifications">Email Notifications</Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive notifications about your documents via email
                 </p>
               </div>
+              <Switch
+                id="email-notifications"
+                checked={userSettings.emailNotifications !== false}
+                onCheckedChange={handleEmailToggle}
+              />
             </div>
             
-            {localSettings.emailNotifications && showEmailTest && (
-              <div className="ml-7 mt-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={sendTestEmailNotification}
-                  className="flex items-center gap-2 text-sm"
-                >
-                  <Mail className="h-3.5 w-3.5" />
-                  Send Test Email
-                </Button>
-                <p className="text-xs text-muted-foreground mt-1 dark:text-slate-400">
-                  {email ? `A test notification will be sent to ${email}` : "Please add an email in account settings"}
-                </p>
-              </div>
-            )}
-            
-            {localSettings.emailNotifications && !email && (
-              <Alert variant="warning" className="ml-7 mt-2 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/30">
-                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                <AlertTitle className="text-amber-800 dark:text-amber-300">Email address required</AlertTitle>
-                <AlertDescription className="text-amber-700 dark:text-amber-400">
-                  Please add an email address in your account settings to receive email notifications.
+            {/* Email verification alert */}
+            {userSettings.emailNotifications && email && !emailVerified && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Email notifications are not verified. Please send a test email to verify.
                 </AlertDescription>
               </Alert>
             )}
             
-            <div className="flex items-start space-x-3">
-              <Checkbox
-                id="pushNotifications"
-                checked={localSettings.pushNotifications}
-                onCheckedChange={(checked) => handleCheck('pushNotifications', checked as boolean)}
-              />
-              <div className="grid gap-1.5">
-                <label
-                  htmlFor="pushNotifications"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-white"
-                >
-                  Push Notifications
-                </label>
-                <p className="text-sm text-muted-foreground dark:text-slate-400">
-                  Receive browser notifications when documents are about to expire
-                </p>
+            {/* Test email section */}
+            {userSettings.emailNotifications && (
+              <div className="pt-2 space-y-3">
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="test-email">Send test notification to:</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="test-email"
+                      placeholder={email || "Enter email address"}
+                      value={testEmailInput}
+                      onChange={(e) => setTestEmailInput(e.target.value)}
+                    />
+                    <Button 
+                      onClick={sendTestEmail}
+                      disabled={isTestingEmail}
+                      size="sm"
+                    >
+                      {isTestingEmail ? (
+                        "Sending..."
+                      ) : (
+                        <>
+                          <Mail className="mr-1 h-4 w-4" />
+                          Test
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex items-start space-x-3">
-              <Checkbox
-                id="voiceReminders"
-                checked={localSettings.voiceReminders}
-                onCheckedChange={(checked) => handleCheck('voiceReminders', checked as boolean)}
-              />
-              <div className="grid gap-1.5">
-                <label
-                  htmlFor="voiceReminders"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-white"
-                >
-                  Voice Reminders
-                </label>
-                <p className="text-sm text-muted-foreground dark:text-slate-400">
-                  Get spoken reminders for urgent document deadlines
-                </p>
-              </div>
-            </div>
+            )}
           </div>
-        </div>
-        
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
-          <h3 className="font-medium mb-4 text-slate-800 dark:text-slate-200">Reminder Settings</h3>
           
-          <div className="space-y-4">
-            <div className="space-y-3">
-              <label className="text-sm font-medium dark:text-white">Reminder Days</label>
-              <p className="text-sm text-muted-foreground dark:text-slate-400">
-                How many days before expiry should we notify you?
+          {/* Push Notifications */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="push-notifications">Push Notifications</Label>
+              <p className="text-sm text-muted-foreground">
+                Receive notifications about your documents in your browser
               </p>
-              <Select value={localSettings.reminderDays} onValueChange={(value) => handleChange('reminderDays', value)}>
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Select days" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 day before</SelectItem>
-                  <SelectItem value="3">3 days before</SelectItem>
-                  <SelectItem value="7">7 days before</SelectItem>
-                  <SelectItem value="14">14 days before</SelectItem>
-                  <SelectItem value="30">30 days before</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
+            <Switch
+              id="push-notifications"
+              checked={userSettings.pushNotifications || false}
+              onCheckedChange={handlePushToggle}
+            />
           </div>
-        </div>
-        
-        {localSettings.voiceReminders && (
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
-            <h3 className="font-medium mb-4 flex items-center gap-2 text-slate-800 dark:text-slate-200">
-              <Volume2 className="h-4 w-4 text-amber-500" />
-              Voice Settings
-            </h3>
+          
+          {/* Voice Reminders */}
+          <div className="flex flex-col space-y-1.5">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="voice-reminders">Voice Reminders</Label>
+                <p className="text-sm text-muted-foreground">
+                  Enable voice notifications for document reminders
+                </p>
+              </div>
+              <Switch
+                id="voice-reminders"
+                checked={userSettings.voiceReminders || false}
+                onCheckedChange={handleVoiceToggle}
+                disabled={!voiceSupported}
+              />
+            </div>
             
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <label className="text-sm font-medium dark:text-white">Voice Type</label>
-                <Select 
-                  value={localSettings.voiceType} 
-                  onValueChange={(value) => handleChange('voiceType', value)}
+            {!voiceSupported && (
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Voice reminders are not supported in your current browser.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+          
+          {/* Reminder Days in Advance */}
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="reminder-days">Reminder Days in Advance: {reminderDays} {reminderDays === 1 ? 'day' : 'days'}</Label>
+              <p className="text-sm text-muted-foreground">
+                How many days before due date to send reminders
+              </p>
+            </div>
+            <Slider
+              id="reminder-days"
+              min={1}
+              max={30}
+              step={1}
+              value={[reminderDays]}
+              onValueChange={(value) => handleReminderDaysChange(value[0])}
+            />
+          </div>
+          
+          {/* Voice Settings */}
+          {userSettings.voiceReminders && voiceSupported && (
+            <div className="space-y-4 pt-2 border-t">
+              <h3 className="text-sm font-medium">Voice Settings</h3>
+              
+              {/* Voice Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="voice-selection">Voice</Label>
+                <Select
+                  value={selectedVoice}
+                  onValueChange={handleVoiceChange}
                 >
-                  <SelectTrigger className="w-full md:w-[300px]">
-                    <SelectValue placeholder="Select voice" />
+                  <SelectTrigger id="voice-selection">
+                    <SelectValue placeholder="Select a voice" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="default">Default</SelectItem>
-                    {availableVoices.map((voice, index) => (
-                      <SelectItem key={index} value={voice.name}>
+                    {availableVoices.map((voice) => (
+                      <SelectItem key={voice.name} value={voice.name}>
                         {voice.name} ({voice.lang})
                       </SelectItem>
                     ))}
@@ -348,87 +382,58 @@ Thank you for using SurakshitLocker!
                 </Select>
               </div>
               
-              <div className="space-y-6 pt-2">
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <label className="text-sm font-medium dark:text-white">Volume</label>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{Math.round(voiceVolume * 100)}%</span>
-                  </div>
-                  <Slider
-                    defaultValue={[voiceVolume * 100]}
-                    max={100}
-                    step={10}
-                    onValueChange={(value) => setVoiceVolume(value[0] / 100)}
-                    className="w-full"
-                  />
+              {/* Volume Control */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="voice-volume">Volume: {voiceVolume}%</Label>
                 </div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <label className="text-sm font-medium dark:text-white">Speed</label>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{voiceRate.toFixed(1)}x</span>
-                  </div>
-                  <Slider
-                    defaultValue={[voiceRate * 50]}
-                    max={100}
-                    step={5}
-                    onValueChange={(value) => setVoiceRate(value[0] / 50)}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <label className="text-sm font-medium dark:text-white">Pitch</label>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{voicePitch.toFixed(1)}</span>
-                  </div>
-                  <Slider
-                    defaultValue={[voicePitch * 50]}
-                    max={100}
-                    step={5}
-                    onValueChange={(value) => setVoicePitch(value[0] / 50)}
-                    className="w-full"
-                  />
-                </div>
+                <Slider
+                  id="voice-volume"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={[voiceVolume]}
+                  onValueChange={handleVoiceVolumeChange}
+                />
               </div>
               
-              <div className="pt-2 flex items-center justify-between">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-2"
-                  onClick={previewVoice}
-                >
-                  <Volume2 className="h-4 w-4" />
-                  Play Voice Preview
-                </Button>
-                
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="flex items-center gap-2 text-muted-foreground"
-                  onClick={() => window.speechSynthesis?.cancel()}
-                >
-                  <VolumeX className="h-4 w-4" />
-                  Stop
-                </Button>
+              {/* Rate Control */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="voice-rate">Speed: {voiceRate}%</Label>
+                </div>
+                <Slider
+                  id="voice-rate"
+                  min={50}
+                  max={200}
+                  step={10}
+                  value={[voiceRate]}
+                  onValueChange={handleVoiceRateChange}
+                />
               </div>
+              
+              {/* Pitch Control */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="voice-pitch">Pitch: {voicePitch}%</Label>
+                </div>
+                <Slider
+                  id="voice-pitch"
+                  min={50}
+                  max={150}
+                  step={10}
+                  value={[voicePitch]}
+                  onValueChange={handleVoicePitchChange}
+                />
+              </div>
+              
+              <Button onClick={testVoice} variant="outline" size="sm">
+                Test Voice
+              </Button>
             </div>
-          </div>
-        )}
-      </div>
-      
-      <div className="mt-6 flex justify-end">
-        <Button 
-          onClick={handleSave}
-          className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white flex gap-2"
-        >
-          <Save className="h-4 w-4" />
-          Save Settings
-        </Button>
-      </div>
-    </BlurContainer>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
-};
-
-export default NotificationSettings;
+}

@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from "react";
-import { Upload, Camera, ArrowRight, Loader2, ScanSearch, Plus } from "lucide-react";
+import { Upload, Camera, ArrowRight, Loader2, ScanSearch, Plus, X, FileIcon } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { toast } from "@/hooks/use-toast";
 import { useDocuments, Document } from "@/contexts/DocumentContext";
@@ -12,10 +12,13 @@ import { Form, FormField, FormItem, FormLabel, FormControl } from "../ui/form";
 import { useForm } from "react-hook-form";
 import { processDocument } from "@/services/DocumentProcessingService";
 import { format, parse, isValid } from "date-fns";
+import { Badge } from "../ui/badge";
+import { ScrollArea } from "../ui/scroll-area";
 
 const DocumentUpload = () => {
   const [dragging, setDragging] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [currentFileIndex, setCurrentFileIndex] = useState<number>(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isScannerActive, setIsScannerActive] = useState(false);
@@ -23,8 +26,11 @@ const DocumentUpload = () => {
   const [customReminderDays, setCustomReminderDays] = useState<number>(3); // Default 3 days
   const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
   const [newDocumentType, setNewDocumentType] = useState("");
+  const [uploadProgress, setUploadProgress] = useState<number[]>([]);
+  const [bulkUploadMode, setBulkUploadMode] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { addDocument, documentTypes, addDocumentType } = useDocuments();
   
   const form = useForm({
@@ -38,10 +44,16 @@ const DocumentUpload = () => {
   
   const resetForm = () => {
     form.reset();
-    setSelectedFile(null);
     setIsProcessing(false);
     setScanStatus("");
     setCustomReminderDays(3);
+  };
+  
+  const resetUpload = () => {
+    setSelectedFiles([]);
+    setCurrentFileIndex(0);
+    setUploadProgress([]);
+    resetForm();
   };
   
   const handleDragOver = (e: React.DragEvent) => {
@@ -58,39 +70,92 @@ const DocumentUpload = () => {
     setDragging(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      await handleFile(file);
+      const files = Array.from(e.dataTransfer.files);
+      
+      // If multiple files, enter bulk upload mode
+      if (files.length > 1) {
+        setBulkUploadMode(true);
+        setSelectedFiles(files);
+        setUploadProgress(new Array(files.length).fill(0));
+        await handleFile(files[0], 0);
+      } else {
+        setBulkUploadMode(false);
+        setSelectedFiles([files[0]]);
+        await handleFile(files[0], 0);
+      }
     }
   };
   
   const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      await handleFile(file);
+      const files = Array.from(e.target.files);
+      
+      // If multiple files, enter bulk upload mode
+      if (files.length > 1) {
+        setBulkUploadMode(true);
+        setSelectedFiles(files);
+        setUploadProgress(new Array(files.length).fill(0));
+        await handleFile(files[0], 0);
+      } else {
+        setBulkUploadMode(false);
+        setSelectedFiles([files[0]]);
+        await handleFile(files[0], 0);
+      }
     }
   };
   
-  const handleFile = async (file: File) => {
-    setSelectedFile(file);
+  const handleFile = async (file: File, fileIndex: number) => {
+    setCurrentFileIndex(fileIndex);
     setIsDialogOpen(true);
     setIsProcessing(true);
     
     // Create a more visual processing experience
     setScanStatus("Analyzing document...");
     
+    // Update progress for this file
+    setUploadProgress(prev => {
+      const newProgress = [...prev];
+      newProgress[fileIndex] = 10;
+      return newProgress;
+    });
+    
     try {
       // Simulate document processing steps
       await new Promise(resolve => setTimeout(resolve, 800));
       setScanStatus("Extracting text...");
       
+      setUploadProgress(prev => {
+        const newProgress = [...prev];
+        newProgress[fileIndex] = 30;
+        return newProgress;
+      });
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       setScanStatus("Identifying document type...");
+      
+      setUploadProgress(prev => {
+        const newProgress = [...prev];
+        newProgress[fileIndex] = 50;
+        return newProgress;
+      });
       
       await new Promise(resolve => setTimeout(resolve, 800));
       setScanStatus("Detecting due dates...");
       
+      setUploadProgress(prev => {
+        const newProgress = [...prev];
+        newProgress[fileIndex] = 70;
+        return newProgress;
+      });
+      
       // Process document to extract information
       const extractedInfo = await processDocument(file);
+      
+      setUploadProgress(prev => {
+        const newProgress = [...prev];
+        newProgress[fileIndex] = 90;
+        return newProgress;
+      });
       
       await new Promise(resolve => setTimeout(resolve, 600));
       setScanStatus("Finalizing results...");
@@ -98,6 +163,9 @@ const DocumentUpload = () => {
       // Update form with extracted info
       if (extractedInfo.title) {
         form.setValue('title', extractedInfo.title);
+      } else {
+        // Use filename as title if no title detected
+        form.setValue('title', file.name.split('.')[0]);
       }
       
       if (extractedInfo.category && documentTypes.includes(extractedInfo.category)) {
@@ -145,6 +213,12 @@ const DocumentUpload = () => {
         }
       }
       
+      setUploadProgress(prev => {
+        const newProgress = [...prev];
+        newProgress[fileIndex] = 100;
+        return newProgress;
+      });
+      
       toast({
         title: "Document Processed",
         description: "Document information extracted successfully!",
@@ -164,10 +238,12 @@ const DocumentUpload = () => {
   };
   
   const handleSubmit = form.handleSubmit((data) => {
-    if (!selectedFile) {
+    const currentFile = selectedFiles[currentFileIndex];
+    
+    if (!currentFile) {
       toast({
         title: "Error",
-        description: "Please select a file to upload",
+        description: "No file selected",
         variant: "destructive",
       });
       return;
@@ -180,7 +256,7 @@ const DocumentUpload = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
     // Create file URL for preview
-    const fileURL = URL.createObjectURL(selectedFile);
+    const fileURL = URL.createObjectURL(currentFile);
     
     // Create document object with proper typing
     const newDocument: Document = {
@@ -201,9 +277,43 @@ const DocumentUpload = () => {
       description: `${data.title} has been uploaded successfully.`,
     });
     
-    resetForm();
-    setIsDialogOpen(false);
+    // If there are more files to process in bulk mode
+    if (bulkUploadMode && currentFileIndex < selectedFiles.length - 1) {
+      // Reset form for next file
+      resetForm();
+      
+      // Process the next file
+      const nextIndex = currentFileIndex + 1;
+      handleFile(selectedFiles[nextIndex], nextIndex);
+    } else {
+      // We're done with all files
+      resetForm();
+      setIsDialogOpen(false);
+      resetUpload();
+    }
   });
+  
+  const handleSkipCurrentFile = () => {
+    // If there are more files to process
+    if (bulkUploadMode && currentFileIndex < selectedFiles.length - 1) {
+      // Reset form for next file
+      resetForm();
+      
+      // Process the next file
+      const nextIndex = currentFileIndex + 1;
+      handleFile(selectedFiles[nextIndex], nextIndex);
+    } else {
+      // We're done with all files or skipping the only file
+      resetForm();
+      setIsDialogOpen(false);
+      resetUpload();
+    }
+    
+    toast({
+      title: "File skipped",
+      description: "Skipped processing this file",
+    });
+  };
   
   // Start document scanner using device camera
   const startScanner = async () => {
@@ -280,7 +390,10 @@ const DocumentUpload = () => {
           stopScanner();
           
           // Process captured image
-          await handleFile(capturedFile);
+          setBulkUploadMode(false);
+          setSelectedFiles([capturedFile]);
+          setCurrentFileIndex(0);
+          await handleFile(capturedFile, 0);
         }
       }, 'image/jpeg', 0.95);
     } catch (error) {
@@ -313,6 +426,31 @@ const DocumentUpload = () => {
     form.setValue("type", newDocumentType.trim());
   };
   
+  // Get file icon based on file type
+  const getFileIcon = (file: File) => {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    
+    if (!extension) return <FileIcon className="h-4 w-4" />;
+    
+    switch(extension) {
+      case 'pdf':
+        return <FileIcon className="h-4 w-4 text-red-500" />;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+        return <FileIcon className="h-4 w-4 text-blue-500" />;
+      case 'doc':
+      case 'docx':
+        return <FileIcon className="h-4 w-4 text-indigo-500" />;
+      case 'xls':
+      case 'xlsx':
+        return <FileIcon className="h-4 w-4 text-green-500" />;
+      default:
+        return <FileIcon className="h-4 w-4" />;
+    }
+  };
+  
   return (
     <>
       <BlurContainer 
@@ -322,6 +460,7 @@ const DocumentUpload = () => {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        id="upload-documents"
       >
         <div className="mx-auto flex max-w-xs flex-col items-center gap-3">
           <div className={`rounded-full p-3 ${
@@ -343,10 +482,12 @@ const DocumentUpload = () => {
             <label className="inline-flex h-9 items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer">
               Select documents
               <input 
+                ref={fileInputRef}
                 type="file" 
                 className="sr-only" 
                 onChange={handleInputChange} 
                 accept=".pdf,.jpg,.jpeg,.png,.tiff"
+                multiple
               />
             </label>
             
@@ -361,7 +502,7 @@ const DocumentUpload = () => {
           </div>
           
           <p className="text-xs text-muted-foreground">
-            Supports PDF, JPG, PNG, TIFF
+            Supports PDF, JPG, PNG, TIFF. Multiple files allowed.
           </p>
         </div>
       </BlurContainer>
@@ -466,10 +607,27 @@ const DocumentUpload = () => {
       </Dialog>
       
       {/* Document Details Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          resetForm();
+          // Don't reset selected files here, only close the dialog
+        }
+        setIsDialogOpen(open);
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Document Details</DialogTitle>
+            <DialogTitle>
+              {bulkUploadMode ? (
+                <span className="flex items-center gap-2">
+                  Document Details 
+                  <Badge variant="outline" className="ml-2">
+                    {currentFileIndex + 1} of {selectedFiles.length}
+                  </Badge>
+                </span>
+              ) : (
+                "Document Details"
+              )}
+            </DialogTitle>
             {scanStatus && (
               <DialogDescription>
                 <div className="flex items-center gap-2">
@@ -492,125 +650,209 @@ const DocumentUpload = () => {
               <p className="mt-6 text-center text-sm text-muted-foreground">
                 {scanStatus || "Processing document..."}
               </p>
-            </div>
-          ) : (
-            <Form {...form}>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Document Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Car Insurance" {...field} required />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex justify-between items-center">
-                        <FormLabel>Document Type</FormLabel>
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 px-2 text-xs text-indigo-600"
-                          onClick={() => setIsTypeDialogOpen(true)}
-                        >
-                          <Plus className="h-3 w-3 mr-1" /> Add Type
-                        </Button>
-                      </div>
-                      <FormControl>
-                        <select
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                          {...field}
-                        >
-                          {documentTypes.map((type) => (
-                            <option key={type} value={type}>
-                              {type}
-                            </option>
-                          ))}
-                        </select>
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Due Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} required />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="space-y-2">
-                  <FormLabel>Custom Reminder</FormLabel>
-                  <select
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    value={customReminderDays}
-                    onChange={(e) => setCustomReminderDays(Number(e.target.value))}
-                  >
-                    <option value="1">1 day before</option>
-                    <option value="3">3 days before</option>
-                    <option value="7">7 days before</option>
-                    <option value="14">14 days before</option>
-                    <option value="30">30 days before</option>
-                  </select>
-                  <p className="text-xs text-muted-foreground">
-                    Select when you want to be reminded about this document
+              
+              {/* Progress bar for bulk uploads */}
+              {bulkUploadMode && (
+                <div className="w-full mt-4">
+                  <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-indigo-600 transition-all duration-300"
+                      style={{ width: `${uploadProgress[currentFileIndex]}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-center mt-1 text-muted-foreground">
+                    Processing file {currentFileIndex + 1} of {selectedFiles.length}
                   </p>
                 </div>
-                
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Enter document description or notes" 
-                          className="min-h-20" 
-                          {...field} 
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => {
-                      resetForm();
-                      setIsDialogOpen(false);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
-                  >
-                    <span>Save Document</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* File preview */}
+              {selectedFiles.length > 0 && currentFileIndex < selectedFiles.length && (
+                <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-md mb-4">
+                  {getFileIcon(selectedFiles[currentFileIndex])}
+                  <div className="flex-1 overflow-hidden">
+                    <p className="text-sm font-medium truncate">
+                      {selectedFiles[currentFileIndex].name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {(selectedFiles[currentFileIndex].size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
                 </div>
-              </form>
-            </Form>
+              )}
+              
+              {/* Multiple files indicator */}
+              {bulkUploadMode && (
+                <div className="mb-4">
+                  <ScrollArea className="h-24">
+                    <div className="space-y-2">
+                      {selectedFiles.map((file, index) => (
+                        <div 
+                          key={index}
+                          className={`flex items-center gap-2 p-2 rounded-md ${index === currentFileIndex ? 'bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800' : ''}`}
+                        >
+                          {getFileIcon(file)}
+                          <div className="flex-1 overflow-hidden">
+                            <p className="text-xs truncate">
+                              {file.name}
+                            </p>
+                          </div>
+                          <Badge variant={index === currentFileIndex ? "default" : "outline"}>
+                            {uploadProgress[index] === 100 ? "Done" : 
+                             index < currentFileIndex ? "Done" : 
+                             index === currentFileIndex ? "Current" : "Pending"}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
+              
+              <Form {...form}>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Document Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Car Insurance" {...field} required />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex justify-between items-center">
+                          <FormLabel>Document Type</FormLabel>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 text-xs text-indigo-600"
+                            onClick={() => setIsTypeDialogOpen(true)}
+                          >
+                            <Plus className="h-3 w-3 mr-1" /> Add Type
+                          </Button>
+                        </div>
+                        <FormControl>
+                          <select
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            {...field}
+                          >
+                            {documentTypes.map((type) => (
+                              <option key={type} value={type}>
+                                {type}
+                              </option>
+                            ))}
+                          </select>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="dueDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Due Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} required />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="space-y-2">
+                    <FormLabel>Custom Reminder</FormLabel>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      value={customReminderDays}
+                      onChange={(e) => setCustomReminderDays(Number(e.target.value))}
+                    >
+                      <option value="1">1 day before</option>
+                      <option value="3">3 days before</option>
+                      <option value="7">7 days before</option>
+                      <option value="14">14 days before</option>
+                      <option value="30">30 days before</option>
+                    </select>
+                    <p className="text-xs text-muted-foreground">
+                      Select when you want to be reminded about this document
+                    </p>
+                  </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Enter document description or notes" 
+                            className="min-h-20" 
+                            {...field} 
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="flex justify-end gap-2 pt-2">
+                    {bulkUploadMode ? (
+                      <>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={handleSkipCurrentFile}
+                        >
+                          Skip
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                        >
+                          <span>
+                            {currentFileIndex < selectedFiles.length - 1 ? "Save & Continue" : "Save & Finish"}
+                          </span>
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => {
+                            resetForm();
+                            setIsDialogOpen(false);
+                            resetUpload();
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                        >
+                          <span>Save Document</span>
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </form>
+              </Form>
+            </>
           )}
         </DialogContent>
       </Dialog>

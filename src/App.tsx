@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Index from "./pages/Index";
 import Documents from "./pages/Documents";
@@ -21,6 +21,9 @@ import { checkForDueDocuments, createNotification, sendEmailNotification, verify
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import StripeCheckout from "./pages/StripeCheckout";
 import UserProfile from "./pages/UserProfile";
+import Help from "./pages/Help";
+import GuidedMessage, { GuideStep } from "./components/onboarding/GuidedMessage";
+import { getGuidesForPath, shouldShowGuide, markGuideAsCompleted } from "./services/OnboardingService";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +44,55 @@ const initializeTheme = () => {
   
   // Store the inferred preference
   localStorage.setItem('theme', prefersDark ? 'dark' : 'light');
+};
+
+// Onboarding guide component
+const OnboardingGuides = () => {
+  const location = useLocation();
+  const [currentGuide, setCurrentGuide] = useState<{id: string, steps: GuideStep[]} | null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
+  
+  useEffect(() => {
+    // Check for guides on path change
+    const path = location.pathname;
+    const guides = getGuidesForPath(path);
+    
+    if (guides.length > 0) {
+      // Find the first guide that should be shown
+      const guideToShow = guides.find(guide => shouldShowGuide(guide.id));
+      
+      if (guideToShow) {
+        // Short delay before showing guide
+        const timer = setTimeout(() => {
+          setCurrentGuide({
+            id: guideToShow.id,
+            steps: guideToShow.steps
+          });
+          setGuideOpen(true);
+        }, 1000);
+        
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [location]);
+  
+  const handleGuideComplete = () => {
+    if (currentGuide) {
+      markGuideAsCompleted(currentGuide.id);
+      setCurrentGuide(null);
+    }
+  };
+  
+  if (!currentGuide) return null;
+  
+  return (
+    <GuidedMessage
+      steps={currentGuide.steps}
+      isOpen={guideOpen}
+      onOpenChange={setGuideOpen}
+      onComplete={handleGuideComplete}
+    />
+  );
 };
 
 // NotificationCheck component to handle notifications
@@ -135,6 +187,7 @@ const App = () => {
             <Sonner />
             <NotificationCheck />
             <BrowserRouter>
+              <OnboardingGuides />
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Index defaultTab="dashboard" />} />
@@ -143,6 +196,7 @@ const App = () => {
                 <Route path="/sign-up" element={<SignUp />} />
                 <Route path="/mobile-app" element={<MobileApp />} />
                 <Route path="/download-app" element={<DownloadApp />} />
+                <Route path="/help" element={<Help />} />
                 <Route 
                   path="/documents" 
                   element={

@@ -17,7 +17,7 @@ interface IndexProps {
 
 const Index = ({ defaultTab = "locker" }: IndexProps) => {
   const { isLoggedIn } = useUser();
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "locker">(defaultTab);
   
   // Set the active tab when defaultTab changes
   useEffect(() => {
@@ -77,7 +77,12 @@ const Index = ({ defaultTab = "locker" }: IndexProps) => {
         </BlurContainer>
       </div>
       
-      <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs 
+        defaultValue={activeTab} 
+        value={activeTab} 
+        onValueChange={(value: "dashboard" | "locker") => setActiveTab(value)} 
+        className="w-full"
+      >
         <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto mb-8 bg-slate-100 dark:bg-slate-800/70 rounded-lg overflow-hidden">
           <TabsTrigger value="dashboard" className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white py-3 rounded-none">
             <div className="flex items-center gap-2">

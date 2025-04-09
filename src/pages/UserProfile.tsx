@@ -1,4 +1,3 @@
-
 import React from "react";
 import Container from "@/components/layout/Container";
 import { useUser } from "@/contexts/UserContext";
@@ -10,7 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 
 const UserProfile = () => {
-  const { user, email, displayName, logout } = useUser();
+  const { email, displayName, logout } = useUser();
   const navigate = useNavigate();
   
   // Get initial letters for avatar fallback
@@ -50,7 +49,7 @@ const UserProfile = () => {
           <BlurContainer className="p-8 md:col-span-2">
             <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={user?.photoURL || ""} alt={displayName || email} />
+                <AvatarImage src="" alt={displayName || email} />
                 <AvatarFallback className="text-xl bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
                   {getInitials()}
                 </AvatarFallback>

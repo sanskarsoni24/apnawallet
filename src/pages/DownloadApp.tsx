@@ -25,32 +25,44 @@ const DownloadApp = () => {
     }
   }, []);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     setDownloading(true);
     
     if (platform === "android") {
-      // Direct link to the APK file
-      const apkUrl = `${window.location.origin}/downloads/surakshitlocker.apk`;
-      
-      // Create an invisible iframe to trigger the download
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = apkUrl;
-      document.body.appendChild(iframe);
-      
-      // Also open in a new tab as a fallback
-      window.open(apkUrl, '_blank');
-      
-      toast({
-        title: "Download Started",
-        description: "The APK file should start downloading automatically. If not, check your downloads folder."
-      });
-      
-      // Clean up the iframe after a delay
-      setTimeout(() => {
-        document.body.removeChild(iframe);
+      try {
+        // Direct link to the APK file
+        const apkUrl = `${window.location.origin}/downloads/surakshitlocker.apk`;
+        
+        // Method 1: Use fetch to download binary file
+        const response = await fetch(apkUrl);
+        const blob = await response.blob();
+        
+        // Create a link element and trigger download
+        const downloadLink = document.createElement('a');
+        downloadLink.href = window.URL.createObjectURL(blob);
+        downloadLink.download = "surakshitlocker.apk";
+        downloadLink.style.display = 'none';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        
+        // Method 2: Direct link as backup
+        window.location.href = apkUrl;
+        
+        toast({
+          title: "Download Started",
+          description: "The APK file should start downloading. Check your downloads folder if it doesn't start automatically."
+        });
+      } catch (error) {
+        console.error("Download error:", error);
+        toast({
+          title: "Download Failed",
+          description: "There was a problem downloading the app. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
         setDownloading(false);
-      }, 2000);
+      }
     } else if (platform === "ios") {
       // For iOS, redirect to TestFlight
       window.location.href = "https://testflight.apple.com/join/surakshitlocker";

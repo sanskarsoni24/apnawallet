@@ -13,8 +13,8 @@ import SurakshitLogo from "@/components/ui/SurakshitLogo";
 import { Link } from "react-router-dom";
 
 const MobileApp = () => {
-  const [appLink, setAppLink] = useState("");
-  const [androidAppLink, setAndroidAppLink] = useState("");
+  const [downloadPageLink, setDownloadPageLink] = useState("");
+  const [directApkLink, setDirectApkLink] = useState("");
   const [activeTab, setActiveTab] = useState<"android" | "ios">("android");
   const isMobile = useMediaQuery('(max-width: 768px)');
   
@@ -24,16 +24,15 @@ const MobileApp = () => {
     const downloadPage = `${domain}/download-app`;
     const directApkLink = `${domain}/downloads/surakshitlocker.apk`;
     
-    setAppLink(downloadPage);
-    setAndroidAppLink(directApkLink);
+    setDownloadPageLink(downloadPage);
+    setDirectApkLink(directApkLink);
     
     console.log("App download link:", downloadPage);
     console.log("Direct APK link:", directApkLink);
   }, []);
 
   const handleCopyLink = () => {
-    const linkToCopy = activeTab === "android" ? androidAppLink : appLink;
-    navigator.clipboard.writeText(linkToCopy);
+    navigator.clipboard.writeText(downloadPageLink);
     toast({
       title: "Link copied",
       description: "App download link copied to clipboard"
@@ -42,15 +41,11 @@ const MobileApp = () => {
 
   const handleDirectDownload = () => {
     if (isMobile) {
-      // On mobile, attempt direct download
-      window.location.href = androidAppLink;
-      toast({
-        title: "Download Started",
-        description: "The APK file should start downloading shortly."
-      });
+      // On mobile, redirect to the download page
+      window.location.href = downloadPageLink;
     } else {
       // On desktop, just copy the link
-      navigator.clipboard.writeText(androidAppLink);
+      navigator.clipboard.writeText(directApkLink);
       toast({
         title: "Link copied",
         description: "Direct APK link copied to clipboard. Share this with your mobile device."
@@ -94,7 +89,7 @@ const MobileApp = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col items-center justify-center p-8">
               <QRCodeSVG 
-                value={activeTab === "android" ? androidAppLink : appLink} 
+                value={isMobile ? directApkLink : downloadPageLink} 
                 size={isMobile ? 200 : 250}
                 bgColor={"#ffffff"}
                 fgColor={"#000000"}
@@ -121,7 +116,7 @@ const MobileApp = () => {
                     onClick={handleDirectDownload}
                   >
                     <Download className="h-4 w-4" />
-                    Direct Download
+                    {isMobile ? "Download Now" : "Copy Direct Link"}
                   </Button>
                 )}
               </div>

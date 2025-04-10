@@ -11,17 +11,15 @@ export function useIsMobile() {
     const onChange = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
-    
-    // Ensure consistent initial value
-    onChange()
-    
     mql.addEventListener("change", onChange)
+    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     return () => mql.removeEventListener("change", onChange)
   }, [])
 
   return !!isMobile
 }
 
+// Function to check if a media query matches
 export function useMediaQuery(query: string) {
   const [matches, setMatches] = React.useState<boolean>(false)
 
@@ -44,43 +42,6 @@ export function useMediaQuery(query: string) {
   }, [query])
 
   return matches
-}
-
-// Detect if the device is a mobile device (based on user agent)
-export function useIsMobileDevice() {
-  const [isMobileDevice, setIsMobileDevice] = React.useState<boolean>(false)
-
-  React.useEffect(() => {
-    const checkMobileDevice = () => {
-      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera || '';
-      const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
-      return mobileRegex.test(userAgent.toLowerCase());
-    };
-    
-    setIsMobileDevice(checkMobileDevice());
-  }, [])
-
-  return isMobileDevice;
-}
-
-// Helper to get unique device ID for session persistence
-export function useMobileDeviceId() {
-  const [deviceId, setDeviceId] = React.useState<string>('')
-  
-  React.useEffect(() => {
-    // Try to get existing device ID from localStorage
-    let storedDeviceId = localStorage.getItem('mobile_device_id');
-    
-    // If not found, generate a new one
-    if (!storedDeviceId) {
-      storedDeviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
-      localStorage.setItem('mobile_device_id', storedDeviceId);
-    }
-    
-    setDeviceId(storedDeviceId);
-  }, []);
-  
-  return deviceId;
 }
 
 // Add an alias export to prevent future imports from breaking

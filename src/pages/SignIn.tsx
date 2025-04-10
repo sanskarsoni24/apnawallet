@@ -120,7 +120,7 @@ const SignIn = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <GoogleSignIn mode="signin" className="" />
+              <GoogleSignIn mode="signin" />
               
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">

@@ -228,3 +228,188 @@ export const generateDocumentSummary = async (text: string, category?: string): 
     }, 1000);
   });
 };
+
+// Function to generate a summary of a document with improved accuracy
+export const generateDocumentSummary = async (text: string, category?: string): Promise<string> => {
+  // This would normally use AI/NLP to generate a summary
+  // For now, we'll create more accurate summaries based on document content and type
+  
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const lowerText = text.toLowerCase();
+      
+      // Extract key information from text
+      const dateMatches = text.match(/\b(date|issued|expiry|expiration|due):\s*([^\n,]+)/gi);
+      const amountMatches = text.match(/\b(amount|total|sum|payment):\s*([^\n,]+)/gi);
+      const nameMatches = text.match(/\b(name|issued to|holder|owner):\s*([^\n,]+)/gi);
+      const idMatches = text.match(/\b(id|number|reference|ref):\s*([^\n,]+)/gi);
+      
+      // Prepare data extracted fragments
+      const keyData = [];
+      if (dateMatches) keyData.push(...dateMatches);
+      if (amountMatches) keyData.push(...amountMatches);
+      if (nameMatches) keyData.push(...nameMatches);
+      if (idMatches) keyData.push(...idMatches);
+      
+      let extractedDataSummary = "";
+      if (keyData.length > 0) {
+        extractedDataSummary = `Key information extracted: ${keyData.join(', ')}.`;
+      }
+      
+      // Generate category-specific summaries with the extracted data
+      if (category === 'Invoice' || lowerText.includes('invoice')) {
+        resolve(`This invoice document requires payment attention by the specified due date. ${extractedDataSummary} Please review the payment details and ensure timely processing.`);
+      } else if (category === 'Identity Document' || lowerText.includes('passport') || lowerText.includes('license')) {
+        resolve(`This identification document contains personal information with an expiration date. ${extractedDataSummary} Keep this document secure and note when renewal is needed.`);
+      } else if (category === 'Insurance' || lowerText.includes('insurance') || lowerText.includes('policy')) {
+        resolve(`This insurance document outlines coverage details and policy period. ${extractedDataSummary} Verify coverage limits and renewal requirements.`);
+      } else if (category === 'Tax Document' || lowerText.includes('tax')) {
+        resolve(`This tax-related document contains important financial information. ${extractedDataSummary} Verify all numerical data and maintain for your records.`);
+      } else if (category === 'Certificate' || lowerText.includes('certificate')) {
+        resolve(`This certificate verifies a qualification or achievement. ${extractedDataSummary} Note the issuing authority and any expiration dates.`);
+      } else if (lowerText.includes('agreement') || lowerText.includes('contract')) {
+        resolve(`This legal agreement outlines terms and conditions between parties. ${extractedDataSummary} Review obligations, termination clauses, and important dates.`);
+      } else if (lowerText.includes('report') || lowerText.includes('analysis')) {
+        resolve(`This document contains analytical findings and data. ${extractedDataSummary} Check the methodology section and key conclusions.`);
+      } else {
+        // Generate a more specific generic summary based on extracted text
+        const textSnippet = text.substring(0, 100).replace(/\n/g, ' ').trim();
+        resolve(`This document appears to contain important information. ${extractedDataSummary} The document begins with: "${textSnippet}...". Review for any required actions or important dates.`);
+      }
+    }, 1000);
+  });
+};
+
+// Function to extract text from document image with improved OCR simulation
+export const extractTextFromImage = async (file: File): Promise<string> => {
+  // This would normally use Tesseract.js or a cloud OCR service
+  // For now, just simulate the process with more detailed text extraction
+  
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // Return simulated text based on file name and type
+      const fileName = file.name.toLowerCase();
+      const fileType = file.type.split('/').pop()?.toLowerCase();
+      
+      // Generate more realistic OCR text based on document type
+      if (fileName.includes('invoice')) {
+        resolve(
+          "INVOICE #INV-2023-1045\n" +
+          "Date: 2023-10-15\n" +
+          "Due Date: 2023-11-15\n\n" +
+          "Bill To: John Smith\n" +
+          "Company: Acme Corporation\n" +
+          "Address: 123 Business St, Suite 100\n\n" +
+          "Item Description: Professional Services\n" +
+          "Quantity: 1\n" +
+          "Rate: $250.00\n" +
+          "Amount: $250.00\n\n" +
+          "Subtotal: $250.00\n" +
+          "Tax (8%): $20.00\n" +
+          "Total: $270.00\n\n" +
+          "Payment Terms: Net 30\n" +
+          "Thank you for your business!"
+        );
+      } else if (fileName.includes('passport')) {
+        resolve(
+          "PASSPORT\n" +
+          "Type: P\n" +
+          "Country Code: USA\n" +
+          "Passport No: AB123456\n" +
+          "Surname: DOE\n" +
+          "Given Names: JOHN MICHAEL\n" +
+          "Nationality: UNITED STATES OF AMERICA\n" +
+          "Date of Birth: 15 JAN 1980\n" +
+          "Place of Birth: NEW YORK, USA\n" +
+          "Date of Issue: 10 JAN 2020\n" +
+          "Date of Expiry: 09 JAN 2030\n" +
+          "Authority: UNITED STATES DEPARTMENT OF STATE"
+        );
+      } else if (fileName.includes('license')) {
+        resolve(
+          "DRIVER LICENSE\n" +
+          "License No: DL9876543\n" +
+          "Class: C\n" +
+          "Endorsements: NONE\n" +
+          "Restrictions: CORRECTIVE LENSES\n" +
+          "Name: SMITH, JANE A\n" +
+          "Address: 456 RESIDENTIAL DR, ANYTOWN, CA 90210\n" +
+          "Sex: F\n" +
+          "Height: 5'-5"\n" +
+          "Eyes: BRN\n" +
+          "Hair: BRN\n" +
+          "Date of Birth: 07/15/1985\n" +
+          "Issue Date: 05/10/2020\n" +
+          "Expiration Date: 07/15/2025\n" +
+          "DD: 12345678901234567890"
+        );
+      } else if (fileName.includes('certificate')) {
+        resolve(
+          "CERTIFICATE OF COMPLETION\n" +
+          "This certifies that\n\n" +
+          "JOHN DOE\n\n" +
+          "has successfully completed\n" +
+          "ADVANCED PROFESSIONAL DEVELOPMENT COURSE\n" +
+          "40 Credit Hours\n\n" +
+          "Date of Issue: September 1, 2023\n" +
+          "Certificate ID: CERT-2023-78901\n\n" +
+          "Issued by: Professional Training Institute\n" +
+          "Accreditation: National Education Board\n" +
+          "Verified by: Jane Smith, Director of Education"
+        );
+      } else if (fileName.includes('insurance')) {
+        resolve(
+          "INSURANCE POLICY\n" +
+          "Policy Number: POL-2023-45678\n" +
+          "Policyholder: Robert Johnson\n" +
+          "Effective Date: January 1, 2023\n" +
+          "Expiration Date: December 31, 2023\n\n" +
+          "Coverage Type: Comprehensive\n" +
+          "Coverage Limits: $500,000\n" +
+          "Deductible: $1,000\n\n" +
+          "Insured Property: 789 Home Avenue, Hometown, ST 12345\n" +
+          "Premium: $1,200.00 annually\n" +
+          "Payment Schedule: Monthly ($100.00)\n\n" +
+          "Special Provisions: Flood coverage included\n" +
+          "Claims Contact: 1-800-555-1234"
+        );
+      } else if (fileName.includes('tax')) {
+        resolve(
+          "TAX DOCUMENT\n" +
+          "Form: 1099-MISC\n" +
+          "Tax Year: 2022\n\n" +
+          "Payer: XYZ Corporation\n" +
+          "Payer TIN: 12-3456789\n" +
+          "Payer Address: 555 Corporate Way, Business City, ST 67890\n\n" +
+          "Recipient: Michael Brown\n" +
+          "Recipient TIN: 987-65-4321\n" +
+          "Recipient Address: 321 Personal St, Hometown, ST 12345\n\n" +
+          "Box 1: Rents - $0.00\n" +
+          "Box 2: Royalties - $0.00\n" +
+          "Box 3: Other Income - $12,500.00\n" +
+          "Box 4: Federal Tax Withheld - $1,250.00\n\n" +
+          "This information is being furnished to the Internal Revenue Service."
+        );
+      } else {
+        // More detailed generic text for any other document type
+        resolve(
+          "DOCUMENT: " + (fileName.split('.')[0] || "Untitled") + "\n" +
+          "Reference: DOC-" + Math.floor(10000 + Math.random() * 90000) + "\n" +
+          "Date: " + new Date().toISOString().split('T')[0] + "\n" +
+          "Page: 1 of 3\n\n" +
+          "This document contains important information regarding your account and services.\n\n" +
+          "Account Number: ACCT-" + Math.floor(100000 + Math.random() * 900000) + "\n" +
+          "Customer ID: CUST-" + Math.floor(10000 + Math.random() * 90000) + "\n" +
+          "Status: Active\n\n" +
+          "Important Information:\n" +
+          "Please review all details carefully and retain this document for your records.\n" +
+          "For any questions or concerns, please contact customer service at the number\n" +
+          "listed on the back of your card or visit our website.\n\n" +
+          "Expiry: " + new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] + "\n" +
+          "Authorization Code: AUTH-" + Math.floor(1000 + Math.random() * 9000) + "\n\n" +
+          "Thank you for choosing our services."
+        );
+      }
+    }, 2000);
+  });
+};

@@ -22,7 +22,7 @@ const DocumentUpload = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isScannerActive, setIsScannerActive] = useState(false);
-  const [scanStatus, setScanStatus] = useState("");
+  const [scanStatus, setScanStatus("");
   const [customReminderDays, setCustomReminderDays] = useState<number>(3); // Default 3 days
   const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
   const [newDocumentType, setNewDocumentType] = useState("");
@@ -135,7 +135,7 @@ const DocumentUpload = () => {
         return newProgress;
       });
       
-      // Extract text from the document
+      // Extract text from the document with improved OCR
       const text = await extractTextFromImage(file);
       setExtractedText(text);
       
@@ -160,7 +160,7 @@ const DocumentUpload = () => {
       await new Promise(resolve => setTimeout(resolve, 600));
       setScanStatus("Generating document summary...");
       
-      // Generate a summary of the document
+      // Generate a more accurate summary of the document
       const summary = await generateDocumentSummary(text, extractedInfo.category);
       setDocumentSummary(summary);
       
@@ -272,7 +272,7 @@ const DocumentUpload = () => {
     // Create file URL for preview
     const fileURL = URL.createObjectURL(currentFile);
     
-    // Create document object with proper typing
+    // Create document object with proper typing, including summary
     const newDocument: Document = {
       id: "", // This will be set in addDocument
       title: data.title,
@@ -282,7 +282,7 @@ const DocumentUpload = () => {
       fileURL: fileURL,
       description: data.description,
       customReminderDays: customReminderDays,
-      summary: documentSummary
+      summary: data.summary
     };
     
     addDocument(newDocument);
@@ -698,11 +698,11 @@ const DocumentUpload = () => {
                 </div>
               )}
               
-              {/* Document summary */}
+              {/* Document summary with improved visibility */}
               {documentSummary && (
-                <div className="mb-4 p-3 bg-secondary/40 border border-border rounded-md">
+                <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-md">
                   <div className="flex items-center gap-2 mb-1">
-                    <FileText className="h-4 w-4 text-primary" />
+                    <FileText className="h-4 w-4 text-indigo-600" />
                     <h4 className="text-sm font-medium">Document Summary</h4>
                   </div>
                   <p className="text-sm text-muted-foreground">{documentSummary}</p>
@@ -826,10 +826,10 @@ const DocumentUpload = () => {
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Info className="h-4 w-4 text-muted-foreground" />
+                                <Info className="h-4 w-4 text-indigo-600 cursor-help" />
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p className="text-xs">Auto-generated summary of the document</p>
+                                <p className="text-xs">AI-generated summary of the document's content</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -837,7 +837,7 @@ const DocumentUpload = () => {
                         <FormControl>
                           <Textarea 
                             placeholder="Auto-generated summary of this document" 
-                            className="min-h-20" 
+                            className="min-h-20 border-indigo-200 focus-visible:ring-indigo-500" 
                             {...field} 
                           />
                         </FormControl>

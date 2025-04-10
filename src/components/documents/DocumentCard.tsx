@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from "react";
-import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell, AlertTriangle, Clock, Share2, Mail, MessageSquare, Facebook, Twitter, Linkedin, Copy } from "lucide-react";
+import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell, AlertTriangle, Clock, Share2, Mail, MessageSquare, Facebook, Twitter, Linkedin, Copy, CheckCircle, FileWarning } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { useDocuments, Document } from "@/contexts/DocumentContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import { Textarea } from "../ui/textarea";
@@ -32,6 +32,7 @@ const DocumentCard = ({
   className,
   importance = "medium", // Default importance
   customReminderDays,
+  status = "active", // Default status
 }: DocumentCardProps) => {
   const [showPreview, setShowPreview] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -41,7 +42,8 @@ const DocumentCard = ({
   const [date, setDate] = useState<Date | undefined>();
   const [showReminderSettings, setShowReminderSettings] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
-  const { deleteDocument, updateDocument, updateDueDate } = useDocuments();
+  const [showStatusOptions, setShowStatusOptions] = useState(false);
+  const { deleteDocument, updateDocument, updateDueDate, markDocumentComplete, markDocumentExpired, scheduleRenewal } = useDocuments();
   
   // Update local state when props change
   useEffect(() => {
@@ -50,12 +52,15 @@ const DocumentCard = ({
   }, [title, description]);
 
   const getStatusVariant = () => {
-    if (daysRemaining < 0) return "destructive";
+    if (status === "expired" || daysRemaining < 0) return "destructive";
+    if (status === "completed") return "outline";
     if (daysRemaining < 3) return "default";
     return "secondary";
   };
 
   const getStatusText = () => {
+    if (status === "expired") return "Expired";
+    if (status === "completed") return "Completed";
     if (daysRemaining < 0) return "Overdue";
     if (daysRemaining === 0) return "Due today";
     if (daysRemaining === 1) return "Due tomorrow";
@@ -64,7 +69,8 @@ const DocumentCard = ({
   
   // Get importance based on due date
   const getImportance = () => {
-    if (daysRemaining < 0) return "critical"; // Overdue
+    if (status === "completed") return "low";
+    if (status === "expired" || daysRemaining < 0) return "critical"; // Overdue
     if (daysRemaining <= 3) return "high"; // Due soon
     if (daysRemaining <= 7) return "medium"; // Coming up
     return "low"; // Plenty of time
@@ -178,6 +184,29 @@ const DocumentCard = ({
     }
   };
 
+  // Function to handle changing document status
+  const handleStatusChange = (newStatus: 'active' | 'expired' | 'completed') => {
+    if (newStatus === 'completed') {
+      markDocumentComplete(id);
+    } else if (newStatus === 'expired') {
+      markDocumentExpired(id);
+    } else if (newStatus === 'active') {
+      // Reactivate document
+      const parsedDate = parseDueDate();
+      if (parsedDate) {
+        const formattedDate = format(parsedDate, "MMMM d, yyyy");
+        scheduleRenewal(id, formattedDate);
+      } else {
+        updateDocument(id, { status: 'active' });
+        toast({
+          title: "Document Activated",
+          description: `${title} has been marked as active.`
+        });
+      }
+    }
+    setShowStatusOptions(false);
+  };
+
   // Function to handle voice reminder
   const handleVoiceReminder = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -259,12 +288,28 @@ const DocumentCard = ({
     description: description || "",
     customReminderDays,
     fileURL: fileURL || "",
+    status,
+  };
+
+  // Determine card border color based on status
+  const getCardBorderStyle = () => {
+    if (status === "expired") return "border-l-4 border-l-red-500";
+    if (status === "completed") return "border-l-4 border-l-green-500";
+    if (getImportance() === "critical") return "border-l-4 border-l-red-500";
+    if (getImportance() === "high") return "border-l-4 border-l-amber-500";
+    if (getImportance() === "medium") return "border-l-4 border-l-indigo-500";
+    return "border-l-4 border-l-teal-500";
   };
 
   return (
     <>
       <BlurContainer 
-        className={cn("document-card document-card-hover cursor-pointer p-4 transition-all duration-300", className)}
+        className={cn(
+          "document-card document-card-hover cursor-pointer p-4 transition-all duration-300", 
+          className,
+          getCardBorderStyle(),
+          status === "completed" && "opacity-75",
+        )}
         hover
         onClick={handleCardClick}
       >
@@ -274,7 +319,13 @@ const DocumentCard = ({
               <Badge variant="outline" className="animate-pulse-subtle">
                 {type}
               </Badge>
-              {getImportance() === "critical" && (
+              {status === "expired" && (
+                <span className="text-red-500"><FileWarning className="h-4 w-4" /></span>
+              )}
+              {status === "completed" && (
+                <span className="text-green-500"><CheckCircle className="h-4 w-4" /></span>
+              )}
+              {getImportance() === "critical" && status !== "expired" && status !== "completed" && (
                 <span className="text-red-500"><AlertTriangle className="h-4 w-4" /></span>
               )}
             </div>
@@ -320,6 +371,61 @@ const DocumentCard = ({
               <span className="sr-only">Download</span>
             </Button>
           )}
+          <Popover open={showStatusOptions} onOpenChange={setShowStatusOptions}>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0 rounded-full bg-purple-100 text-purple-600 hover:text-purple-800 hover:bg-purple-200"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                <Clock className="h-4 w-4" />
+                <span className="sr-only">Change Status</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
+              <div className="flex flex-col gap-2">
+                <h4 className="text-sm font-medium mb-1">Update Status</h4>
+                <div className="grid grid-cols-1 gap-2">
+                  {status !== "active" && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="flex justify-start gap-2 pl-2"
+                      onClick={() => handleStatusChange('active')}
+                    >
+                      <Clock className="h-4 w-4 text-blue-500" />
+                      <span>Mark as Active</span>
+                    </Button>
+                  )}
+                  {status !== "completed" && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="flex justify-start gap-2 pl-2"
+                      onClick={() => handleStatusChange('completed')}
+                    >
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span>Mark as Completed</span>
+                    </Button>
+                  )}
+                  {status !== "expired" && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="flex justify-start gap-2 pl-2"
+                      onClick={() => handleStatusChange('expired')}
+                    >
+                      <FileWarning className="h-4 w-4 text-red-500" />
+                      <span>Mark as Expired</span>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button 
             variant="ghost" 
             size="sm" 
@@ -329,7 +435,7 @@ const DocumentCard = ({
               setShowReminderSettings(true);
             }}
           >
-            <Clock className="h-4 w-4" />
+            <Bell className="h-4 w-4" />
             <span className="sr-only">Reminder Settings</span>
           </Button>
           <Button 
@@ -450,6 +556,11 @@ const DocumentCard = ({
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>{isEditing ? "Edit Document" : title}</DialogTitle>
+            {!isEditing && status && (
+              <DialogDescription>
+                Status: <Badge variant={getStatusVariant()} className="ml-1">{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>
+              </DialogDescription>
+            )}
           </DialogHeader>
           
           {isEditing ? (
@@ -494,6 +605,35 @@ const DocumentCard = ({
                   placeholder="Add notes about this document..."
                   className="min-h-[100px] transition-all focus:ring-2 focus:ring-primary"
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Status</label>
+                <div className="flex gap-2">
+                  <Button 
+                    type="button" 
+                    variant={status === "active" ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateDocument(id, { status: "active" })}
+                  >
+                    Active
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant={status === "completed" ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateDocument(id, { status: "completed" })}
+                  >
+                    Completed
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant={status === "expired" ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => updateDocument(id, { status: "expired" })}
+                  >
+                    Expired
+                  </Button>
+                </div>
               </div>
               <div className="pt-2 flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsEditing(false)} className="hover:bg-secondary/80 transition-colors">
@@ -590,7 +730,8 @@ const DocumentCard = ({
                     <p className="mb-2"><strong>Document details:</strong></p>
                     <p><strong>Type:</strong> {type}</p>
                     <p><strong>Due Date:</strong> {dueDate}</p>
-                    <p><strong>Status:</strong> {getStatusText()}</p>
+                    <p><strong>Status:</strong> {status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Active'}</p>
+                    <p><strong>Priority:</strong> {getImportance().charAt(0).toUpperCase() + getImportance().slice(1)}</p>
                     {customReminderDays !== undefined && (
                       <p><strong>Custom reminder:</strong> {customReminderDays} days before due date</p>
                     )}
@@ -603,37 +744,52 @@ const DocumentCard = ({
                   </div>
                 </div>
               )}
-              <div className="flex justify-end gap-2 w-full mt-2">
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2 bg-green-50 hover:bg-green-100 border-green-200"
-                  onClick={() => setShowShareOptions(true)}
-                >
-                  <Share2 className="h-4 w-4 text-green-600" />
-                  <span className="whitespace-nowrap">Share</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 border-indigo-200"
-                  onClick={() => setShowReminderSettings(true)}
-                >
-                  <Clock className="h-4 w-4 text-indigo-600" />
-                  <span className="whitespace-nowrap">Set Reminders</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2 bg-sky-50 hover:bg-sky-100 border-sky-200"
-                  onClick={() => setIsEditing(true)}
-                >
-                  <Pencil className="h-4 w-4 text-sky-600" />
-                  <span className="whitespace-nowrap">Edit</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowPreview(false)}
-                >
-                  Close
-                </Button>
+              <div className="flex justify-between w-full mt-2 flex-wrap gap-2">
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    className={`flex items-center gap-2 ${status === 'active' ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}`}
+                    onClick={() => handleStatusChange('active')}
+                    disabled={status === 'active'}
+                  >
+                    <Clock className="h-4 w-4" />
+                    <span className="whitespace-nowrap">Mark Active</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className={`flex items-center gap-2 ${status === 'completed' ? 'bg-green-50 border-green-200 text-green-700' : ''}`}
+                    onClick={() => handleStatusChange('completed')}
+                    disabled={status === 'completed'}
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="whitespace-nowrap">Mark Complete</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className={`flex items-center gap-2 ${status === 'expired' ? 'bg-red-50 border-red-200 text-red-700' : ''}`}
+                    onClick={() => handleStatusChange('expired')}
+                    disabled={status === 'expired'}
+                  >
+                    <FileWarning className="h-4 w-4" />
+                    <span className="whitespace-nowrap">Mark Expired</span>
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center gap-2 bg-sky-50 hover:bg-sky-100 border-sky-200"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <Pencil className="h-4 w-4 text-sky-600" />
+                    <span className="whitespace-nowrap">Edit</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowPreview(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
             </div>
           )}

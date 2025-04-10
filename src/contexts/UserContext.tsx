@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 
@@ -23,6 +24,8 @@ interface UserSettings {
   autoBackup?: boolean;
   backupFrequency?: string;
   cloudExportProviders?: string[];
+  mobileDeviceName?: string;
+  googleConnected?: boolean;
 }
 
 interface UserContextType {
@@ -39,6 +42,15 @@ interface UserContextType {
   disableTwoFactor: () => void;
   createBackupKey: () => void;
   restoreFromBackupKey: (key: string) => boolean;
+  isGoogleConnected: boolean;
+  connectGoogle: () => void;
+  disconnectGoogle: () => void;
+  getUserSubscriptionDetails: () => {
+    plan: string;
+    expiresOn: string;
+    documentLimit: number;
+    documentSizeLimit: number;
+  };
 }
 
 const defaultContextValue: UserContextType = {
@@ -55,6 +67,15 @@ const defaultContextValue: UserContextType = {
   disableTwoFactor: () => {},
   createBackupKey: () => {},
   restoreFromBackupKey: () => false,
+  isGoogleConnected: false,
+  connectGoogle: () => {},
+  disconnectGoogle: () => {},
+  getUserSubscriptionDetails: () => ({
+    plan: 'free',
+    expiresOn: '',
+    documentLimit: 10,
+    documentSizeLimit: 5
+  }),
 };
 
 const UserContext = createContext<UserContextType>(defaultContextValue);
@@ -100,6 +121,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       autoBackup: false,
       backupFrequency: "weekly",
       cloudExportProviders: [],
+      googleConnected: false,
+      mobileDeviceName: "",
       ...getDocumentLimits("free")
     };
     
@@ -115,23 +138,93 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const [displayName, setDisplayName] = useState(userSettings.displayName || "");
   const [email, setEmail] = useState(userSettings.email || "");
+  const [isGoogleConnected, setIsGoogleConnected] = useState(userSettings.googleConnected || false);
 
   // Mock user database for simple authentication
-  const [mockUsers, setMockUsers] = useState<Record<string, {password: string, name: string}>>(() => {
+  const [mockUsers, setMockUsers] = useState<Record<string, {password: string, name: string, subscriptionExpiry?: string}>>(() => {
     const savedUsers = localStorage.getItem("mockUsers");
     if (savedUsers) {
       return JSON.parse(savedUsers);
     } else {
-      // Default users
+      // Default users with mock subscription data
       const defaultUsers = {
-        "user@example.com": {password: "password123", name: "Demo User"},
-        "test@example.com": {password: "test123", name: "Test User"},
-        "admin@example.com": {password: "admin123", name: "Admin User"},
+        "user@example.com": {
+          password: "password123", 
+          name: "Demo User",
+          subscriptionExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+        },
+        "test@example.com": {
+          password: "test123", 
+          name: "Test User"
+        },
+        "admin@example.com": {
+          password: "admin123", 
+          name: "Admin User", 
+          subscriptionExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year from now
+        },
       };
       localStorage.setItem("mockUsers", JSON.stringify(defaultUsers));
       return defaultUsers;
     }
   });
+
+  // Get user subscription details
+  const getUserSubscriptionDetails = () => {
+    const plan = userSettings.subscriptionPlan || 'free';
+    const limits = getDocumentLimits(plan);
+    
+    // Get expiry date from mock user database
+    let expiryDate = '';
+    if (email && mockUsers[email] && mockUsers[email].subscriptionExpiry) {
+      expiryDate = new Date(mockUsers[email].subscriptionExpiry).toLocaleDateString();
+    } else if (plan !== 'free') {
+      // Default expiry for premium users is 30 days from now
+      expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
+    }
+    
+    return {
+      plan,
+      expiresOn: expiryDate,
+      documentLimit: limits.documentLimit,
+      documentSizeLimit: limits.documentSizeLimit
+    };
+  };
+
+  // Connect Google account
+  const connectGoogle = () => {
+    setIsGoogleConnected(true);
+    
+    const updatedSettings = {
+      ...userSettings,
+      googleConnected: true
+    };
+    
+    localStorage.setItem("userSettings", JSON.stringify(updatedSettings));
+    setUserSettings(updatedSettings);
+    
+    toast({
+      title: "Google account connected",
+      description: "You can now use Google services with your account"
+    });
+  };
+  
+  // Disconnect Google account
+  const disconnectGoogle = () => {
+    setIsGoogleConnected(false);
+    
+    const updatedSettings = {
+      ...userSettings,
+      googleConnected: false
+    };
+    
+    localStorage.setItem("userSettings", JSON.stringify(updatedSettings));
+    setUserSettings(updatedSettings);
+    
+    toast({
+      title: "Google account disconnected",
+      description: "Your Google account has been disconnected"
+    });
+  };
 
   // Generate encryption key for secure backup
   const generateEncryptionKey = () => {
@@ -238,7 +331,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Add user to mock database
     const updatedUsers = {
       ...mockUsers,
-      [userEmail]: {password, name}
+      [userEmail]: {
+        password, 
+        name,
+        subscriptionExpiry: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14-day trial
+      }
     };
     
     setMockUsers(updatedUsers);
@@ -266,6 +363,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       autoBackup: false,
       backupFrequency: "weekly",
       cloudExportProviders: [],
+      googleConnected: false,
+      mobileDeviceName: "",
       ...getDocumentLimits("free")
     };
     
@@ -276,7 +375,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     toast({
       title: "Account created successfully",
-      description: `Welcome, ${name}!`
+      description: `Welcome, ${name}! You have a 14-day free trial of premium features.`
     });
   };
   
@@ -303,9 +402,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userName = mockUsers[userEmail].name;
     setDisplayName(userName);
     
+    // Determine subscription plan
+    let plan = userSettings.subscriptionPlan || "free" as 'free';
+    
     // If this is Google sign-in user, assign premium by default for demo
-    const isGoogleUser = userEmail === "demo@example.com";
-    const plan = isGoogleUser ? "premium" as 'premium' : (userSettings.subscriptionPlan || "free" as 'free');
+    if (userEmail === "demo@example.com") {
+      plan = "premium" as 'premium';
+      setIsGoogleConnected(true);
+    }
     
     const updatedSettings: UserSettings = {
       ...userSettings,
@@ -317,6 +421,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       autoBackup: userSettings.autoBackup || false,
       backupFrequency: userSettings.backupFrequency || "weekly",
       cloudExportProviders: userSettings.cloudExportProviders || [],
+      googleConnected: userEmail === "demo@example.com" || false,
+      mobileDeviceName: userSettings.mobileDeviceName || "",
       ...getDocumentLimits(plan)
     };
     
@@ -373,6 +479,33 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let updatedLimits = {};
     if (settings.subscriptionPlan && settings.subscriptionPlan !== userSettings.subscriptionPlan) {
       updatedLimits = getDocumentLimits(settings.subscriptionPlan);
+      
+      // Update subscription expiry in mock users database
+      if (email && mockUsers[email]) {
+        const expiryDate = new Date();
+        switch (settings.subscriptionPlan) {
+          case 'basic':
+            expiryDate.setDate(expiryDate.getDate() + 30); // 30 days
+            break;
+          case 'premium':
+            expiryDate.setMonth(expiryDate.getMonth() + 1); // 1 month
+            break;
+          case 'enterprise':
+            expiryDate.setFullYear(expiryDate.getFullYear() + 1); // 1 year
+            break;
+        }
+        
+        const updatedUsers = {
+          ...mockUsers,
+          [email]: {
+            ...mockUsers[email],
+            subscriptionExpiry: expiryDate.toISOString()
+          }
+        };
+        
+        setMockUsers(updatedUsers);
+        localStorage.setItem("mockUsers", JSON.stringify(updatedUsers));
+      }
     }
     
     const updatedSettings: UserSettings = {
@@ -393,7 +526,18 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setEmail(settings.email);
     }
     
+    // Update Google connection status if it was changed
+    if (settings.googleConnected !== undefined) {
+      setIsGoogleConnected(settings.googleConnected);
+    }
+    
     console.log("Updated settings:", updatedSettings);
+    
+    toast({
+      title: "Settings updated",
+      description: "Your user settings have been saved successfully",
+      variant: "default",
+    });
   };
 
   // Listen for changes in localStorage from other tabs/windows
@@ -407,6 +551,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserSettings(settings);
           setDisplayName(settings.displayName || displayName);
           setEmail(settings.email || email);
+          setIsGoogleConnected(settings.googleConnected || false);
         } catch (error) {
           console.error("Error parsing userSettings from localStorage", error);
         }
@@ -457,7 +602,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         enableTwoFactor,
         disableTwoFactor,
         createBackupKey,
-        restoreFromBackupKey
+        restoreFromBackupKey,
+        isGoogleConnected,
+        connectGoogle,
+        disconnectGoogle,
+        getUserSubscriptionDetails
       }}
     >
       {children}

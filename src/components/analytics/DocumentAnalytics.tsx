@@ -99,7 +99,12 @@ const DocumentAnalytics: React.FC = () => {
   
   // Calculate document volume over time (by month)
   const documentsByMonth = useMemo(() => {
-    const monthCount: Record<string, number> = {};
+    interface MonthData {
+      name: string;
+      value: number;
+    }
+    
+    const monthCount: Record<string, { month: string; count: number }> = {};
     const now = new Date();
     
     // Initialize last 6 months
@@ -113,11 +118,13 @@ const DocumentAnalytics: React.FC = () => {
     // Count documents by month
     documents.forEach(doc => {
       try {
-        const date = new Date(doc.dateAdded);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        
-        if (monthCount[monthKey]) {
-          monthCount[monthKey].count += 1;
+        if (doc.dateAdded) {
+          const date = new Date(doc.dateAdded);
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          
+          if (monthCount[monthKey]) {
+            monthCount[monthKey].count += 1;
+          }
         }
       } catch (e) {
         // Skip invalid dates

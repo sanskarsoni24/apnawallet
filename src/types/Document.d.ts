@@ -21,4 +21,12 @@ interface Document {
   status?: 'active' | 'expired' | 'pending';
   summary?: string;
   daysRemaining?: number;
+  dueDate?: string;
+  fileURL?: string;
+  description?: string;
+  customReminderDays?: number;
+  userId?: string;
+  importance?: 'low' | 'medium' | 'high' | 'critical';
+  createdAt?: string;
+  categories?: string[];
 }

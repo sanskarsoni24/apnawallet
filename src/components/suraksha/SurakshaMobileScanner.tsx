@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { AlertCircle, Smartphone, Check, Loader2 } from "lucide-react";
@@ -12,13 +11,6 @@ type ScannerState = "waiting" | "scanning" | "success" | "error";
 interface SurakshaMobileScannerProps {
   userSettings?: UserSettings;
   updateUserSettings?: (settings: Partial<UserSettings>) => void;
-}
-
-// Define the Scanner props interface explicitly to match the actual component
-interface ScannerProps {
-  onDecode: (result: string) => void;
-  onError: (err: any) => void;
-  containerStyle?: Record<string, string>;
 }
 
 const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
@@ -37,8 +29,11 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
     }
   }, [userSettings]);
 
-  // Handler for QR code detection
-  const handleDetect = (result: string) => {
+  // Updated handler to match the API of the Scanner component
+  const handleScan = (detectedCodes: any) => {
+    // Extract the text value from the detected codes
+    const result = detectedCodes && detectedCodes.length > 0 ? detectedCodes[0].rawValue : null;
+    
     if (result) {
       try {
         // Parse QR code data
@@ -187,7 +182,7 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
               
               <div className="relative w-full max-w-sm overflow-hidden rounded-lg border">
                 <Scanner
-                  onDecode={handleDetect}
+                  onDecode={handleScan}
                   onError={handleError}
                   containerStyle={{ borderRadius: '0.5rem' }}
                 />

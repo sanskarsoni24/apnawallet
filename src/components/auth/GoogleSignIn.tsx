@@ -47,7 +47,7 @@ const GoogleSignIn = ({ mode = "signin", className = "" }: GoogleSignInProps) =>
           googleProfilePicture,
           googleId,
           lastLoginMethod: "google"
-        } as Partial<UserSettings>);
+        });
         
         toast({
           title: "Account created with Google",
@@ -64,7 +64,7 @@ const GoogleSignIn = ({ mode = "signin", className = "" }: GoogleSignInProps) =>
           googleProfilePicture,
           googleId,
           lastLoginMethod: "google"
-        } as Partial<UserSettings>);
+        });
         
         toast({
           title: "Signed in with Google",

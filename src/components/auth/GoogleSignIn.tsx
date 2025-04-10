@@ -12,7 +12,7 @@ type GoogleSignInProps = {
 
 const GoogleSignIn = ({ mode = "signin", className = "" }: GoogleSignInProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { login, register, updateUserSettings } = useUser();
+  const { login, register } = useUser();
   const navigate = useNavigate();
 
   const handleGoogleSignIn = async () => {
@@ -33,41 +33,21 @@ const GoogleSignIn = ({ mode = "signin", className = "" }: GoogleSignInProps) =>
       
       // Get the Google account info (either default or simulated manual entry)
       const googleEmail = useDefault ? "demo@example.com" : "user.custom@gmail.com";
-      const googleProfilePicture = `https://i.pravatar.cc/150?u=${encodeURIComponent(googleEmail)}`;
-      const googleId = `google_${Math.random().toString(36).substring(2, 11)}`;
       
       if (mode === "signup") {
         // For signup, register a new user with Google credentials
         register(googleEmail, "demo123", googleEmail.split('@')[0]);
         
-        // Update user settings with Google information
-        updateUserSettings({
-          googleConnected: true,
-          googleEmail,
-          googleProfilePicture,
-          googleId,
-          lastLoginMethod: "google"
-        });
-        
         toast({
-          title: "Account created with Google",
+          title: "Account created",
           description: `Signed up with ${googleEmail}`,
         });
       } else {
         // For signin, use the existing login flow with Google credentials
         login(googleEmail, "demo123");
         
-        // Update user settings with Google information
-        updateUserSettings({
-          googleConnected: true,
-          googleEmail,
-          googleProfilePicture,
-          googleId,
-          lastLoginMethod: "google"
-        });
-        
         toast({
-          title: "Signed in with Google",
+          title: "Signed in",
           description: `Successfully signed in as ${googleEmail}`,
         });
       }

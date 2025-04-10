@@ -21,7 +21,6 @@ interface UserSettings {
   autoBackup?: boolean;
   backupFrequency?: string;
   cloudExportProviders?: string[];
-  mobileDeviceName?: string;
   mobileDeviceId?: string;
   lastMobileSync?: string;
 }

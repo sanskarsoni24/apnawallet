@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { Shield, LockKeyhole, Plus, FileText, Key, Trash2, Eye, EyeOff, Lock } from "lucide-react";
+import { Shield, LockKeyhole, Plus, FileText, Key, Trash2, Eye, EyeOff, Lock, ScanFace, Fingerprint } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,7 @@ import PasswordRecovery from "@/components/security/PasswordRecovery";
 import ForgotPassword from "@/components/auth/ForgotPassword";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useUser } from "@/contexts/UserContext";
 
 interface SecretItem {
   id: string;
@@ -20,6 +20,7 @@ interface SecretItem {
 }
 
 const SurakshaLocker: React.FC = () => {
+  const { userSettings } = useUser();
   const [isLocked, setIsLocked] = useState(true);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -50,6 +51,12 @@ const SurakshaLocker: React.FC = () => {
   
   const [newItemTitle, setNewItemTitle] = useState("");
   const [newItemValue, setNewItemValue] = useState("");
+  const [showBiometricOptions, setShowBiometricOptions] = useState(false);
+  
+  // Check if biometric auth is enabled
+  const biometricEnabled = userSettings?.biometricAuth?.enabled || false;
+  const faceIdEnabled = userSettings?.biometricAuth?.faceIdEnabled || false;
+  const fingerprintEnabled = userSettings?.biometricAuth?.fingerprintEnabled || false;
   
   useEffect(() => {
     // Check if vault has been unlocked in this session
@@ -75,6 +82,32 @@ const SurakshaLocker: React.FC = () => {
         variant: "destructive",
       });
     }
+  };
+  
+  const handleBiometricAuth = (type: 'face' | 'fingerprint') => {
+    // In a real app, this would use the Web Authentication API or a device-specific API
+    // Simulated authentication for demo purposes
+    console.log(`Authenticating with ${type} recognition`);
+    
+    // Show simulated scanning animation
+    setShowBiometricOptions(false);
+    
+    toast({
+      title: `${type === 'face' ? 'Face' : 'Fingerprint'} scan initiated`,
+      description: "Please keep still while scanning...",
+    });
+    
+    // Simulate scanning delay
+    setTimeout(() => {
+      // Success: unlock the vault
+      setIsLocked(false);
+      sessionStorage.setItem("vaultUnlocked", "true");
+      
+      toast({
+        title: "Biometric authentication successful",
+        description: "You now have access to your secure vault",
+      });
+    }, 2000);
   };
   
   const handleLock = () => {
@@ -165,6 +198,47 @@ const SurakshaLocker: React.FC = () => {
                 >
                   Unlock Vault
                 </Button>
+                
+                {/* Biometric authentication options */}
+                {(faceIdEnabled || fingerprintEnabled) && (
+                  <div className="mt-4">
+                    <div className="flex justify-center">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowBiometricOptions(!showBiometricOptions)}
+                        className="text-sm"
+                      >
+                        Use biometric authentication
+                      </Button>
+                    </div>
+                    
+                    {showBiometricOptions && (
+                      <div className="flex justify-center gap-3 mt-4 animate-fade-in">
+                        {faceIdEnabled && (
+                          <Button
+                            variant="outline"
+                            onClick={() => handleBiometricAuth('face')}
+                            className="flex flex-col items-center p-4 h-auto gap-2"
+                          >
+                            <ScanFace className="h-10 w-10 text-primary" />
+                            <span>Face ID</span>
+                          </Button>
+                        )}
+                        
+                        {fingerprintEnabled && (
+                          <Button
+                            variant="outline"
+                            onClick={() => handleBiometricAuth('fingerprint')}
+                            className="flex flex-col items-center p-4 h-auto gap-2"
+                          >
+                            <Fingerprint className="h-10 w-10 text-primary" />
+                            <span>Fingerprint</span>
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 <div className="text-center mt-2">
                   <ForgotPassword />

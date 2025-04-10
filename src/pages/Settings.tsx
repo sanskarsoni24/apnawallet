@@ -3,12 +3,13 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Container from "@/components/layout/Container";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Bell, Palette, Shield, CloudCog } from "lucide-react";
+import { User, Bell, Palette, Shield, CloudCog, ScanFace } from "lucide-react";
 import AccountSettings from "@/components/settings/AccountSettings";
 import NotificationSettings from "@/components/settings/NotificationSettings";
 import AppearanceSettings from "@/components/settings/AppearanceSettings";
 import ChromeExtensionDownload from "@/components/settings/ChromeExtensionDownload";
 import BackupSettings from "@/components/settings/BackupSettings";
+import BiometricSettings from "@/components/settings/BiometricSettings";
 import PremiumFeatures from "@/components/premium/PremiumFeatures";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
@@ -32,7 +33,7 @@ const Settings = () => {
   
   // Track tab changes from URL params
   useEffect(() => {
-    if (tabParam && ["backup", "account", "notifications", "appearance", "extensions"].includes(tabParam)) {
+    if (tabParam && ["backup", "account", "notifications", "appearance", "extensions", "security"].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
@@ -139,6 +140,11 @@ const Settings = () => {
               <Palette className="h-4 w-4" />
               <span className="hidden sm:inline">Appearance</span>
             </TabsTrigger>
+            <TabsTrigger value="security" className="text-xs sm:text-sm flex items-center gap-1">
+              <ScanFace className="h-4 w-4" />
+              <span className="hidden sm:inline">Biometric Security</span>
+              <span className="inline sm:hidden">Security</span>
+            </TabsTrigger>
             <TabsTrigger value="extensions" className="text-xs sm:text-sm flex items-center gap-1">
               <Shield className="h-4 w-4" />
               <span className="hidden sm:inline">Extensions</span>
@@ -179,6 +185,10 @@ const Settings = () => {
               theme={userSettings?.theme || 'system'} 
               saveTheme={saveTheme} 
             />
+          </TabsContent>
+
+          <TabsContent value="security" className="space-y-6">
+            <BiometricSettings />
           </TabsContent>
 
           <TabsContent value="extensions" className="space-y-6">

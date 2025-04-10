@@ -16,4 +16,10 @@ declare interface UserSettings {
   googleEmail?: string;
   mobileDeviceName?: string;
   voiceType?: "default" | "male" | "female";
+  biometricAuth?: {
+    enabled: boolean;
+    faceIdEnabled: boolean;
+    fingerprintEnabled: boolean;
+    lastVerified?: string;
+  };
 }

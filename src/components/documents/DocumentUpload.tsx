@@ -22,7 +22,7 @@ const DocumentUpload = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isScannerActive, setIsScannerActive] = useState(false);
-  const [scanStatus, setScanStatus("");
+  const [scanStatus, setScanStatus] = useState(""); // Fixed: Added missing useState
   const [customReminderDays, setCustomReminderDays] = useState<number>(3); // Default 3 days
   const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
   const [newDocumentType, setNewDocumentType] = useState("");
@@ -912,7 +912,3 @@ const DocumentUpload = () => {
         </DialogContent>
       </Dialog>
     </>
-  );
-};
-
-export default DocumentUpload;

@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 // Define the structure of a document
@@ -34,7 +35,7 @@ type DocumentProviderProps = {
 
 export const DocumentProvider: React.FC<DocumentProviderProps> = ({ children }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [documentTypes, setDocumentTypes] = useState<string>(['Invoice', 'Passport', 'License', 'Insurance', 'Tax Document', 'Certificate', 'Other'].sort());
+  const [documentTypes, setDocumentTypes] = useState<string[]>(['Invoice', 'Passport', 'License', 'Insurance', 'Tax Document', 'Certificate', 'Other'].sort());
 
   // Function to add a new document
   const addDocument = (document: Document) => {

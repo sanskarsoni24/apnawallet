@@ -1,29 +1,28 @@
-import React from "react"
-import { useTheme } from "next-themes"
-import { Link } from "react-router-dom"
-import { siteConfig } from "@/config/site"
-import { cn } from "@/lib/utils"
-import { Icons } from "@/components/icons"
-import { ModeToggle } from "@/components/mode-toggle"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
+import React from "react";
+import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { ModeToggle } from "@/components/mode-toggle";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { useUserAuth } from "@/contexts/AuthContext"
-import { useNavigate } from "react-router-dom"
-import { Home, Plus, Settings, User, HelpCircle, LogOut, Scan } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import { useUserAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { Home, Plus, Settings, User, HelpCircle, LogOut, Scan } from "lucide-react";
+import { Icons } from "@/components/icons";
+import { siteConfig } from "@/config/site";
 
 interface MainNavProps extends React.HTMLAttributes<HTMLElement> {}
 
 const MainNav = ({ className, ...props }: MainNavProps) => {
-  const { theme } = useTheme()
-  const { user, logout } = useUserAuth()
-  const navigate = useNavigate()
+  const { user, logout } = useUserAuth();
+  const navigate = useNavigate();
 
   const navItems = [
     {
@@ -41,7 +40,7 @@ const MainNav = ({ className, ...props }: MainNavProps) => {
       href: "/scan-to-pdf",
       icon: <Scan className="h-[1.2rem] w-[1.2rem]" />,
     },
-  ]
+  ];
 
   return (
     <div
@@ -94,8 +93,8 @@ const MainNav = ({ className, ...props }: MainNavProps) => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
-                    logout()
-                    navigate("/")
+                    logout();
+                    navigate("/");
                   }}
                 >
                   <LogOut className="mr-2 h-4 w-4" /> <span>Log out</span>
@@ -112,7 +111,7 @@ const MainNav = ({ className, ...props }: MainNavProps) => {
         </div>
       </nav>
     </div>
-  )
-}
+  );
+};
 
-export default MainNav
+export default MainNav;

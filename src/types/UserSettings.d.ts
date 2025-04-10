@@ -14,6 +14,9 @@ declare interface UserSettings {
     requirePassword: boolean;
   };
   googleEmail?: string;
+  googleProfilePicture?: string;
+  googleId?: string;
+  lastLoginMethod?: string;
   mobileDeviceName?: string;
   voiceType?: "default" | "male" | "female";
   biometricAuth?: {

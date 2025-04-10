@@ -15,4 +15,6 @@ declare interface Document {
   daysRemaining?: number;
   reminderSet?: boolean;
   customReminderDays?: number;
+  summary?: string;
+  category?: string;
 }

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BarChart3, Calendar, FileText, Filter, ArrowRight, Shield, Clock } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
@@ -11,6 +10,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import SurakshitLogo from "../ui/SurakshitLogo";
 import { Card } from "../ui/card";
+import DocumentAnalytics from "../analytics/DocumentAnalytics";
+import AnalyticsInsights from "../analytics/AnalyticsInsights";
 
 const Dashboard = () => {
   const { documents } = useDocuments();
@@ -146,7 +147,13 @@ const Dashboard = () => {
         </BlurContainer>
       </div>
       
-      <div className="grid gap-8 lg:grid-cols-3 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+      {/* Analytics Section */}
+      <div className="grid gap-6 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+        <DocumentAnalytics />
+        <AnalyticsInsights />
+      </div>
+      
+      <div className="grid gap-8 lg:grid-cols-3 animate-fade-in" style={{ animationDelay: "0.3s" }}>
         <div className="lg:col-span-2 space-y-6">
           <BlurContainer variant="default" className="p-6">
             <div className="flex items-center justify-between mb-6">

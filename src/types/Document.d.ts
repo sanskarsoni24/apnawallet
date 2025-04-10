@@ -20,4 +20,5 @@ interface Document {
   notes?: string;
   status?: 'active' | 'expired' | 'pending';
   summary?: string;
+  daysRemaining?: number;
 }

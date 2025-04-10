@@ -28,17 +28,6 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
   navigator.userAgent
 );
 
-// Generate a unique device ID if not exists
-const getDeviceId = () => {
-  let deviceId = localStorage.getItem("device_id");
-  if (!deviceId) {
-    deviceId = `device_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-    localStorage.setItem("device_id", deviceId);
-  }
-  console.log("Existing session detected with device ID:", deviceId);
-  return deviceId;
-};
-
 if (isMobileDevice) {
   console.log("Mobile device detected. Optimizing mobile experience...");
   // Store device information in localStorage for responsive adjustments
@@ -52,15 +41,9 @@ if (isMobileDevice) {
   
   // Add mobile app banner class to body
   document.body.classList.add('mobile-view');
-  
-  // Generate device ID
-  getDeviceId();
 } else {
   console.log("Desktop device detected. Optimizing experience...");
   localStorage.setItem("device_type", "desktop");
-  
-  // Generate device ID
-  getDeviceId();
 }
 
 // Add information about the mobile app availability
@@ -71,3 +54,12 @@ console.log(
 console.log(
   "Scan the QR code from the Mobile App page to download the app."
 );
+
+// Set up automatic redirection to dashboard for returning users
+const isReturningUser = localStorage.getItem("returning_user") === "true";
+if (isReturningUser && window.location.pathname === "/") {
+  window.location.href = "/dashboard";
+} else if (window.location.pathname !== "/sign-in" && window.location.pathname !== "/sign-up") {
+  // Mark as returning user after first visit
+  localStorage.setItem("returning_user", "true");
+}

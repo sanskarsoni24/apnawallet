@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
@@ -74,9 +73,6 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           console.error("Error parsing documents from localStorage:", err);
           setDocuments([]);
         }
-      } else {
-        // If no documents exist for this user, initialize with empty array
-        setDocuments([]);
       }
     };
     
@@ -90,9 +86,6 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           console.error("Error parsing categories from localStorage:", err);
           setCategories([]);
         }
-      } else {
-        // Initialize with empty array for new users
-        setCategories([]);
       }
     };
     
@@ -113,16 +106,12 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       loadDocuments();
       loadCategories();
       loadDocumentTypes();
-    } else {
-      // If no user is logged in, clear documents
-      setDocuments([]);
-      setCategories([]);
     }
   }, [email]);
   
   // Save documents to localStorage whenever they change
   useEffect(() => {
-    if (email && documents.length >= 0) {
+    if (email && documents.length > 0) {
       localStorage.setItem(`documents_${email}`, JSON.stringify(documents));
     }
   }, [documents, email]);
@@ -143,15 +132,6 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   // Add a new document
   const addDocument = (doc: Document): string => {
-    if (!email) {
-      toast({
-        title: "User not logged in",
-        description: "You must be logged in to add documents",
-        variant: "destructive"
-      });
-      return "";
-    }
-    
     const id = `doc_${Date.now()}`;
     const newDoc: Document = {
       ...doc,
@@ -183,26 +163,25 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   // Filter documents by type - IMPROVED to properly handle custom document types
   const filterDocumentsByType = (type: string): Document[] => {
-    // Ensure we only return documents belonging to the current user
-    const userDocuments = documents.filter(doc => doc.userId === email);
-    
     if (type === "All") {
-      return userDocuments;
+      return documents.filter(doc => doc.userId === email);
     } else if (type === "upcoming") {
-      return userDocuments.filter(
-        doc => doc.daysRemaining >= 0 && doc.daysRemaining <= 7
+      return documents.filter(
+        doc => doc.userId === email && doc.daysRemaining >= 0 && doc.daysRemaining <= 7
       );
     } else if (documentTypes.includes(type)) {
       // Filter by document type
-      return userDocuments.filter(doc => doc.type === type);
+      return documents.filter(
+        doc => doc.userId === email && doc.type === type
+      );
     } else if (categories.includes(type)) {
       // Filter by custom category
-      return userDocuments.filter(
-        doc => doc.categories && doc.categories.includes(type)
+      return documents.filter(
+        doc => doc.userId === email && doc.categories && doc.categories.includes(type)
       );
     } else {
       // Fallback
-      return userDocuments;
+      return documents.filter(doc => doc.userId === email);
     }
   };
   

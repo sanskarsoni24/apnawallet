@@ -21,6 +21,7 @@ interface UserSettings {
   autoBackup?: boolean;
   backupFrequency?: string;
   cloudExportProviders?: string[];
-  mobileDeviceId?: string;  // Device identifier for mobile linking
-  lastMobileSync?: string;  // Last time device was synced
+  mobileDeviceName?: string;
+  mobileDeviceId?: string;
+  lastMobileSync?: string;
 }

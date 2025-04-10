@@ -22,7 +22,7 @@ const DocumentUpload = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isScannerActive, setIsScannerActive] = useState(false);
-  const [scanStatus, setScanStatus] = useState(""); // Fixed: Added missing useState
+  const [scanStatus, setScanStatus] = useState("");
   const [customReminderDays, setCustomReminderDays] = useState<number>(3); // Default 3 days
   const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
   const [newDocumentType, setNewDocumentType] = useState("");
@@ -135,7 +135,7 @@ const DocumentUpload = () => {
         return newProgress;
       });
       
-      // Extract text from the document with improved OCR
+      // Extract text from the document
       const text = await extractTextFromImage(file);
       setExtractedText(text);
       
@@ -160,7 +160,7 @@ const DocumentUpload = () => {
       await new Promise(resolve => setTimeout(resolve, 600));
       setScanStatus("Generating document summary...");
       
-      // Generate a more accurate summary of the document
+      // Generate a summary of the document
       const summary = await generateDocumentSummary(text, extractedInfo.category);
       setDocumentSummary(summary);
       
@@ -272,7 +272,7 @@ const DocumentUpload = () => {
     // Create file URL for preview
     const fileURL = URL.createObjectURL(currentFile);
     
-    // Create document object with proper typing, including summary
+    // Create document object with proper typing
     const newDocument: Document = {
       id: "", // This will be set in addDocument
       title: data.title,
@@ -282,7 +282,7 @@ const DocumentUpload = () => {
       fileURL: fileURL,
       description: data.description,
       customReminderDays: customReminderDays,
-      summary: data.summary
+      summary: documentSummary
     };
     
     addDocument(newDocument);
@@ -698,11 +698,11 @@ const DocumentUpload = () => {
                 </div>
               )}
               
-              {/* Document summary with improved visibility */}
+              {/* Document summary */}
               {documentSummary && (
-                <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-md">
+                <div className="mb-4 p-3 bg-secondary/40 border border-border rounded-md">
                   <div className="flex items-center gap-2 mb-1">
-                    <FileText className="h-4 w-4 text-indigo-600" />
+                    <FileText className="h-4 w-4 text-primary" />
                     <h4 className="text-sm font-medium">Document Summary</h4>
                   </div>
                   <p className="text-sm text-muted-foreground">{documentSummary}</p>
@@ -826,10 +826,10 @@ const DocumentUpload = () => {
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Info className="h-4 w-4 text-indigo-600 cursor-help" />
+                                <Info className="h-4 w-4 text-muted-foreground" />
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p className="text-xs">AI-generated summary of the document's content</p>
+                                <p className="text-xs">Auto-generated summary of the document</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -837,7 +837,7 @@ const DocumentUpload = () => {
                         <FormControl>
                           <Textarea 
                             placeholder="Auto-generated summary of this document" 
-                            className="min-h-20 border-indigo-200 focus-visible:ring-indigo-500" 
+                            className="min-h-20" 
                             {...field} 
                           />
                         </FormControl>
@@ -912,3 +912,7 @@ const DocumentUpload = () => {
         </DialogContent>
       </Dialog>
     </>
+  );
+};
+
+export default DocumentUpload;

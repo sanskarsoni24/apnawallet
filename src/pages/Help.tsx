@@ -3,7 +3,30 @@ import React from "react";
 import Container from "@/components/layout/Container";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import VideoFaq from "@/components/faq/VideoFaq";
-import { Mail, MessageCircle, ShieldCheck, HelpCircle, Share2, Upload, Download, Clock } from "lucide-react";
+import { 
+  Mail, 
+  MessageCircle, 
+  ShieldCheck, 
+  HelpCircle, 
+  Share2, 
+  Upload, 
+  Download, 
+  Clock, 
+  Info, 
+  BookOpen, 
+  GitMerge, 
+  FileText, 
+  Shield, 
+  Bell, 
+  Smartphone,
+  Cpu,
+  FileCode,
+  CloudOff,
+  FolderSync,
+  Database,
+  KeyRound,
+  Settings
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +45,7 @@ const Help = () => {
         </div>
 
         <Tabs defaultValue="faq" className="space-y-6">
-          <TabsList className="grid grid-cols-3 max-w-md mx-auto">
+          <TabsList className="grid grid-cols-4 max-w-md mx-auto">
             <TabsTrigger value="faq" className="text-sm flex items-center gap-1">
               <HelpCircle className="h-4 w-4" />
               <span>FAQs</span>
@@ -30,6 +53,10 @@ const Help = () => {
             <TabsTrigger value="security" className="text-sm flex items-center gap-1">
               <ShieldCheck className="h-4 w-4" />
               <span>Security</span>
+            </TabsTrigger>
+            <TabsTrigger value="about" className="text-sm flex items-center gap-1">
+              <Info className="h-4 w-4" />
+              <span>About</span>
             </TabsTrigger>
             <TabsTrigger value="contact" className="text-sm flex items-center gap-1">
               <MessageCircle className="h-4 w-4" />
@@ -191,6 +218,119 @@ const Help = () => {
                       </p>
                     </AccordionContent>
                   </AccordionItem>
+                  
+                  <AccordionItem value="item-7">
+                    <AccordionTrigger className="text-base font-medium">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-primary" />
+                        <span>What is document summarization?</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p>
+                        Document summarization is a Premium feature that automatically creates a concise 
+                        summary of your document's content using AI technology.
+                      </p>
+                      <p className="my-2">
+                        This feature helps you quickly understand the key points of your documents without 
+                        having to read through the entire content.
+                      </p>
+                      <p>Benefits of document summarization:</p>
+                      <ul className="list-disc pl-5 space-y-1 mt-2">
+                        <li>Save time by quickly understanding document contents</li>
+                        <li>Identify important dates, amounts, and other key information</li>
+                        <li>Get reminders about document purpose and importance</li>
+                        <li>Easier document organization and searchability</li>
+                      </ul>
+                      <p className="mt-2">
+                        You can view the document summary in the document details page after uploading.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-8">
+                    <AccordionTrigger className="text-base font-medium">
+                      <div className="flex items-center gap-2">
+                        <Smartphone className="h-5 w-5 text-primary" />
+                        <span>How do I use the mobile app?</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p>
+                        Our mobile app provides convenient access to your documents on the go:
+                      </p>
+                      <p className="my-2">To get started with the mobile app:</p>
+                      <ol className="list-decimal pl-5 space-y-2">
+                        <li>Download the app from the App Store or Google Play</li>
+                        <li>Log in with your SurakshitLocker account</li>
+                        <li>Scan the QR code from the web app to link your devices</li>
+                      </ol>
+                      <p className="mt-2">Key mobile app features:</p>
+                      <ul className="list-disc pl-5 space-y-1 mt-2">
+                        <li>Scan physical documents using your phone's camera</li>
+                        <li>Convert multiple scanned images to PDF</li>
+                        <li>Access your documents offline</li>
+                        <li>Receive notification reminders</li>
+                        <li>Quick document sharing</li>
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-9">
+                    <AccordionTrigger className="text-base font-medium">
+                      <div className="flex items-center gap-2">
+                        <Bell className="h-5 w-5 text-primary" />
+                        <span>How do notifications work?</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p>
+                        SurakshitLocker offers several types of notifications:
+                      </p>
+                      <ul className="list-disc pl-5 space-y-1 my-2">
+                        <li><span className="font-medium">Email notifications:</span> Sent to your registered email address</li>
+                        <li><span className="font-medium">Push notifications:</span> Delivered to your browser or mobile app</li>
+                        <li><span className="font-medium">Voice reminders:</span> Automated voice calls for critical reminders (Premium)</li>
+                      </ul>
+                      <p>To manage your notification settings:</p>
+                      <ol className="list-decimal pl-5 space-y-2 mt-2">
+                        <li>Go to Settings → Notifications</li>
+                        <li>Toggle on/off the notification types you want to receive</li>
+                        <li>Set your preferred notification timing and frequency</li>
+                      </ol>
+                      <p className="mt-2">
+                        Note that some notification types are only available on specific subscription plans.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-10">
+                    <AccordionTrigger className="text-base font-medium">
+                      <div className="flex items-center gap-2">
+                        <CloudOff className="h-5 w-5 text-primary" />
+                        <span>Can I use SurakshitLocker offline?</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p>
+                        Yes, SurakshitLocker has offline capabilities:
+                      </p>
+                      <ul className="list-disc pl-5 space-y-1 my-2">
+                        <li>The web app can work in offline mode using Progressive Web App (PWA) technology</li>
+                        <li>The mobile app has built-in offline support</li>
+                        <li>You can download documents for offline access</li>
+                      </ul>
+                      <p>To enable offline access:</p>
+                      <ol className="list-decimal pl-5 space-y-2 mt-2">
+                        <li>For web: Add SurakshitLocker to your home screen when prompted</li>
+                        <li>For mobile: Toggle "Enable Offline Mode" in the app settings</li>
+                        <li>Download important documents by clicking the "Available Offline" toggle</li>
+                      </ol>
+                      <p className="mt-2 text-sm italic">
+                        Note: Some features like document sharing require an internet connection.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
                 </Accordion>
               </div>
             </div>
@@ -287,6 +427,177 @@ const Help = () => {
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="about" className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>About SurakshitLocker</CardTitle>
+                  <CardDescription>
+                    Your secure document management solution
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p>
+                    SurakshitLocker is a comprehensive document management system designed to 
+                    help individuals and businesses securely store, organize, and access their 
+                    important documents anytime, anywhere.
+                  </p>
+                  
+                  <div className="space-y-4 mt-4">
+                    <div className="flex items-start gap-3">
+                      <Shield className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h4 className="font-medium mb-1">Security First Approach</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Built with industry-leading security standards including end-to-end 
+                          encryption, zero-knowledge architecture, and multi-factor authentication.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <Cpu className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h4 className="font-medium mb-1">Intelligent Document Processing</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Our AI-powered system automatically extracts key information from your 
+                          documents, creates summaries, and helps you stay on top of important deadlines.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <Smartphone className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h4 className="font-medium mb-1">Multi-Platform Access</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Access your documents from any device with our web app, mobile apps, 
+                          and browser extensions. Scan documents directly using your smartphone.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <FolderSync className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h4 className="font-medium mb-1">Seamless Organization</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Organize documents with custom categories, tags, and smart folders. 
+                          Powerful search helps you find what you need instantly.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Technical Specifications</CardTitle>
+                    <CardDescription>
+                      System requirements and technical information
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-medium mb-2">Web Application</h4>
+                        <ul className="text-sm space-y-1 text-muted-foreground">
+                          <li><span className="font-medium text-foreground">Supported browsers:</span> Chrome, Firefox, Safari, Edge (latest 2 versions)</li>
+                          <li><span className="font-medium text-foreground">Minimum screen resolution:</span> 320px width (responsive design)</li>
+                          <li><span className="font-medium text-foreground">Optimized for:</span> Desktop, tablet, and mobile devices</li>
+                          <li><span className="font-medium text-foreground">Internet connection:</span> Required for full functionality</li>
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium mb-2">Mobile Application</h4>
+                        <ul className="text-sm space-y-1 text-muted-foreground">
+                          <li><span className="font-medium text-foreground">iOS:</span> iOS 14.0 or later (iPhone, iPad)</li>
+                          <li><span className="font-medium text-foreground">Android:</span> Android 8.0 or later</li>
+                          <li><span className="font-medium text-foreground">Camera:</span> Required for document scanning</li>
+                          <li><span className="font-medium text-foreground">Storage:</span> Minimum 100MB free space recommended</li>
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium mb-2">File Support</h4>
+                        <ul className="text-sm space-y-1 text-muted-foreground">
+                          <li><span className="font-medium text-foreground">Document formats:</span> PDF, DOCX, DOC, TXT, RTF, ODT</li>
+                          <li><span className="font-medium text-foreground">Image formats:</span> JPG, JPEG, PNG, TIFF, BMP, WEBP</li>
+                          <li><span className="font-medium text-foreground">Spreadsheet formats:</span> XLSX, XLS, CSV, ODS (Premium)</li>
+                          <li><span className="font-medium text-foreground">Maximum file size:</span> 25MB (100MB for Enterprise)</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle>System Status</CardTitle>
+                    <CardDescription>
+                      Current system performance and service availability
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center pb-2 border-b">
+                        <div className="flex items-center gap-2">
+                          <Database className="h-4 w-4 text-green-500" />
+                          <span className="text-sm">Document Storage</span>
+                        </div>
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Operational</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pb-2 border-b">
+                        <div className="flex items-center gap-2">
+                          <KeyRound className="h-4 w-4 text-green-500" />
+                          <span className="text-sm">Authentication Services</span>
+                        </div>
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Operational</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pb-2 border-b">
+                        <div className="flex items-center gap-2">
+                          <FileCode className="h-4 w-4 text-green-500" />
+                          <span className="text-sm">Document Processing</span>
+                        </div>
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Operational</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pb-2 border-b">
+                        <div className="flex items-center gap-2">
+                          <Smartphone className="h-4 w-4 text-green-500" />
+                          <span className="text-sm">Mobile Applications</span>
+                        </div>
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Operational</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <Settings className="h-4 w-4 text-green-500" />
+                          <span className="text-sm">API Services</span>
+                        </div>
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Operational</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 pt-2 border-t">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-muted-foreground">Last updated: April 10, 2025 07:05 UTC</span>
+                        <Button variant="link" size="sm" className="h-auto p-0 text-xs">
+                          View history
+                        </Button>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>

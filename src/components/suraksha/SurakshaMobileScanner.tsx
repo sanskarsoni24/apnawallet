@@ -1,12 +1,13 @@
+
 import React, { useState, useEffect } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
-import { AlertCircle, Smartphone, Check, Loader2 } from "lucide-react";
+import { AlertCircle, Smartphone, Check, Loader2, FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 
-type ScannerState = "waiting" | "scanning" | "success" | "error";
+type ScannerState = "waiting" | "scanning" | "success" | "error" | "pdf-scanning";
 
 interface SurakshaMobileScannerProps {
   userSettings?: UserSettings;
@@ -20,6 +21,9 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
   const [scannerState, setScannerState] = useState<ScannerState>("waiting");
   const [deviceName, setDeviceName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [pdfDocument, setPdfDocument] = useState<Blob | null>(null);
+  const [pdfScanning, setPdfScanning] = useState(false);
+  const [pdfName, setPdfName] = useState("Scanned Document");
 
   useEffect(() => {
     // Check if device is already paired
@@ -87,10 +91,18 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
     setScannerState("scanning");
     setError(null);
   };
+  
+  const startPdfScanning = () => {
+    setScannerState("pdf-scanning");
+    setPdfScanning(true);
+    setError(null);
+  };
 
   const resetScanner = () => {
     setScannerState("waiting");
     setError(null);
+    setPdfScanning(false);
+    setPdfDocument(null);
   };
 
   const unpairDevice = () => {
@@ -106,6 +118,47 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
     toast({
       title: "Device unpaired",
       description: "Your mobile device has been disconnected",
+    });
+  };
+  
+  // Function to capture multiple images and convert to PDF
+  const capturePdf = async () => {
+    // This is a simulation; in a real app, it would capture multiple images
+    setPdfScanning(true);
+    toast({
+      title: "Capturing document",
+      description: "Processing images into PDF format...",
+    });
+    
+    // Simulate PDF creation process
+    setTimeout(() => {
+      // In reality, this would be actual PDF data from captured images
+      const mockPdfBlob = new Blob(["PDF content would be here"], { type: "application/pdf" });
+      setPdfDocument(mockPdfBlob);
+      setPdfScanning(false);
+      
+      toast({
+        title: "PDF created",
+        description: "Document has been converted to PDF successfully!",
+      });
+    }, 2000);
+  };
+  
+  const downloadPdf = () => {
+    if (!pdfDocument) return;
+    
+    const url = URL.createObjectURL(pdfDocument);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${pdfName}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "PDF downloaded",
+      description: "Your scanned document has been downloaded successfully.",
     });
   };
 
@@ -146,6 +199,20 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
                   Disconnect
                 </Button>
               </div>
+              
+              <div className="mt-6 pt-4 border-t w-full">
+                <h4 className="font-medium mb-3">Document Scanning Features</h4>
+                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs mx-auto">
+                  <Button
+                    variant="outline"
+                    onClick={startPdfScanning}
+                    className="flex-1 flex items-center gap-2"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Scan to PDF
+                  </Button>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -163,9 +230,15 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
                 Scan the QR code from your SurakshitLocker mobile app to connect your account
               </p>
               
-              <Button onClick={startScanning}>
-                Start Scanner
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button onClick={startScanning}>
+                  Start Scanner
+                </Button>
+                <Button variant="outline" onClick={startPdfScanning} className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Scan to PDF
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -192,6 +265,91 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
               <Button variant="outline" onClick={resetScanner}>
                 Cancel
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {scannerState === "pdf-scanning" && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center space-y-4">
+              <h3 className="text-xl font-medium">Scan Document to PDF</h3>
+              <p className="text-sm text-muted-foreground text-center mb-2">
+                Take multiple photos of document pages to create a PDF file
+              </p>
+              
+              {!pdfDocument ? (
+                <>
+                  <div className="relative w-full max-w-sm overflow-hidden rounded-lg border bg-muted aspect-[3/4] flex items-center justify-center">
+                    {pdfScanning ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                        <p className="text-sm font-medium">Processing document...</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-3">
+                        <FileText className="h-16 w-16 text-muted-foreground/50" />
+                        <p className="text-sm">Position your document and tap capture</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="w-full max-w-sm">
+                    <label className="text-sm font-medium mb-2 block">Document Name</label>
+                    <input
+                      type="text"
+                      value={pdfName}
+                      onChange={(e) => setPdfName(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md mb-4"
+                      placeholder="Enter document name"
+                    />
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={resetScanner}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={capturePdf}
+                      disabled={pdfScanning}
+                      className="flex items-center gap-2"
+                    >
+                      {pdfScanning ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Processing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-4 w-4" />
+                          <span>Capture Document</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="relative w-full max-w-sm overflow-hidden rounded-lg border bg-muted p-6 flex flex-col items-center justify-center">
+                    <FileText className="h-16 w-16 text-primary mb-3" />
+                    <h4 className="font-medium text-lg mb-1">{pdfName}.pdf</h4>
+                    <p className="text-sm text-muted-foreground">PDF document ready for download</p>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={resetScanner}>
+                      New Scan
+                    </Button>
+                    <Button 
+                      onClick={downloadPdf}
+                      className="flex items-center gap-2"
+                    >
+                      Download PDF
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>

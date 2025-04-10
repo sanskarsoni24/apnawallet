@@ -28,6 +28,9 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
   navigator.userAgent
 );
 
+// Chrome mobile optimizations
+const isChromeMobile = isMobileDevice && /Chrome/i.test(navigator.userAgent);
+
 if (isMobileDevice) {
   console.log("Mobile device detected. Optimizing mobile experience...");
   // Store device information in localStorage for responsive adjustments
@@ -37,6 +40,30 @@ if (isMobileDevice) {
   const viewportMeta = document.querySelector('meta[name="viewport"]');
   if (viewportMeta) {
     viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+  }
+  
+  // Chrome mobile specific optimizations
+  if (isChromeMobile) {
+    // Set theme-color for Chrome's address bar
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute('content', '#5f5cff');
+    } else {
+      const meta = document.createElement('meta');
+      meta.setAttribute('name', 'theme-color');
+      meta.setAttribute('content', '#5f5cff');
+      document.head.appendChild(meta);
+    }
+    
+    // Add Chrome mobile-specific class
+    document.body.classList.add('chrome-mobile');
+    
+    // Optimize for Chrome's pull-to-refresh feature
+    document.addEventListener('touchstart', function(e) {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    }, { passive: false });
   }
   
   // Add mobile app banner class to body

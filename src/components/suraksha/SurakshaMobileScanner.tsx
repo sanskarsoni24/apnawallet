@@ -14,6 +14,13 @@ interface SurakshaMobileScannerProps {
   updateUserSettings?: (settings: Partial<UserSettings>) => void;
 }
 
+// Define the Scanner props interface explicitly to match the actual component
+interface ScannerProps {
+  onDecode: (result: string) => void;
+  onError: (err: any) => void;
+  containerStyle?: Record<string, string>;
+}
+
 const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
   userSettings,
   updateUserSettings
@@ -180,7 +187,7 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
               
               <div className="relative w-full max-w-sm overflow-hidden rounded-lg border">
                 <Scanner
-                  onResult={handleDetect}
+                  onDecode={handleDetect}
                   onError={handleError}
                   containerStyle={{ borderRadius: '0.5rem' }}
                 />

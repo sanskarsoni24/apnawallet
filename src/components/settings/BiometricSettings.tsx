@@ -25,18 +25,27 @@ const BiometricSettings = () => {
   const [biometricsSupported, setBiometricsSupported] = useState(false);
   const [faceIdSupported, setFaceIdSupported] = useState(false);
   const [fingerprintSupported, setFingerprintSupported] = useState(false);
+  const [isInIframe, setIsInIframe] = useState(false);
   
   // Check if biometric authentication is supported
   useEffect(() => {
+    // Check if running in an iframe
+    try {
+      setIsInIframe(window.self !== window.top);
+    } catch (e) {
+      // If we can't access window.top due to cross-origin restrictions, we're in an iframe
+      setIsInIframe(true);
+    }
+
     const checkBiometricSupport = async () => {
       // Check if the Web Authentication API is available
       if (window.PublicKeyCredential) {
         try {
           // Check if platform authenticator is available
           const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-          setBiometricsSupported(available);
+          setBiometricsSupported(available && !isInIframe);
           
-          if (available) {
+          if (available && !isInIframe) {
             // Most modern laptops and phones with biometrics will return true here
             // We're making educated guesses about specific capabilities
             
@@ -54,7 +63,9 @@ const BiometricSettings = () => {
             
             console.log("Biometric authentication is supported on this device");
           } else {
-            console.log("Biometric authentication is not supported on this device");
+            console.log(isInIframe ? 
+              "Biometric authentication is not available in iframes due to security restrictions" : 
+              "Biometric authentication is not supported on this device");
           }
         } catch (error) {
           console.error("Error checking biometric support:", error);
@@ -67,16 +78,24 @@ const BiometricSettings = () => {
     };
     
     checkBiometricSupport();
-  }, []);
+  }, [isInIframe]);
   
   // Enable or disable biometric authentication
   const handleBiometricToggle = async (enabled: boolean) => {
     if (enabled && !biometricsSupported) {
-      toast({
-        title: "Device not supported",
-        description: "Your device doesn't support biometric authentication",
-        variant: "destructive",
-      });
+      if (isInIframe) {
+        toast({
+          title: "Not available in preview",
+          description: "Biometric authentication is not available in the preview. It will work in your deployed app.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Device not supported",
+          description: "Your device doesn't support biometric authentication",
+          variant: "destructive",
+        });
+      }
       return;
     }
     
@@ -88,8 +107,8 @@ const BiometricSettings = () => {
       setFingerprintEnabled(false);
     }
     
-    // Register a credential for biometric auth (simplified for demo)
-    if (enabled) {
+    // Try to register a credential for biometric auth (simplified for demo)
+    if (enabled && !isInIframe) {
       try {
         await testBiometricRegistration();
         
@@ -117,27 +136,37 @@ const BiometricSettings = () => {
         });
       }
     } else {
+      // If in iframe or just disabling, update settings without testing biometrics
       updateUserSettings({
         biometricAuth: {
-          enabled: false,
-          faceIdEnabled: false,
-          fingerprintEnabled: false,
-          lastVerified: undefined,
+          enabled: isInIframe ? true : enabled, // In iframe, simulate success
+          faceIdEnabled: isInIframe ? faceIdEnabled : (enabled ? faceIdEnabled : false),
+          fingerprintEnabled: isInIframe ? fingerprintEnabled : (enabled ? fingerprintEnabled : false),
+          lastVerified: (isInIframe || enabled) ? new Date().toISOString() : undefined,
         }
       });
       
-      toast({
-        title: "Biometric authentication disabled",
-        description: "Biometric authentication has been turned off",
-      });
+      if (isInIframe && enabled) {
+        toast({
+          title: "Biometric authentication simulated",
+          description: "In the preview environment, biometric authentication is simulated. It will work properly in the deployed app.",
+        });
+      } else if (!enabled) {
+        toast({
+          title: "Biometric authentication disabled",
+          description: "Biometric authentication has been turned off",
+        });
+      }
     }
   };
   
   // Test biometric registration to verify it works
   const testBiometricRegistration = async () => {
-    // Only try if Web Authentication API is available
-    if (!window.PublicKeyCredential) {
-      throw new Error("Web Authentication API not supported");
+    // Only try if Web Authentication API is available and not in iframe
+    if (!window.PublicKeyCredential || isInIframe) {
+      throw new Error(isInIframe ? 
+        "Biometric authentication is not available in preview mode" :
+        "Web Authentication API not supported");
     }
     
     try {
@@ -182,7 +211,7 @@ const BiometricSettings = () => {
   
   // Enable or disable face ID
   const handleFaceIdToggle = (enabled: boolean) => {
-    if (enabled && !faceIdSupported) {
+    if (enabled && !faceIdSupported && !isInIframe) {
       toast({
         title: "Face ID not supported",
         description: "Your device doesn't appear to support facial recognition",
@@ -212,7 +241,7 @@ const BiometricSettings = () => {
   
   // Enable or disable fingerprint
   const handleFingerprintToggle = (enabled: boolean) => {
-    if (enabled && !fingerprintSupported) {
+    if (enabled && !fingerprintSupported && !isInIframe) {
       toast({
         title: "Fingerprint not supported",
         description: "Your device doesn't appear to support fingerprint recognition",
@@ -267,11 +296,24 @@ const BiometricSettings = () => {
             id="biometric-auth"
             checked={biometricsEnabled}
             onCheckedChange={handleBiometricToggle}
-            disabled={!biometricsSupported}
+            disabled={!biometricsSupported && !isInIframe}
           />
         </div>
         
-        {!biometricsSupported && (
+        {isInIframe && (
+          <div className="flex items-start space-x-2 rounded-md bg-blue-50 dark:bg-blue-950/20 p-3 text-blue-800 dark:text-blue-300">
+            <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium">Preview Mode Notice</p>
+              <p className="text-sm">
+                Biometric authentication API is disabled in preview mode due to security restrictions.
+                Settings changes will be saved, but actual biometric verification will only work in the deployed app.
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {!biometricsSupported && !isInIframe && (
           <div className="flex items-start space-x-2 rounded-md bg-amber-50 dark:bg-amber-950/20 p-3 text-amber-800 dark:text-amber-300">
             <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
             <div>
@@ -304,7 +346,7 @@ const BiometricSettings = () => {
                   id="face-id"
                   checked={faceIdEnabled}
                   onCheckedChange={handleFaceIdToggle}
-                  disabled={!biometricsEnabled || !faceIdSupported}
+                  disabled={!biometricsEnabled || (!faceIdSupported && !isInIframe)}
                 />
               </div>
               
@@ -326,7 +368,7 @@ const BiometricSettings = () => {
                   id="fingerprint"
                   checked={fingerprintEnabled}
                   onCheckedChange={handleFingerprintToggle}
-                  disabled={!biometricsEnabled || !fingerprintSupported}
+                  disabled={!biometricsEnabled || (!fingerprintSupported && !isInIframe)}
                 />
               </div>
             </div>

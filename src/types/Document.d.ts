@@ -17,4 +17,5 @@ declare interface Document {
   customReminderDays?: number;
   summary?: string;
   category?: string;
+  notes?: string;
 }

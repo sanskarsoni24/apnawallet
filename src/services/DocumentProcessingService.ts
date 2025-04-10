@@ -1,4 +1,3 @@
-
 import { format, parseISO, differenceInDays, addDays, parse, isValid } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 
@@ -196,5 +195,36 @@ export const extractTextFromImage = async (file: File): Promise<string> => {
         resolve("Document content extraction simulation.\nThis is placeholder text that would normally be extracted using OCR technology.\nDate: 2023-10-20\nRef: DOC-12345\nExpiry: 2024-10-20");
       }
     }, 2000);
+  });
+};
+
+// Function to generate a summary of a document
+export const generateDocumentSummary = async (text: string, category?: string): Promise<string> => {
+  // This would normally use AI/NLP to generate a summary
+  // For now, we'll simulate with predefined summaries based on document type
+  
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const lowerText = text.toLowerCase();
+      
+      if (category === 'Invoice' || lowerText.includes('invoice')) {
+        resolve("This is an invoice document that contains payment details and requires action by the due date. Please review the amount and payment method.");
+      } else if (category === 'Identity Document' || lowerText.includes('passport') || lowerText.includes('license')) {
+        resolve("This is an identification document containing personal information. It has an expiration date and should be kept secure.");
+      } else if (category === 'Insurance' || lowerText.includes('insurance') || lowerText.includes('policy')) {
+        resolve("This insurance document outlines coverage details, policy period, and conditions. Check the renewal date and coverage limits.");
+      } else if (category === 'Tax Document' || lowerText.includes('tax')) {
+        resolve("This tax-related document contains important financial information. Please verify all numbers and keep for your records.");
+      } else if (category === 'Certificate' || lowerText.includes('certificate')) {
+        resolve("This certificate verifies an achievement, qualification, or participation. Note the issuing authority and date of issue.");
+      } else if (lowerText.includes('agreement') || lowerText.includes('contract')) {
+        resolve("This document appears to be a legal agreement outlining terms and conditions between parties. Review the obligations and termination clauses.");
+      } else if (lowerText.includes('report') || lowerText.includes('analysis')) {
+        resolve("This report contains data analysis and findings. Check the methodology section and key conclusions.");
+      } else {
+        // Generic summary
+        resolve("This document contains important information. Key details include dates, names, and possibly amounts. Review the document for specific actions required.");
+      }
+    }, 1000);
   });
 };

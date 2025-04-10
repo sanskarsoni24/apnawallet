@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Upload, Camera, ArrowRight, Loader2, ScanSearch, Plus, X, FileIcon } from "lucide-react";
+import { Upload, Camera, ArrowRight, Loader2, ScanSearch, Plus, X, FileIcon, FileText, Info } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { toast } from "@/hooks/use-toast";
 import { useDocuments, Document } from "@/contexts/DocumentContext";
@@ -9,10 +9,11 @@ import { Textarea } from "../ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "../ui/form";
 import { useForm } from "react-hook-form";
-import { processDocument, parseMultiFormatDate } from "@/services/DocumentProcessingService";
+import { processDocument, parseMultiFormatDate, extractTextFromImage, generateDocumentSummary } from "@/services/DocumentProcessingService";
 import { format, parse, isValid } from "date-fns";
 import { Badge } from "../ui/badge";
 import { ScrollArea } from "../ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 const DocumentUpload = () => {
   const [dragging, setDragging] = useState(false);
@@ -27,6 +28,8 @@ const DocumentUpload = () => {
   const [newDocumentType, setNewDocumentType] = useState("");
   const [uploadProgress, setUploadProgress] = useState<number[]>([]);
   const [bulkUploadMode, setBulkUploadMode] = useState(false);
+  const [documentSummary, setDocumentSummary] = useState<string>("");
+  const [extractedText, setExtractedText] = useState<string>("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +41,7 @@ const DocumentUpload = () => {
       type: "Invoice",
       dueDate: "",
       description: "",
+      summary: ""
     }
   });
   
@@ -46,6 +50,8 @@ const DocumentUpload = () => {
     setIsProcessing(false);
     setScanStatus("");
     setCustomReminderDays(3);
+    setDocumentSummary("");
+    setExtractedText("");
   };
   
   const resetUpload = () => {
@@ -129,7 +135,11 @@ const DocumentUpload = () => {
         return newProgress;
       });
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Extract text from the document
+      const text = await extractTextFromImage(file);
+      setExtractedText(text);
+      
+      await new Promise(resolve => setTimeout(resolve, 800));
       setScanStatus("Identifying document type...");
       
       setUploadProgress(prev => {
@@ -138,8 +148,8 @@ const DocumentUpload = () => {
         return newProgress;
       });
       
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setScanStatus("Detecting due dates...");
+      // Process document to extract information
+      const extractedInfo = await processDocument(file);
       
       setUploadProgress(prev => {
         const newProgress = [...prev];
@@ -147,17 +157,18 @@ const DocumentUpload = () => {
         return newProgress;
       });
       
-      // Process document to extract information
-      const extractedInfo = await processDocument(file);
+      await new Promise(resolve => setTimeout(resolve, 600));
+      setScanStatus("Generating document summary...");
+      
+      // Generate a summary of the document
+      const summary = await generateDocumentSummary(text, extractedInfo.category);
+      setDocumentSummary(summary);
       
       setUploadProgress(prev => {
         const newProgress = [...prev];
         newProgress[fileIndex] = 90;
         return newProgress;
       });
-      
-      await new Promise(resolve => setTimeout(resolve, 600));
-      setScanStatus("Finalizing results...");
       
       // Update form with extracted info
       if (extractedInfo.title) {
@@ -173,6 +184,10 @@ const DocumentUpload = () => {
       
       if (extractedInfo.description) {
         form.setValue('description', extractedInfo.description);
+      }
+      
+      if (summary) {
+        form.setValue('summary', summary);
       }
       
       if (extractedInfo.dueDate) {
@@ -220,7 +235,7 @@ const DocumentUpload = () => {
       
       toast({
         title: "Document Processed",
-        description: "Document information extracted successfully!",
+        description: "Document information extracted and summarized successfully!",
       });
       
     } catch (error) {
@@ -266,7 +281,8 @@ const DocumentUpload = () => {
       daysRemaining: diffDays,
       fileURL: fileURL,
       description: data.description,
-      customReminderDays: customReminderDays
+      customReminderDays: customReminderDays,
+      summary: documentSummary
     };
     
     addDocument(newDocument);
@@ -682,6 +698,17 @@ const DocumentUpload = () => {
                 </div>
               )}
               
+              {/* Document summary */}
+              {documentSummary && (
+                <div className="mb-4 p-3 bg-secondary/40 border border-border rounded-md">
+                  <div className="flex items-center gap-2 mb-1">
+                    <FileText className="h-4 w-4 text-primary" />
+                    <h4 className="text-sm font-medium">Document Summary</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{documentSummary}</p>
+                </div>
+              )}
+              
               {/* Multiple files indicator */}
               {bulkUploadMode && (
                 <div className="mb-4">
@@ -791,13 +818,42 @@ const DocumentUpload = () => {
                   
                   <FormField
                     control={form.control}
+                    name="summary"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between">
+                          <FormLabel>Document Summary</FormLabel>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-4 w-4 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">Auto-generated summary of the document</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Auto-generated summary of this document" 
+                            className="min-h-20" 
+                            {...field} 
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description</FormLabel>
+                        <FormLabel>Additional Notes</FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="Enter document description or notes" 
+                            placeholder="Enter additional notes or comments" 
                             className="min-h-20" 
                             {...field} 
                           />

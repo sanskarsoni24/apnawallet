@@ -14,4 +14,5 @@ type UserSettings = {
   googleId?: string;
   lastLoginMethod?: 'password' | 'google';
   defaultSharingPlatforms?: string[];
+  documentSummarization?: boolean;
 };

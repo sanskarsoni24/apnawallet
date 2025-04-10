@@ -19,7 +19,6 @@ interface Document {
   isArchived?: boolean;
   notes?: string;
   status?: 'active' | 'expired' | 'pending' | 'completed' | 'deleted';
-  summary?: string;
   daysRemaining?: number;
   dueDate?: string;
   fileURL?: string;

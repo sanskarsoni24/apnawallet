@@ -103,7 +103,7 @@ const SignIn = () => {
             <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <LogIn className="h-5 w-5 text-primary" />
             </div>
-            <span className="font-medium text-lg">DocuNinja</span>
+            <span className="font-medium text-lg">ApnaWallet</span>
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight">Sign In</h1>
           <p className="text-sm text-muted-foreground">

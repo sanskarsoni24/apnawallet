@@ -28,4 +28,5 @@ interface Document {
   importance?: 'low' | 'medium' | 'high' | 'critical';
   createdAt?: string;
   categories?: string[];
+  summary?: string;
 }

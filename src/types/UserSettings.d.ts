@@ -42,4 +42,6 @@ interface UserSettings {
   layoutPreference?: 'compact' | 'comfortable' | 'spacious';
   dateFormat?: string;
   timeFormat?: '12h' | '24h';
+  mobileDeviceName?: string;
+  googleEmail?: string;
 }

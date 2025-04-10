@@ -1,7 +1,7 @@
 
 {
-  "name": "SurakshitLocker",
-  "short_name": "SurakshitLocker",
+  "name": "ApnaWallet",
+  "short_name": "ApnaWallet",
   "description": "Your secure document vault and password manager",
   "start_url": "/",
   "display": "standalone",
@@ -26,16 +26,16 @@
   "related_applications": [
     {
       "platform": "web",
-      "url": "https://surakshitlocker.com"
+      "url": "https://apnawallet.com"
     },
     {
       "platform": "play",
-      "url": "https://play.google.com/store/apps/details?id=app.surakshitlocker.secure",
-      "id": "app.surakshitlocker.secure"
+      "url": "https://play.google.com/store/apps/details?id=app.apnawallet.secure",
+      "id": "app.apnawallet.secure"
     },
     {
       "platform": "chrome_web_store",
-      "url": "https://chrome.google.com/webstore/detail/surakshitlocker-extension/abcdefghijklmnopqrstuvwxyz",
+      "url": "https://chrome.google.com/webstore/detail/apnawallet-extension/abcdefghijklmnopqrstuvwxyz",
       "id": "abcdefghijklmnopqrstuvwxyz"
     }
   ],
@@ -64,7 +64,7 @@
     }
   ],
   "chrome_settings_overrides": {
-    "homepage": "https://surakshitlocker.com/dashboard"
+    "homepage": "https://apnawallet.com/dashboard"
   },
   "oauth2": {
     "client_id": "demo-client-id.apps.googleusercontent.com",

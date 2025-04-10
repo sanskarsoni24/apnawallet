@@ -1,8 +1,8 @@
 
 {
   "manifest_version": 3,
-  "name": "SurakshitLocker Document Manager",
-  "description": "Manage and track your important documents with SurakshitLocker",
+  "name": "ApnaWallet Document Manager",
+  "description": "Manage and track your important documents with ApnaWallet",
   "version": "1.0",
   "icons": {
     "16": "icon-16.png",

@@ -15,7 +15,7 @@ defineCustomElements(window);
 
 // Display a message in the console
 console.log(
-  "%cSurakshitLocker Document Manager",
+  "%cApnaWallet Document Manager",
   "color: #5f5cff; font-size: 24px; font-weight: bold;"
 );
 console.log(

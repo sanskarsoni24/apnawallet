@@ -64,6 +64,29 @@ if (isMobileDevice) {
         e.preventDefault();
       }
     }, { passive: false });
+    
+    // Improve scrolling performance on Chrome mobile
+    document.addEventListener('touchmove', function(e) {
+      // Allow scrolling but optimize performance
+    }, { passive: true });
+    
+    // Set home screen icon for Chrome
+    const appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]');
+    if (!appleTouchIcon) {
+      const link = document.createElement('link');
+      link.setAttribute('rel', 'apple-touch-icon');
+      link.setAttribute('href', '/apple-touch-icon.png');
+      document.head.appendChild(link);
+    }
+    
+    // Add fullscreen mode capability for Chrome PWA
+    const manifestLink = document.querySelector('link[rel="manifest"]');
+    if (!manifestLink) {
+      const link = document.createElement('link');
+      link.setAttribute('rel', 'manifest');
+      link.setAttribute('href', '/manifest.json');
+      document.head.appendChild(link);
+    }
   }
   
   // Add mobile app banner class to body
@@ -71,6 +94,16 @@ if (isMobileDevice) {
 } else {
   console.log("Desktop device detected. Optimizing experience...");
   localStorage.setItem("device_type", "desktop");
+}
+
+// Create a "standalone" display mode detection
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                    (window.navigator as any).standalone ||
+                    document.referrer.includes('android-app://');
+
+if (isStandalone) {
+  document.body.classList.add('standalone-mode');
+  localStorage.setItem("app_mode", "standalone");
 }
 
 // Add information about the mobile app availability

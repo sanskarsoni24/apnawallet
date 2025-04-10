@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import MobileBanner from "../ui/MobileBanner";
+import MobileQRCodeModal from "../mobile/MobileQRCodeModal";
 
 const Header = () => {
   const location = useLocation();
@@ -72,7 +73,6 @@ const Header = () => {
   const navItems = [
     { name: "Dashboard", path: "/dashboard" },
     { name: "Documents", path: "/documents" },
-    { name: "Mobile App", path: "/mobile-app" },
     { name: "Pricing", path: "/pricing" },
     { name: "Help", path: "/help" },
   ];
@@ -127,6 +127,8 @@ const Header = () => {
             </Link>
 
             <ModeToggle />
+            
+            {isLoggedIn && <MobileQRCodeModal deviceName={userSettings?.mobileDeviceName} />}
             
             {isLoggedIn ? (
               <>

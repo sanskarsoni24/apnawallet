@@ -33,11 +33,8 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
     }
   }, [userSettings]);
 
-  // Updated handler to match the API of the Scanner component
-  const handleScan = (detectedCodes: any) => {
-    // Extract the text value from the detected codes
-    const result = detectedCodes && detectedCodes.length > 0 ? detectedCodes[0].rawValue : null;
-    
+  // Handle QR code result
+  const handleDecode = (result: string) => {
     if (result) {
       try {
         // Parse QR code data
@@ -255,7 +252,7 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
               
               <div className="relative w-full max-w-sm overflow-hidden rounded-lg border">
                 <Scanner
-                  onDecode={handleScan}
+                  onResult={handleDecode}
                   onError={handleError}
                   containerStyle={{ borderRadius: '0.5rem' }}
                 />

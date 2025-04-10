@@ -23,17 +23,6 @@ console.log(
   "font-size: 14px;"
 );
 
-// Check if running in Electron environment
-const isElectron = !!window.navigator.userAgent.match(/Electron/i);
-if (isElectron) {
-  console.log("Running in desktop app mode with enhanced capabilities");
-  document.body.classList.add('electron-app');
-  localStorage.setItem("app_mode", "desktop");
-  
-  // Store device information for responsive adjustments
-  localStorage.setItem("device_type", "desktop");
-}
-
 // Enhanced device detection for better user experience
 const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
   navigator.userAgent
@@ -124,15 +113,6 @@ console.log(
 );
 console.log(
   "Scan the QR code from the Mobile App page to download the app."
-);
-
-// Add information about the desktop app
-console.log(
-  "%cDesktop App Available",
-  "color: #5f5cff; font-size: 18px; font-weight: bold;"
-);
-console.log(
-  "Visit the Desktop App page to download the desktop version for enhanced features."
 );
 
 // Set up automatic redirection to dashboard for returning users

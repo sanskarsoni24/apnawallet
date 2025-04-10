@@ -43,16 +43,11 @@ const Settings = () => {
   
   // Save account settings
   const saveAccountSettings = () => {
-    if (updateProfile && localDisplayName !== null) {
-      updateProfile({ 
-        displayName: localDisplayName, 
-        email: localEmail 
-      });
-      toast({
-        title: "Settings saved",
-        description: "Your account settings have been updated successfully.",
-      });
-    }
+    updateProfile(localDisplayName, localEmail);
+    toast({
+      title: "Settings saved",
+      description: "Your account settings have been updated successfully.",
+    });
   };
   
   // Save notification settings
@@ -65,7 +60,7 @@ const Settings = () => {
   };
   
   // Save theme
-  const saveTheme = (theme: "light" | "dark" | "system") => {
+  const saveTheme = (theme: string) => {
     updateUserSettings({ theme });
     toast({
       title: "Theme updated",

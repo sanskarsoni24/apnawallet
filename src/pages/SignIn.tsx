@@ -57,14 +57,7 @@ const SignIn = () => {
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      // Mock login - create a user object
-      const user = {
-        displayName: "Test User",
-        email: values.email,
-        userId: `user-${Date.now()}`,
-      };
-      
-      login(user);
+      login(values.email, values.password);
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in",
@@ -127,7 +120,7 @@ const SignIn = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <GoogleSignIn />
+              <GoogleSignIn mode="signin" />
               
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">

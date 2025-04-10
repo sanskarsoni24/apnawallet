@@ -24,4 +24,9 @@ interface UserSettings {
   mobileDeviceName?: string;
   mobileDeviceId?: string;
   lastMobileSync?: string;
+  googleConnected?: boolean;
+  googleEmail?: string;
+  googleProfilePicture?: string;
+  googleId?: string;
+  lastLoginMethod?: string;
 }

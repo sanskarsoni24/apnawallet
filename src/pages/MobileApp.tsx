@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Container from "@/components/layout/Container";
@@ -9,6 +8,8 @@ import { Share, Download, Smartphone, Tablet, Laptop, ArrowRight, PhoneCall, Sca
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useUser } from "@/contexts/UserContext";
+import { useIsMobileDevice, useMobileDeviceId } from "@/hooks/use-mobile";
 
 // Define a global type for the deferredPrompt
 declare global {
@@ -23,6 +24,9 @@ const MobileApp = () => {
   const [canInstall, setCanInstall] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
+  const { isLoggedIn, userSettings, updateUserSettings } = useUser();
+  const isMobileDevice = useIsMobileDevice();
+  const deviceId = useMobileDeviceId();
   
   // Current page URL to create QR code
   const downloadUrl = `${window.location.origin}/download-app`;
@@ -48,10 +52,20 @@ const MobileApp = () => {
     
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     
+    // Register the mobile device if logged in
+    if (isLoggedIn && isMobileDevice) {
+      // Update user settings with mobile device info
+      updateUserSettings({
+        mobileDeviceName: navigator.userAgent,
+        mobileDeviceId: deviceId,
+        lastMobileSync: new Date().toISOString()
+      });
+    }
+    
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  }, []);
+  }, [isLoggedIn, isMobileDevice, deviceId, updateUserSettings]);
   
   const handleShare = async () => {
     try {
@@ -148,6 +162,18 @@ const MobileApp = () => {
             Access your secure document vault on the go with our mobile app
           </p>
         </div>
+        
+        {isMobileDevice && isLoggedIn && (
+          <Alert className="bg-green-50 border-green-100 dark:bg-green-900/20 dark:border-green-800 mb-6">
+            <AlertTitle className="text-green-800 dark:text-green-300 flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              Mobile device detected
+            </AlertTitle>
+            <AlertDescription className="text-green-700 dark:text-green-400">
+              You're currently using the mobile version. Your session is synced with your account.
+            </AlertDescription>
+          </Alert>
+        )}
         
         <Alert className="bg-blue-50 border-blue-100 dark:bg-blue-900/20 dark:border-blue-800 mb-6">
           <AlertTitle className="text-blue-800 dark:text-blue-300 flex items-center gap-2">

@@ -30,6 +30,12 @@ const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera
 
 if (isMobileDevice) {
   console.log("Mobile device detected. Optimizing mobile experience...");
+  // Store a persistent device ID for session continuity
+  if (!localStorage.getItem('mobile_device_id')) {
+    const deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+    localStorage.setItem('mobile_device_id', deviceId);
+  }
+  
   // Store device information in localStorage for responsive adjustments
   localStorage.setItem("device_type", "mobile");
   
@@ -45,6 +51,32 @@ if (isMobileDevice) {
   console.log("Desktop device detected. Optimizing experience...");
   localStorage.setItem("device_type", "desktop");
 }
+
+// Ensure proper session management
+const checkExistingSession = () => {
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const deviceId = localStorage.getItem("mobile_device_id");
+  
+  if (isLoggedIn && deviceId) {
+    console.log("Existing session detected with device ID:", deviceId);
+    
+    // Ensure we have proper user settings in localStorage
+    try {
+      const userSettings = JSON.parse(localStorage.getItem("userSettings") || "{}");
+      if (!userSettings.mobileDeviceId && deviceId) {
+        userSettings.mobileDeviceId = deviceId;
+        userSettings.mobileDeviceName = navigator.userAgent;
+        userSettings.lastMobileSync = new Date().toISOString();
+        localStorage.setItem("userSettings", JSON.stringify(userSettings));
+      }
+    } catch (e) {
+      console.error("Error parsing user settings:", e);
+    }
+  }
+};
+
+// Run session check
+checkExistingSession();
 
 // Add information about the mobile app availability
 console.log(

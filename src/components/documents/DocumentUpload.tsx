@@ -1,917 +1,581 @@
-import React, { useState, useRef } from "react";
-import { Upload, Camera, ArrowRight, Loader2, ScanSearch, Plus, X, FileIcon, FileText, Info } from "lucide-react";
-import BlurContainer from "../ui/BlurContainer";
+import React, { useState, useRef, useCallback } from "react";
+import { useDropzone } from "react-dropzone";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { useDocuments, Document } from "@/contexts/DocumentContext";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormControl } from "../ui/form";
-import { useForm } from "react-hook-form";
-import { processDocument, parseMultiFormatDate, extractTextFromImage, generateDocumentSummary } from "@/services/DocumentProcessingService";
-import { format, parse, isValid } from "date-fns";
-import { Badge } from "../ui/badge";
-import { ScrollArea } from "../ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import { useDocuments } from "@/contexts/DocumentContext";
+import { Document, DocumentType } from "@/types/Document";
+import { useUser } from "@/contexts/UserContext";
+import { Loader2, Upload, File, X, Camera, AlertCircle, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const DocumentUpload = () => {
-  const [dragging, setDragging] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [currentFileIndex, setCurrentFileIndex] = useState<number>(0);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isScannerActive, setIsScannerActive] = useState(false);
-  const [scanStatus, setScanStatus] = useState("");
-  const [customReminderDays, setCustomReminderDays] = useState<number>(3); // Default 3 days
-  const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
-  const [newDocumentType, setNewDocumentType] = useState("");
-  const [uploadProgress, setUploadProgress] = useState<number[]>([]);
-  const [bulkUploadMode, setBulkUploadMode] = useState(false);
-  const [documentSummary, setDocumentSummary] = useState<string>("");
-  const [extractedText, setExtractedText] = useState<string>("");
+interface DocumentUploadProps {
+  onClose?: () => void;
+  onSuccess?: (document: Document) => void;
+  defaultType?: string;
+}
+
+const DocumentUpload = ({ onClose, onSuccess, defaultType }: DocumentUploadProps) => {
+  const [files, setFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [documentName, setDocumentName] = useState("");
+  const [documentType, setDocumentType] = useState(defaultType || "");
+  const [documentDescription, setDocumentDescription] = useState("");
+  const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
+  const [isImportant, setIsImportant] = useState(false);
+  const [newTypeDialog, setNewTypeDialog] = useState(false);
+  const [newTypeName, setNewTypeName] = useState("");
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("upload");
+  const [isCameraActive, setIsCameraActive] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { addDocument, documentTypes, addDocumentType } = useDocuments();
-  
-  const form = useForm({
-    defaultValues: {
-      title: "",
-      type: "Invoice",
-      dueDate: "",
-      description: "",
-      summary: ""
-    }
-  });
-  
-  const resetForm = () => {
-    form.reset();
-    setIsProcessing(false);
-    setScanStatus("");
-    setCustomReminderDays(3);
-    setDocumentSummary("");
-    setExtractedText("");
-  };
-  
-  const resetUpload = () => {
-    setSelectedFiles([]);
-    setCurrentFileIndex(0);
-    setUploadProgress([]);
-    resetForm();
-  };
-  
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(true);
-  };
-  
-  const handleDragLeave = () => {
-    setDragging(false);
-  };
-  
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
+  const { addDocument, documentTypes } = useDocuments();
+  const { user } = useUser();
+
+  // Check if user has reached document limit
+  const hasReachedLimit = () => {
+    if (!user || !user.documentLimit) return false;
     
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const files = Array.from(e.dataTransfer.files);
-      
-      // If multiple files, enter bulk upload mode
-      if (files.length > 1) {
-        setBulkUploadMode(true);
-        setSelectedFiles(files);
-        setUploadProgress(new Array(files.length).fill(0));
-        await handleFile(files[0], 0);
-      } else {
-        setBulkUploadMode(false);
-        setSelectedFiles([files[0]]);
-        await handleFile(files[0], 0);
-      }
-    }
+    // This would need to be implemented based on your actual document count logic
+    const currentDocumentCount = 0; // Replace with actual count
+    return currentDocumentCount >= user.documentLimit;
   };
-  
-  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const files = Array.from(e.target.files);
-      
-      // If multiple files, enter bulk upload mode
-      if (files.length > 1) {
-        setBulkUploadMode(true);
-        setSelectedFiles(files);
-        setUploadProgress(new Array(files.length).fill(0));
-        await handleFile(files[0], 0);
-      } else {
-        setBulkUploadMode(false);
-        setSelectedFiles([files[0]]);
-        await handleFile(files[0], 0);
-      }
-    }
-  };
-  
-  const handleFile = async (file: File, fileIndex: number) => {
-    setCurrentFileIndex(fileIndex);
-    setIsDialogOpen(true);
-    setIsProcessing(true);
-    
-    // Create a more visual processing experience
-    setScanStatus("Analyzing document...");
-    
-    // Update progress for this file
-    setUploadProgress(prev => {
-      const newProgress = [...prev];
-      newProgress[fileIndex] = 10;
-      return newProgress;
-    });
-    
-    try {
-      // Simulate document processing steps
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setScanStatus("Extracting text...");
-      
-      setUploadProgress(prev => {
-        const newProgress = [...prev];
-        newProgress[fileIndex] = 30;
-        return newProgress;
-      });
-      
-      // Extract text from the document
-      const text = await extractTextFromImage(file);
-      setExtractedText(text);
-      
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setScanStatus("Identifying document type...");
-      
-      setUploadProgress(prev => {
-        const newProgress = [...prev];
-        newProgress[fileIndex] = 50;
-        return newProgress;
-      });
-      
-      // Process document to extract information
-      const extractedInfo = await processDocument(file);
-      
-      setUploadProgress(prev => {
-        const newProgress = [...prev];
-        newProgress[fileIndex] = 70;
-        return newProgress;
-      });
-      
-      await new Promise(resolve => setTimeout(resolve, 600));
-      setScanStatus("Generating document summary...");
-      
-      // Generate a summary of the document
-      const summary = await generateDocumentSummary(text, extractedInfo.category);
-      setDocumentSummary(summary);
-      
-      setUploadProgress(prev => {
-        const newProgress = [...prev];
-        newProgress[fileIndex] = 90;
-        return newProgress;
-      });
-      
-      // Update form with extracted info
-      if (extractedInfo.title) {
-        form.setValue('title', extractedInfo.title);
-      } else {
-        // Use filename as title if no title detected
-        form.setValue('title', file.name.split('.')[0]);
-      }
-      
-      if (extractedInfo.category && documentTypes.includes(extractedInfo.category)) {
-        form.setValue('type', extractedInfo.category);
-      }
-      
-      if (extractedInfo.description) {
-        form.setValue('description', extractedInfo.description);
-      }
-      
-      if (summary) {
-        form.setValue('summary', summary);
-      }
-      
-      if (extractedInfo.dueDate) {
-        // Improved date parsing for multiple formats
-        let parsedDate: Date | null = null;
-        
-        // Try direct Date parsing first
-        parsedDate = new Date(extractedInfo.dueDate);
-        
-        // If that didn't work, try various formats
-        if (isNaN(parsedDate.getTime())) {
-          const dateFormats = [
-            'MMMM d, yyyy', // May 15, 2025
-            'MMM d, yyyy',  // May 15, 2025
-            'yyyy-MM-dd',   // 2025-05-15
-            'MM/dd/yyyy',   // 05/15/2025
-            'dd/MM/yyyy'    // 15/05/2025
-          ];
-          
-          for (const dateFormat of dateFormats) {
-            try {
-              const tempDate = parse(extractedInfo.dueDate, dateFormat, new Date());
-              if (isValid(tempDate)) {
-                parsedDate = tempDate;
-                break;
-              }
-            } catch (e) {
-              // Continue trying other formats
-            }
-          }
-        }
-        
-        // If we successfully parsed the date
-        if (parsedDate && isValid(parsedDate)) {
-          // Format as YYYY-MM-DD for the input
-          form.setValue('dueDate', format(parsedDate, 'yyyy-MM-dd'));
-        }
-      }
-      
-      setUploadProgress(prev => {
-        const newProgress = [...prev];
-        newProgress[fileIndex] = 100;
-        return newProgress;
-      });
-      
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (hasReachedLimit()) {
       toast({
-        title: "Document Processed",
-        description: "Document information extracted and summarized successfully!",
-      });
-      
-    } catch (error) {
-      console.error("Error processing document:", error);
-      toast({
-        title: "Processing Failed",
-        description: "Could not extract information from document.",
+        title: "Document limit reached",
+        description: "You've reached your plan's document limit. Please upgrade to add more documents.",
         variant: "destructive",
       });
-    } finally {
-      setIsProcessing(false);
-      setScanStatus("");
+      return;
+    }
+
+    // Check file size
+    const maxSize = user?.documentSizeLimit || 5 * 1024 * 1024; // Default 5MB
+    const oversizedFiles = acceptedFiles.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+      toast({
+        title: "File too large",
+        description: `Some files exceed the ${maxSize / (1024 * 1024)}MB limit for your plan.`,
+        variant: "destructive",
+      });
+      
+      // Filter out oversized files
+      const validFiles = acceptedFiles.filter(file => file.size <= maxSize);
+      setFiles(prev => [...prev, ...validFiles]);
+    } else {
+      setFiles(prev => [...prev, ...acceptedFiles]);
+    }
+    
+    // Auto-fill document name if empty and only one file
+    if (!documentName && acceptedFiles.length === 1) {
+      // Remove file extension from name
+      const fileName = acceptedFiles[0].name.replace(/\.[^/.]+$/, "");
+      setDocumentName(fileName);
+    }
+    
+    setUploadError(null);
+  }, [documentName, user, hasReachedLimit]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+    onDrop,
+    accept: {
+      'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'text/plain': ['.txt'],
+    }
+  });
+
+  const removeFile = (index: number) => {
+    setFiles(files.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (files.length === 0) {
+      setUploadError("Please select at least one file to upload");
+      return;
+    }
+    
+    if (!documentName.trim()) {
+      setUploadError("Please enter a document name");
+      return;
+    }
+    
+    if (!documentType) {
+      setUploadError("Please select a document type");
+      return;
+    }
+    
+    setUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
+    
+    try {
+      // Simulate upload progress
+      const totalSteps = 10;
+      for (let i = 1; i <= totalSteps; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        setUploadProgress((i / totalSteps) * 100);
+      }
+      
+      // Create document object
+      const newDocument: Document = {
+        id: `doc-${Date.now()}`,
+        name: documentName,
+        type: documentType as DocumentType,
+        description: documentDescription,
+        dateAdded: new Date().toISOString(),
+        files: files.map(file => ({
+          id: `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: URL.createObjectURL(file),
+        })),
+        isImportant,
+        expiryDate: expiryDate ? expiryDate.toISOString() : undefined,
+      };
+      
+      // Add document to context
+      addDocument(newDocument);
+      
+      // Show success message
+      setUploadSuccess(true);
+      
+      // Call success callback if provided
+      if (onSuccess) {
+        onSuccess(newDocument);
+      }
+      
+      toast({
+        title: "Document uploaded successfully",
+        description: "Your document has been added to your library.",
+      });
+      
+      // Reset form after short delay
+      setTimeout(() => {
+        setFiles([]);
+        setDocumentName("");
+        setDocumentType("");
+        setDocumentDescription("");
+        setExpiryDate(undefined);
+        setIsImportant(false);
+        setUploading(false);
+        setUploadProgress(0);
+        setUploadSuccess(false);
+        
+        // Close dialog if onClose provided
+        if (onClose) {
+          onClose();
+        }
+      }, 1500);
+      
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploadError("An error occurred while uploading your document. Please try again.");
+      setUploading(false);
     }
   };
-  
-  const handleSubmit = form.handleSubmit((data) => {
-    const currentFile = selectedFiles[currentFileIndex];
-    
-    if (!currentFile) {
+
+  const handleAddNewType = () => {
+    if (!newTypeName.trim()) {
       toast({
         title: "Error",
-        description: "No file selected",
+        description: "Please enter a name for the new document type",
         variant: "destructive",
       });
       return;
     }
     
-    // Calculate days remaining
-    const dueDate = new Date(data.dueDate);
-    const today = new Date();
-    const diffTime = dueDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    // Create file URL for preview
-    const fileURL = URL.createObjectURL(currentFile);
-    
-    // Create document object with proper typing
-    const newDocument: Document = {
-      id: "", // This will be set in addDocument
-      title: data.title,
-      type: data.type,
-      dueDate: format(dueDate, "MMMM d, yyyy"),
-      daysRemaining: diffDays,
-      fileURL: fileURL,
-      description: data.description,
-      customReminderDays: customReminderDays,
-      summary: documentSummary
-    };
-    
-    addDocument(newDocument);
+    // Add new document type logic would go here
+    // This is a simplified example
     
     toast({
-      title: "Document uploaded",
-      description: `${data.title} has been uploaded successfully.`,
+      title: "New document type added",
+      description: `"${newTypeName}" has been added to your document types.`,
     });
     
-    // If there are more files to process in bulk mode
-    if (bulkUploadMode && currentFileIndex < selectedFiles.length - 1) {
-      // Reset form for next file
-      resetForm();
-      
-      // Process the next file
-      const nextIndex = currentFileIndex + 1;
-      handleFile(selectedFiles[nextIndex], nextIndex);
-    } else {
-      // We're done with all files
-      resetForm();
-      setIsDialogOpen(false);
-      resetUpload();
-    }
-  });
-  
-  const handleSkipCurrentFile = () => {
-    // If there are more files to process
-    if (bulkUploadMode && currentFileIndex < selectedFiles.length - 1) {
-      // Reset form for next file
-      resetForm();
-      
-      // Process the next file
-      const nextIndex = currentFileIndex + 1;
-      handleFile(selectedFiles[nextIndex], nextIndex);
-    } else {
-      // We're done with all files or skipping the only file
-      resetForm();
-      setIsDialogOpen(false);
-      resetUpload();
-    }
-    
-    toast({
-      title: "File skipped",
-      description: "Skipped processing this file",
-    });
+    setDocumentType(newTypeName);
+    setNewTypeDialog(false);
+    setNewTypeName("");
   };
-  
-  // Start document scanner using device camera
-  const startScanner = async () => {
+
+  const startCamera = async () => {
     try {
-      setIsScannerActive(true);
-      setScanStatus("Initializing camera...");
-      
-      // Check if browser supports camera
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Camera not supported in this browser");
-      }
-      
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment" } 
+        video: { facingMode: 'environment' } 
       });
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        setScanStatus("Camera active. Position document in frame and tap Capture.");
+        setIsCameraActive(true);
+        setActiveTab("camera");
       }
-      
-    } catch (error) {
-      console.error("Error accessing camera:", error);
+    } catch (err) {
+      console.error("Error accessing camera:", err);
       toast({
         title: "Camera Error",
-        description: "Could not access device camera. Please check permissions.",
+        description: "Could not access your camera. Please check permissions.",
         variant: "destructive",
       });
-      setScanStatus("");
-      setIsScannerActive(false);
     }
   };
-  
-  // Stop scanner
-  const stopScanner = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-    setScanStatus("");
-    setIsScannerActive(false);
-  };
-  
-  // Capture image from scanner
-  const captureDocument = async () => {
+
+  const captureImage = () => {
     if (!videoRef.current || !canvasRef.current) return;
     
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-    
-    if (!context) return;
     
     // Set canvas dimensions to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
-    // Visual feedback
-    setScanStatus("Capturing image...");
-    
     // Draw video frame to canvas
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
-    // Convert canvas to blob
-    try {
-      setScanStatus("Processing captured image...");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Convert canvas to file
+    canvas.toBlob((blob) => {
+      if (!blob) return;
       
-      canvas.toBlob(async (blob) => {
-        if (blob) {
-          const capturedFile = new File([blob], "scanned-document.jpg", { type: 'image/jpeg' });
-          
-          // Stop camera stream
-          stopScanner();
-          
-          // Process captured image
-          setBulkUploadMode(false);
-          setSelectedFiles([capturedFile]);
-          setCurrentFileIndex(0);
-          await handleFile(capturedFile, 0);
-        }
-      }, 'image/jpeg', 0.95);
-    } catch (error) {
-      console.error("Error capturing image:", error);
+      const file = new File([blob], `scan-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      setFiles(prev => [...prev, file]);
+      
+      // Stop camera
+      stopCamera();
+      
+      // Switch back to upload tab
+      setActiveTab("upload");
+      
       toast({
-        title: "Capture Error",
-        description: "Failed to capture image from camera",
-        variant: "destructive",
+        title: "Image captured",
+        description: "The scanned image has been added to your upload.",
       });
-      setScanStatus("");
-    }
+    }, 'image/jpeg', 0.95);
   };
-  
-  // Handle adding a new document type
-  const handleAddDocumentType = () => {
-    if (!newDocumentType.trim()) {
-      toast({
-        title: "Type Required",
-        description: "Please enter a document type name",
-        variant: "destructive",
-      });
-      return;
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const tracks = stream.getTracks();
+      
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
     }
     
-    addDocumentType(newDocumentType.trim());
-    setNewDocumentType("");
-    setIsTypeDialogOpen(false);
-    
-    // Set the newly added type as the current type in the form
-    form.setValue("type", newDocumentType.trim());
+    setIsCameraActive(false);
   };
-  
-  // Get file icon based on file type
-  const getFileIcon = (file: File) => {
-    const extension = file.name.split('.').pop()?.toLowerCase();
-    
-    if (!extension) return <FileIcon className="h-4 w-4" />;
-    
-    switch(extension) {
-      case 'pdf':
-        return <FileIcon className="h-4 w-4 text-red-500" />;
-      case 'jpg':
-      case 'jpeg':
-      case 'png':
-      case 'gif':
-        return <FileIcon className="h-4 w-4 text-blue-500" />;
-      case 'doc':
-      case 'docx':
-        return <FileIcon className="h-4 w-4 text-indigo-500" />;
-      case 'xls':
-      case 'xlsx':
-        return <FileIcon className="h-4 w-4 text-green-500" />;
-      default:
-        return <FileIcon className="h-4 w-4" />;
-    }
-  };
-  
+
   return (
-    <>
-      <BlurContainer 
-        className={`border-2 border-dashed transition-all duration-300 ${
-          dragging ? "border-primary bg-primary/5" : "border-border"
-        } rounded-xl p-8 text-center`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        id="upload-documents"
-      >
-        <div className="mx-auto flex max-w-xs flex-col items-center gap-3">
-          <div className={`rounded-full p-3 ${
-            dragging ? "bg-primary/20" : "bg-primary/10"
-          } transition-colors duration-300`}>
-            <Upload className={`h-6 w-6 ${
-              dragging ? "text-primary" : "text-primary/80"
-            } transition-colors duration-300`} />
-          </div>
+    <div className="w-full max-w-3xl mx-auto">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Upload Document</CardTitle>
+          <CardDescription>
+            Add a new document to your secure storage
+          </CardDescription>
+        </CardHeader>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto px-4">
+            <TabsTrigger value="upload" onClick={() => stopCamera()}>
+              <Upload className="h-4 w-4 mr-2" />
+              Upload File
+            </TabsTrigger>
+            <TabsTrigger value="camera" onClick={startCamera}>
+              <Camera className="h-4 w-4 mr-2" />
+              Scan Document
+            </TabsTrigger>
+          </TabsList>
           
-          <div className="flex flex-col gap-1">
-            <h3 className="text-base font-medium">Upload documents</h3>
-            <p className="text-sm text-muted-foreground">
-              Drag and drop your documents or click to browse
-            </p>
-          </div>
-          
-          <div className="flex gap-2">
-            <label className="inline-flex h-9 items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer">
-              Upload
-              <input 
-                ref={fileInputRef}
-                type="file" 
-                className="sr-only" 
-                onChange={handleInputChange} 
-                accept=".pdf,.jpg,.jpeg,.png,.tiff"
-                multiple
-              />
-            </label>
-            
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200 hover:bg-gradient-to-r hover:from-indigo-100 hover:to-blue-100 text-indigo-700"
-              onClick={startScanner}
-            >
-              <Camera className="h-4 w-4" />
-              <span>Scan</span>
-            </Button>
-          </div>
-          
-          <p className="text-xs text-muted-foreground">
-            Supports PDF, JPG, PNG, TIFF. Multiple files allowed.
-          </p>
-        </div>
-      </BlurContainer>
-      
-      {/* Document Scanner Dialog */}
-      <Dialog open={isScannerActive} onOpenChange={(open) => {
-        if (!open) stopScanner();
-        setIsScannerActive(open);
-      }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Document Scanner</DialogTitle>
-            {scanStatus && (
-              <DialogDescription>{scanStatus}</DialogDescription>
-            )}
-          </DialogHeader>
-          
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative w-full aspect-[4/3] bg-black rounded-lg overflow-hidden">
-              <video 
-                ref={videoRef} 
-                autoPlay 
-                playsInline 
-                className="w-full h-full object-contain"
-              />
-              <div className="absolute inset-0 border-4 border-indigo-400/50 pointer-events-none" />
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4 pt-4">
+              <TabsContent value="upload" className="mt-0 space-y-4">
+                {uploadSuccess ? (
+                  <Alert className="bg-green-500/10 border-green-500/50">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <AlertTitle>Upload Successful</AlertTitle>
+                    <AlertDescription>
+                      Your document has been uploaded successfully.
+                    </AlertDescription>
+                  </Alert>
+                ) : uploadError ? (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Upload Failed</AlertTitle>
+                    <AlertDescription>
+                      {uploadError}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+                
+                <div 
+                  {...getRootProps()} 
+                  className={`border-2 border-dashed rounded-md p-6 text-center cursor-pointer transition-colors ${
+                    isDragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50'
+                  }`}
+                >
+                  <input {...getInputProps()} />
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <Upload className="h-8 w-8 text-muted-foreground/50" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">
+                        {isDragActive ? 'Drop the files here' : 'Drag & drop files here'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        or click to browse files
+                      </p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Supports PDF, JPG, PNG, DOC, DOCX, TXT
+                    </p>
+                  </div>
+                </div>
+                
+                {files.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Selected Files</Label>
+                    <div className="border rounded-md divide-y">
+                      {files.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-2">
+                          <div className="flex items-center space-x-2">
+                            <File className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {(file.size / 1024).toFixed(0)} KB
+                            </Badge>
+                          </div>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => removeFile(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
               
-              {/* Scanning animation */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-1 bg-indigo-500/30 w-full absolute animate-scanning-line" />
+              <TabsContent value="camera" className="mt-0 space-y-4">
+                <div className="relative aspect-video bg-black rounded-md overflow-hidden">
+                  <video 
+                    ref={videoRef} 
+                    autoPlay 
+                    playsInline 
+                    className="w-full h-full object-cover"
+                  />
+                  
+                  {isCameraActive && (
+                    <div className="absolute inset-0 border-2 border-primary/50 pointer-events-none"></div>
+                  )}
+                  
+                  <canvas ref={canvasRef} className="hidden" />
+                </div>
+                
+                <div className="flex justify-center space-x-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={stopCamera}
+                  >
+                    Cancel
+                  </Button>
+                  
+                  <Button 
+                    type="button" 
+                    onClick={captureImage}
+                    disabled={!isCameraActive}
+                  >
+                    Capture
+                  </Button>
+                </div>
+                
+                <p className="text-xs text-muted-foreground text-center">
+                  Position your document within the frame and ensure good lighting
+                </p>
+              </TabsContent>
+              
+              <div className="space-y-2">
+                <Label htmlFor="documentName">Document Name</Label>
+                <Input
+                  id="documentName"
+                  value={documentName}
+                  onChange={(e) => setDocumentName(e.target.value)}
+                  placeholder="Enter document name"
+                  disabled={uploading}
+                />
               </div>
               
-              {/* Visual guides for document positioning */}
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="border-2 border-white/20 border-dashed m-8 h-[calc(100%-64px)]"></div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="documentType">Document Type</Label>
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    size="sm" 
+                    className="h-auto p-0 text-xs"
+                    onClick={() => setNewTypeDialog(true)}
+                  >
+                    + Add Type
+                  </Button>
+                </div>
+                
+                <Select 
+                  value={documentType} 
+                  onValueChange={setDocumentType}
+                  disabled={uploading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select document type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {documentTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="documentDescription">Description (Optional)</Label>
+                <Textarea
+                  id="documentDescription"
+                  value={documentDescription}
+                  onChange={(e) => setDocumentDescription(e.target.value)}
+                  placeholder="Add notes or details about this document"
+                  disabled={uploading}
+                  rows={3}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="expiryDate">Expiry Date (Optional)</Label>
+                <DatePicker
+                  date={expiryDate}
+                  setDate={setExpiryDate}
+                  disabled={uploading}
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isImportant"
+                  checked={isImportant}
+                  onCheckedChange={setIsImportant}
+                  disabled={uploading}
+                />
+                <Label htmlFor="isImportant">Mark as important document</Label>
+              </div>
+              
+              {uploading && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span>Uploading...</span>
+                    <span>{Math.round(uploadProgress)}%</span>
+                  </div>
+                  <Progress value={uploadProgress} className="h-2" />
+                </div>
+              )}
+            </CardContent>
             
-            <canvas ref={canvasRef} className="hidden"></canvas>
-            
-            <div className="flex justify-center gap-4 w-full">
-              <Button
-                variant="outline"
-                onClick={stopScanner}
-                className="bg-white dark:bg-background"
+            <CardFooter className="flex justify-between">
+              {onClose && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={onClose}
+                  disabled={uploading}
+                >
+                  Cancel
+                </Button>
+              )}
+              
+              <Button 
+                type="submit" 
+                disabled={uploading || uploadSuccess}
+                className="ml-auto"
               >
-                Cancel
+                {uploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Document
+                  </>
+                )}
               </Button>
-              <Button
-                onClick={captureDocument}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
-              >
-                <ScanSearch className="h-4 w-4" />
-                <span>Capture</span>
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+            </CardFooter>
+          </form>
+        </Tabs>
+      </Card>
       
-      {/* Add New Document Type Dialog */}
-      <Dialog open={isTypeDialogOpen} onOpenChange={setIsTypeDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={newTypeDialog} onOpenChange={setNewTypeDialog}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Document Type</DialogTitle>
             <DialogDescription>
-              Create a custom document type to better organize your documents
+              Create a custom document type to better organize your documents.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="flex items-center gap-2">
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="newTypeName">Type Name</Label>
               <Input
-                placeholder="Enter new document type"
-                value={newDocumentType}
-                onChange={(e) => setNewDocumentType(e.target.value)}
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newDocumentType.trim()) {
-                    handleAddDocumentType();
-                  }
-                }}
+                id="newTypeName"
+                value={newTypeName}
+                onChange={(e) => setNewTypeName(e.target.value)}
+                placeholder="e.g. Medical Records, Tax Documents"
               />
-              <Button 
-                onClick={handleAddDocumentType}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white"
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
             </div>
           </div>
           
           <DialogFooter>
             <Button 
+              type="button" 
               variant="outline" 
-              onClick={() => setIsTypeDialogOpen(false)}
+              onClick={() => setNewTypeDialog(false)}
             >
               Cancel
+            </Button>
+            <Button type="button" onClick={handleAddNewType}>
+              Add Type
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      {/* Document Details Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={(open) => {
-        if (!open) {
-          resetForm();
-          // Don't reset selected files here, only close the dialog
-        }
-        setIsDialogOpen(open);
-      }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {bulkUploadMode ? (
-                <span className="flex items-center gap-2">
-                  Document Details 
-                  <Badge variant="outline" className="ml-2">
-                    {currentFileIndex + 1} of {selectedFiles.length}
-                  </Badge>
-                </span>
-              ) : (
-                "Document Details"
-              )}
-            </DialogTitle>
-            {scanStatus && (
-              <DialogDescription>
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {scanStatus}
-                </div>
-              </DialogDescription>
-            )}
-          </DialogHeader>
-          
-          {isProcessing ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <div className="relative h-20 w-20">
-                <div className="absolute inset-0 rounded-full border-2 border-indigo-200 border-dashed animate-spin-slow"></div>
-                <div className="absolute inset-2 rounded-full border-b-2 border-indigo-600 animate-spin"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
-                </div>
-              </div>
-              <p className="mt-6 text-center text-sm text-muted-foreground">
-                {scanStatus || "Processing document..."}
-              </p>
-              
-              {/* Progress bar for bulk uploads */}
-              {bulkUploadMode && (
-                <div className="w-full mt-4">
-                  <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-indigo-600 transition-all duration-300"
-                      style={{ width: `${uploadProgress[currentFileIndex]}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-center mt-1 text-muted-foreground">
-                    Processing file {currentFileIndex + 1} of {selectedFiles.length}
-                  </p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
-              {/* File preview */}
-              {selectedFiles.length > 0 && currentFileIndex < selectedFiles.length && (
-                <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-md mb-4">
-                  {getFileIcon(selectedFiles[currentFileIndex])}
-                  <div className="flex-1 overflow-hidden">
-                    <p className="text-sm font-medium truncate">
-                      {selectedFiles[currentFileIndex].name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {(selectedFiles[currentFileIndex].size / 1024).toFixed(1)} KB
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Document summary */}
-              {documentSummary && (
-                <div className="mb-4 p-3 bg-secondary/40 border border-border rounded-md">
-                  <div className="flex items-center gap-2 mb-1">
-                    <FileText className="h-4 w-4 text-primary" />
-                    <h4 className="text-sm font-medium">Document Summary</h4>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{documentSummary}</p>
-                </div>
-              )}
-              
-              {/* Multiple files indicator */}
-              {bulkUploadMode && (
-                <div className="mb-4">
-                  <ScrollArea className="h-24">
-                    <div className="space-y-2">
-                      {selectedFiles.map((file, index) => (
-                        <div 
-                          key={index}
-                          className={`flex items-center gap-2 p-2 rounded-md ${index === currentFileIndex ? 'bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800' : ''}`}
-                        >
-                          {getFileIcon(file)}
-                          <div className="flex-1 overflow-hidden">
-                            <p className="text-xs truncate">
-                              {file.name}
-                            </p>
-                          </div>
-                          <Badge variant={index === currentFileIndex ? "default" : "outline"}>
-                            {uploadProgress[index] === 100 ? "Done" : 
-                             index < currentFileIndex ? "Done" : 
-                             index === currentFileIndex ? "Current" : "Pending"}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              )}
-              
-              <Form {...form}>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Document Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Car Insurance" {...field} required />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex justify-between items-center">
-                          <FormLabel>Document Type</FormLabel>
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-6 px-2 text-xs text-indigo-600"
-                            onClick={() => setIsTypeDialogOpen(true)}
-                          >
-                            <Plus className="h-3 w-3 mr-1" /> Add Type
-                          </Button>
-                        </div>
-                        <FormControl>
-                          <select
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                            {...field}
-                          >
-                            {documentTypes.map((type) => (
-                              <option key={type} value={type}>
-                                {type}
-                              </option>
-                            ))}
-                          </select>
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="dueDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Due Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} required />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="space-y-2">
-                    <FormLabel>Custom Reminder</FormLabel>
-                    <select
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      value={customReminderDays}
-                      onChange={(e) => setCustomReminderDays(Number(e.target.value))}
-                    >
-                      <option value="1">1 day before</option>
-                      <option value="3">3 days before</option>
-                      <option value="7">7 days before</option>
-                      <option value="14">14 days before</option>
-                      <option value="30">30 days before</option>
-                    </select>
-                    <p className="text-xs text-muted-foreground">
-                      Select when you want to be reminded about this document
-                    </p>
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="summary"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center justify-between">
-                          <FormLabel>Document Summary</FormLabel>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Info className="h-4 w-4 text-muted-foreground" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="text-xs">Auto-generated summary of the document</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Auto-generated summary of this document" 
-                            className="min-h-20" 
-                            {...field} 
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Additional Notes</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Enter additional notes or comments" 
-                            className="min-h-20" 
-                            {...field} 
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="flex justify-end gap-2 pt-2">
-                    {bulkUploadMode ? (
-                      <>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          onClick={handleSkipCurrentFile}
-                        >
-                          Skip
-                        </Button>
-                        <Button 
-                          type="submit" 
-                          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
-                        >
-                          <span>
-                            {currentFileIndex < selectedFiles.length - 1 ? "Save & Continue" : "Save & Finish"}
-                          </span>
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          onClick={() => {
-                            resetForm();
-                            setIsDialogOpen(false);
-                            resetUpload();
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                        <Button 
-                          type="submit" 
-                          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
-                        >
-                          <span>Save Document</span>
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </form>
-              </Form>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+    </div>
   );
 };
 

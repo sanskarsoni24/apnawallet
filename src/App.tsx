@@ -14,6 +14,7 @@ import Help from "./pages/Help";
 import UserProfile from "./pages/UserProfile";
 import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
+import DocumentScannerPage from "./pages/DocumentScanner";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import MobileResponsive from "./components/ui/mobile-responsive";
 
@@ -34,6 +35,7 @@ function App() {
             <Route path="/download-app" element={<DownloadApp />} />
             <Route path="/help" element={<Help />} />
             <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+            <Route path="/document-scanner" element={<ProtectedRoute><DocumentScannerPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />

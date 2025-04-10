@@ -12,71 +12,35 @@ type GoogleSignInProps = {
 
 const GoogleSignIn = ({ mode = "signin", className = "" }: GoogleSignInProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { login, register, updateUserSettings } = useUser();
+  const { login, register } = useUser();
   const navigate = useNavigate();
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      // In a real implementation, this would be replaced with actual Google OAuth
-      // Here we simulate the Google account selection popup
-      
-      // Let's display mock Google account selection using browser's native confirm
-      const useDefault = window.confirm(
-        "Select a Google account to continue:\n\n" +
-        "▶ demo@example.com (Default)\n" +
-        "▶ Use another account"
-      );
-      
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Get the Google account info (either default or simulated manual entry)
-      const googleEmail = useDefault ? "demo@example.com" : "user.custom@gmail.com";
-      const googleProfilePicture = `https://i.pravatar.cc/150?u=${encodeURIComponent(googleEmail)}`;
-      const googleId = `google_${Math.random().toString(36).substring(2, 11)}`;
+      // Simplified Google sign-in process
+      const email = "demo@example.com";
+      const name = "Demo User";
       
       if (mode === "signup") {
-        // For signup, register a new user with Google credentials
-        register(googleEmail, "demo123", googleEmail.split('@')[0]);
-        
-        // Update user settings with Google information
-        updateUserSettings({
-          googleConnected: true,
-          googleEmail,
-          googleProfilePicture,
-          googleId,
-          lastLoginMethod: "google"
-        });
-        
+        register(email, "demo123", name);
         toast({
-          title: "Account created with Google",
-          description: `Signed up with ${googleEmail}`,
+          title: "Account created",
+          description: `Signed up with ${email}`,
         });
       } else {
-        // For signin, use the existing login flow with Google credentials
-        login(googleEmail, "demo123");
-        
-        // Update user settings with Google information
-        updateUserSettings({
-          googleConnected: true,
-          googleEmail,
-          googleProfilePicture,
-          googleId,
-          lastLoginMethod: "google"
-        });
-        
+        login(email, "demo123");
         toast({
-          title: "Signed in with Google",
-          description: `Successfully signed in as ${googleEmail}`,
+          title: "Signed in",
+          description: `Successfully signed in as ${email}`,
         });
       }
       
       navigate("/dashboard");
     } catch (error) {
       toast({
-        title: "Google sign in failed",
-        description: "There was an error signing in with Google. Please try again.",
+        title: "Sign in failed",
+        description: "There was an error signing in. Please try again.",
         variant: "destructive",
       });
     } finally {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Container from "@/components/layout/Container";
@@ -156,7 +157,7 @@ const MobileApp = () => {
       <div className="space-y-8">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            SurakshitLocker Mobile App
+            DocuNinja Mobile App
           </h1>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
             Access your secure document vault on the go with our mobile app

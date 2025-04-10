@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
@@ -28,6 +29,7 @@ const GoogleSignIn = () => {
         updateUserSettings({
           displayName: user.displayName || email.split('@')[0],
           email: email,
+          googleConnected: true
         });
       }
 
@@ -61,6 +63,7 @@ const GoogleSignIn = () => {
     googleLogout();
     if (updateUserSettings) {
       updateUserSettings({
+        googleConnected: false
       });
     }
     toast({

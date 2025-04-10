@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { AlertCircle, Smartphone, Check, Loader2, Camera, QrCode, Scan, FileText, RefreshCw, Trash } from "lucide-react";
@@ -369,4 +370,196 @@ const SurakshaMobileScanner: React.FC<SurakshaMobileScannerProps> = ({
             <Card>
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center justify-center text-center p-4">
-                  <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center
+                  <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center mb-4">
+                    <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <h3 className="text-xl font-medium mb-2">Connection Lost</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    The connection to your mobile device has been lost. Please reconnect.
+                  </p>
+                  <Button onClick={connectToMobileDevice}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Reconnect
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {scannerState === "error" && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center justify-center text-center p-4">
+                  <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mb-4">
+                    <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+                  </div>
+                  <h3 className="text-xl font-medium mb-2">Connection Error</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {error || "An error occurred while establishing connection."}
+                  </p>
+                  <Button onClick={resetScanner}>Try Again</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {(scannerState === "waiting" || scannerState === "scanning") && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center justify-center text-center p-4">
+                  {scannerState === "scanning" ? (
+                    <>
+                      <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-4">
+                        <Loader2 className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-spin" />
+                      </div>
+                      <h3 className="text-xl font-medium mb-2">Establishing Connection</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Scan the QR code below with your mobile device to connect.
+                      </p>
+                      <div className="p-4 rounded-lg bg-white shadow-md mb-4">
+                        <QRCodeCanvas
+                          value={qrValueRef.current || JSON.stringify({type: "connect", dummy: true})}
+                          size={200}
+                          bgColor="#ffffff"
+                          fgColor="#000000"
+                          level="L"
+                          includeMargin={false}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Session ID: {sessionId?.substring(0, 8) || "Generating..."}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-4">
+                        <Smartphone className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <h3 className="text-xl font-medium mb-2">Connect Your Mobile Device</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Connect your mobile device to scan documents and instantly view them in your browser.
+                      </p>
+                      <Button onClick={startScanning}>
+                        <QrCode className="h-4 w-4 mr-2" />
+                        Generate QR Code
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {scannerState === "scanning_document" && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center justify-center text-center p-4">
+                  <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-4">
+                    <Camera className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h3 className="text-xl font-medium mb-2">Scanning Document</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Please keep your device steady while scanning the document.
+                  </p>
+                  <div className="w-full mb-4">
+                    <Progress value={documentScanProgress} className="h-2" />
+                    <p className="text-xs text-right mt-1 text-muted-foreground">{documentScanProgress}%</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="documents" className="space-y-4 mt-4">
+          {scannedDocuments.length > 0 ? (
+            <>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Scanned Documents ({scannedDocuments.length})</h3>
+                <Button variant="outline" size="sm" onClick={clearDocuments}>
+                  <Trash className="h-4 w-4 mr-2" />
+                  Clear All
+                </Button>
+              </div>
+              
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                {scannedDocuments.map((doc) => (
+                  <Card 
+                    key={doc.id} 
+                    className={`cursor-pointer hover:shadow-md transition-shadow ${selectedDocument?.id === doc.id ? 'border-primary' : ''}`}
+                    onClick={() => setSelectedDocument(doc)}
+                  >
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <div className="w-16 h-16 bg-muted rounded overflow-hidden flex-shrink-0">
+                        {doc.thumbnailUrl && (
+                          <img 
+                            src={doc.thumbnailUrl} 
+                            alt={doc.name} 
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="overflow-hidden">
+                        <h4 className="font-medium truncate">{doc.name}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(doc.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              {selectedDocument && (
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle>{selectedDocument.name}</CardTitle>
+                    <CardDescription>
+                      Scanned on {new Date(selectedDocument.timestamp).toLocaleString()}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-muted rounded-md overflow-hidden">
+                      {selectedDocument.preview && (
+                        <img 
+                          src={selectedDocument.preview} 
+                          alt={selectedDocument.name} 
+                          className="w-full h-auto max-h-[500px] object-contain"
+                        />
+                      )}
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-end gap-2">
+                    <Button variant="outline">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Save as PDF
+                    </Button>
+                    <Button>
+                      Add to Documents
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )}
+            </>
+          ) : (
+            <Card className="bg-muted/50">
+              <CardContent className="flex flex-col items-center justify-center text-center py-12">
+                <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-xl font-medium mb-2">No Documents Yet</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Connect your mobile device and scan documents to see them appear here.
+                </p>
+                <Button onClick={() => setActiveTab("connection")}>
+                  <Scan className="h-4 w-4 mr-2" />
+                  Go to Scanner
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default SurakshaMobileScanner;

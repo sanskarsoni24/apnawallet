@@ -25,4 +25,5 @@ declare interface UserSettings {
     fingerprintEnabled: boolean;
     lastVerified?: string;
   };
+  googleConnected?: boolean;
 }

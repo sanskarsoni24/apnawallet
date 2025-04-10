@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { Shield, LockKeyhole, Plus, FileText, Key, Trash2, Eye, EyeOff, Lock, ScanFace, Fingerprint } from "lucide-react";
+import { Shield, LockKeyhole, Plus, FileText, Key, Trash2, Eye, EyeOff, Lock, ScanFace, Fingerprint, AlertTriangle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,11 +53,55 @@ const SurakshaLocker: React.FC = () => {
   const [newItemTitle, setNewItemTitle] = useState("");
   const [newItemValue, setNewItemValue] = useState("");
   const [showBiometricOptions, setShowBiometricOptions] = useState(false);
+  const [biometricProcessing, setBiometricProcessing] = useState(false);
+  const [biometricsSupported, setBiometricsSupported] = useState(false);
+  const [faceIdSupported, setFaceIdSupported] = useState(false);
+  const [fingerprintSupported, setFingerprintSupported] = useState(false);
   
-  // Check if biometric auth is enabled
+  // Check if biometric auth is enabled in user settings
   const biometricEnabled = userSettings?.biometricAuth?.enabled || false;
   const faceIdEnabled = userSettings?.biometricAuth?.faceIdEnabled || false;
   const fingerprintEnabled = userSettings?.biometricAuth?.fingerprintEnabled || false;
+  
+  // Check if device supports biometrics
+  useEffect(() => {
+    const checkBiometricSupport = async () => {
+      if (window.PublicKeyCredential) {
+        try {
+          const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+          setBiometricsSupported(available);
+          
+          if (available) {
+            // Most modern laptops and phones with biometrics will return true here
+            // We're making educated guesses about specific capabilities
+            
+            // Check if device likely has fingerprint support (most biometric devices do)
+            setFingerprintSupported(true);
+            
+            // Check if device likely has facial recognition (many modern laptops and phones do)
+            const isMac = /Mac/.test(navigator.platform);
+            const isWindows = /Win/.test(navigator.platform);
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            // Modern Macs have Face ID, Windows has Windows Hello, many mobile devices have face unlock
+            setFaceIdSupported(isMac || isWindows || isMobile);
+            
+            console.log("Biometric authentication is supported on this device");
+          } else {
+            console.log("Biometric authentication is not supported on this device");
+          }
+        } catch (error) {
+          console.error("Error checking biometric support:", error);
+          setBiometricsSupported(false);
+        }
+      } else {
+        console.log("Web Authentication API is not supported in this browser");
+        setBiometricsSupported(false);
+      }
+    };
+    
+    checkBiometricSupport();
+  }, []);
   
   useEffect(() => {
     // Check if vault has been unlocked in this session
@@ -65,6 +110,37 @@ const SurakshaLocker: React.FC = () => {
       setIsLocked(false);
     }
   }, []);
+  
+  // Create a credential validation function
+  const verifyBiometricCredential = async () => {
+    if (!window.PublicKeyCredential) {
+      throw new Error("Web Authentication API not supported");
+    }
+    
+    try {
+      // Generate a random challenge
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+      
+      // Create the credential request options
+      const publicKeyCredentialRequestOptions = {
+        challenge,
+        rpId: window.location.hostname,
+        userVerification: "required" as UserVerificationRequirement,
+        timeout: 60000,
+      };
+      
+      // Request the credential - this will trigger the device's biometric prompt
+      await navigator.credentials.get({
+        publicKey: publicKeyCredentialRequestOptions
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Biometric verification failed:", error);
+      throw error;
+    }
+  };
   
   const handleUnlock = () => {
     // This is a simplified authentication. In a real app, you would verify against stored credentials
@@ -84,30 +160,67 @@ const SurakshaLocker: React.FC = () => {
     }
   };
   
-  const handleBiometricAuth = (type: 'face' | 'fingerprint') => {
-    // In a real app, this would use the Web Authentication API or a device-specific API
-    // Simulated authentication for demo purposes
-    console.log(`Authenticating with ${type} recognition`);
+  const handleBiometricAuth = async (type: 'face' | 'fingerprint') => {
+    if (!biometricsSupported) {
+      toast({
+        title: "Not supported",
+        description: "Your device doesn't support biometric authentication",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    // Show simulated scanning animation
+    // Check if the specific method is supported
+    if (type === 'face' && !faceIdSupported) {
+      toast({
+        title: "Face ID not available",
+        description: "Your device doesn't support facial recognition",
+        variant: "destructive", 
+      });
+      return;
+    }
+    
+    if (type === 'fingerprint' && !fingerprintSupported) {
+      toast({
+        title: "Fingerprint not available",
+        description: "Your device doesn't support fingerprint recognition",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Show processing state and hide options
+    setBiometricProcessing(true);
     setShowBiometricOptions(false);
     
     toast({
       title: `${type === 'face' ? 'Face' : 'Fingerprint'} scan initiated`,
-      description: "Please keep still while scanning...",
+      description: "Please respond to the biometric prompt from your device",
     });
     
-    // Simulate scanning delay
-    setTimeout(() => {
-      // Success: unlock the vault
-      setIsLocked(false);
-      sessionStorage.setItem("vaultUnlocked", "true");
+    try {
+      // This will trigger the actual biometric verification using the platform's API
+      const success = await verifyBiometricCredential();
       
+      if (success) {
+        setIsLocked(false);
+        sessionStorage.setItem("vaultUnlocked", "true");
+        
+        toast({
+          title: "Biometric authentication successful",
+          description: "You now have access to your secure vault",
+        });
+      }
+    } catch (error) {
+      console.error("Authentication error:", error);
       toast({
-        title: "Biometric authentication successful",
-        description: "You now have access to your secure vault",
+        title: "Authentication failed",
+        description: error instanceof Error ? error.message : "Biometric verification failed",
+        variant: "destructive",
       });
-    }, 2000);
+    } finally {
+      setBiometricProcessing(false);
+    }
   };
   
   const handleLock = () => {
@@ -200,13 +313,14 @@ const SurakshaLocker: React.FC = () => {
                 </Button>
                 
                 {/* Biometric authentication options */}
-                {(faceIdEnabled || fingerprintEnabled) && (
+                {biometricEnabled && (faceIdEnabled || fingerprintEnabled) && (
                   <div className="mt-4">
                     <div className="flex justify-center">
                       <Button
                         variant="outline"
                         onClick={() => setShowBiometricOptions(!showBiometricOptions)}
                         className="text-sm"
+                        disabled={biometricProcessing}
                       >
                         Use biometric authentication
                       </Button>
@@ -219,6 +333,7 @@ const SurakshaLocker: React.FC = () => {
                             variant="outline"
                             onClick={() => handleBiometricAuth('face')}
                             className="flex flex-col items-center p-4 h-auto gap-2"
+                            disabled={biometricProcessing || !biometricsSupported || !faceIdSupported}
                           >
                             <ScanFace className="h-10 w-10 text-primary" />
                             <span>Face ID</span>
@@ -230,11 +345,30 @@ const SurakshaLocker: React.FC = () => {
                             variant="outline"
                             onClick={() => handleBiometricAuth('fingerprint')}
                             className="flex flex-col items-center p-4 h-auto gap-2"
+                            disabled={biometricProcessing || !biometricsSupported || !fingerprintSupported}
                           >
                             <Fingerprint className="h-10 w-10 text-primary" />
                             <span>Fingerprint</span>
                           </Button>
                         )}
+                      </div>
+                    )}
+                    
+                    {biometricProcessing && (
+                      <div className="text-center mt-4 text-primary animate-pulse">
+                        <p>Waiting for biometric verification...</p>
+                      </div>
+                    )}
+                    
+                    {!biometricsSupported && showBiometricOptions && (
+                      <div className="flex items-start space-x-2 rounded-md bg-amber-50 dark:bg-amber-950/20 p-3 mt-4 text-amber-800 dark:text-amber-300">
+                        <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-medium">Biometric authentication not available</p>
+                          <p className="text-sm">
+                            Your device or browser doesn't support the Web Authentication API needed for secure biometric authentication.
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>

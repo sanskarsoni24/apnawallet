@@ -35,6 +35,13 @@ const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
     const dismissed = localStorage.getItem("guide_dismissed") === "true";
     setGuideDismissed(dismissed);
   }, []);
+
+  // Effect to navigate to full calendar when "calendar" tab is selected
+  useEffect(() => {
+    if (activeTab === "calendar") {
+      // We'll show the calendar directly in this component instead of navigating
+    }
+  }, [activeTab, navigate]);
   
   if (!isLoggedIn) {
     return (
@@ -42,6 +49,11 @@ const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
         <LandingPage />
       </Container>
     );
+  }
+
+  // If calendar tab is active, render the full-screen calendar
+  if (activeTab === "calendar") {
+    return <FullScreenCalendar />;
   }
   
   return (
@@ -113,9 +125,7 @@ const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
           <Dashboard />
         </TabsContent>
 
-        <TabsContent value="calendar" className="animate-fade-in">
-          <FullScreenCalendar />
-        </TabsContent>
+        {/* Calendar tab content is rendered in full screen mode */}
       </Tabs>
       
       {/* Quick Access Widgets */}

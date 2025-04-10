@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { QrCode, X, Smartphone } from "lucide-react";
+import { Smartphone } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from "qrcode.react";
@@ -12,12 +12,9 @@ interface MobileQRCodeModalProps {
 const MobileQRCodeModal: React.FC<MobileQRCodeModalProps> = ({ deviceName }) => {
   const [isOpen, setIsOpen] = useState(false);
   
-  // Generate a QR code with the current URL and a unique token
-  const qrCodeData = JSON.stringify({
-    appUrl: window.location.origin,
-    deviceName: deviceName || "Chrome Mobile",
-    timestamp: new Date().toISOString()
-  });
+  // Generate a QR code with the current URL 
+  const currentUrl = window.location.href;
+  const qrCodeData = currentUrl;
   
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -30,7 +27,7 @@ const MobileQRCodeModal: React.FC<MobileQRCodeModalProps> = ({ deviceName }) => 
         <DialogHeader>
           <DialogTitle>Mobile Access</DialogTitle>
           <DialogDescription>
-            Scan this QR code to access your vault on mobile
+            Scan this QR code to open this page on your mobile device
           </DialogDescription>
         </DialogHeader>
         
@@ -44,7 +41,7 @@ const MobileQRCodeModal: React.FC<MobileQRCodeModalProps> = ({ deviceName }) => 
             />
           </div>
           <p className="text-sm text-muted-foreground text-center">
-            Scan this QR code using your mobile device to access your secure vault
+            This QR code contains a direct link to the current page
           </p>
         </div>
         

@@ -1,47 +1,19 @@
 
-interface UserSettings {
-  id?: string;
-  userId?: string;
-  theme?: 'light' | 'dark' | 'system';
-  language?: string;
-  emailNotifications?: boolean;
-  pushNotifications?: boolean;
-  smsNotifications?: boolean;
-  voiceReminders?: boolean;
-  reminderDays?: number;
-  subscriptionTier?: 'free' | 'premium' | 'business';
-  subscriptionStatus?: 'active' | 'inactive' | 'trial';
-  subscriptionExpiry?: string;
-  twoFactorEnabled?: boolean;
-  defaultSortOrder?: string;
-  defaultCategory?: string;
-  autoDelete?: boolean;
-  autoDeleteDays?: number;
-  showTutorial?: boolean;
-  lastLogin?: string;
-  deviceIds?: string[];
-  preferredCurrency?: string;
-  autoBackup?: boolean;
-  backupFrequency?: 'daily' | 'weekly' | 'monthly';
-  backupLocation?: string;
-  fontSize?: 'small' | 'medium' | 'large';
-  fontFamily?: string;
-  colorScheme?: string;
-  customCategories?: string[];
-  customTags?: string[];
-  voiceType?: string;
-  notificationSound?: string;
-  paymentMethods?: string[];
-  securityLevel?: 'standard' | 'high' | 'custom';
-  passwordChangeReminder?: boolean;
-  passwordChangeReminderDays?: number;
-  documentCategories?: string[];
-  documentSortOrder?: string;
-  documentViewType?: 'grid' | 'list' | 'calendar';
-  documentReminderSettings?: Record<string, number>;
-  layoutPreference?: 'compact' | 'comfortable' | 'spacious';
-  dateFormat?: string;
-  timeFormat?: '12h' | '24h';
-  mobileDeviceName?: string;
+declare interface UserSettings {
+  theme: "light" | "dark" | "system";
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  voiceReminders: boolean;
+  reminderDays: number;
+  twoFactorEnabled: boolean;
+  autoBackup: boolean;
+  backupFrequency: "daily" | "weekly" | "monthly" | "never";
+  lastBackupDate?: string;
+  sharePreferences: {
+    defaultExpiry: number;
+    requirePassword: boolean;
+  };
   googleEmail?: string;
+  mobileDeviceName?: string;
+  voiceType?: "default" | "male" | "female";
 }

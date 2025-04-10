@@ -22,6 +22,7 @@ const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
   const { isLoggedIn } = useUser();
   const [activeTab, setActiveTab] = useState<"dashboard" | "locker" | "calendar">(defaultTab);
   const [guideDismissed, setGuideDismissed] = useState<boolean>(false);
+  const [showCalendar, setShowCalendar] = useState<boolean>(false);
   
   // Set the active tab when defaultTab changes
   useEffect(() => {
@@ -36,12 +37,18 @@ const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
     setGuideDismissed(dismissed);
   }, []);
 
-  // Effect to navigate to full calendar when "calendar" tab is selected
+  // Effect to show calendar modal when "calendar" tab is selected
   useEffect(() => {
     if (activeTab === "calendar") {
-      // We'll show the calendar directly in this component instead of navigating
+      setShowCalendar(true);
     }
-  }, [activeTab, navigate]);
+  }, [activeTab]);
+
+  // Handler for closing the calendar modal
+  const handleCloseCalendar = () => {
+    setShowCalendar(false);
+    setActiveTab("dashboard");
+  };
   
   if (!isLoggedIn) {
     return (
@@ -49,11 +56,6 @@ const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
         <LandingPage />
       </Container>
     );
-  }
-
-  // If calendar tab is active, render the full-screen calendar
-  if (activeTab === "calendar") {
-    return <FullScreenCalendar />;
   }
   
   return (
@@ -124,9 +126,10 @@ const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
         <TabsContent value="dashboard" className="animate-fade-in">
           <Dashboard />
         </TabsContent>
-
-        {/* Calendar tab content is rendered in full screen mode */}
       </Tabs>
+      
+      {/* Calendar Modal */}
+      <FullScreenCalendar isOpen={showCalendar} onClose={handleCloseCalendar} />
       
       {/* Quick Access Widgets */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">

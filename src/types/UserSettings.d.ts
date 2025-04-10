@@ -13,4 +13,5 @@ type UserSettings = {
   googleProfilePicture?: string;
   googleId?: string;
   lastLoginMethod?: 'password' | 'google';
+  defaultSharingPlatforms?: string[];
 };

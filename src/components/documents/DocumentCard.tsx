@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell, AlertTriangle, Clock } from "lucide-react";
+import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell, AlertTriangle, Clock, Share2, Mail, MessageSquare, Facebook, Twitter, Linkedin, Copy } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,7 @@ const DocumentCard = ({
   const [editDescription, setEditDescription] = useState(description || "");
   const [date, setDate] = useState<Date | undefined>();
   const [showReminderSettings, setShowReminderSettings] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState(false);
   const { deleteDocument, updateDocument, updateDueDate } = useDocuments();
   
   // Update local state when props change
@@ -197,6 +198,57 @@ const DocumentCard = ({
     }
   };
 
+  // Sharing functions
+  const getShareUrl = () => {
+    // In a real app, this would generate a unique sharing URL
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/shared-document/${id}`;
+  };
+
+  const copyToClipboard = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(getShareUrl());
+    toast({
+      title: "Link copied",
+      description: "Document link copied to clipboard",
+    });
+    setShowShareOptions(false);
+  };
+
+  const shareViaEmail = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const subject = encodeURIComponent(`Document Shared: ${title}`);
+    const body = encodeURIComponent(`Check out this document: ${title}\n\n${getShareUrl()}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+    setShowShareOptions(false);
+  };
+
+  const shareViaWhatsApp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const text = encodeURIComponent(`Check out this document: ${title} ${getShareUrl()}`);
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+    setShowShareOptions(false);
+  };
+
+  const shareViaFacebook = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`, '_blank');
+    setShowShareOptions(false);
+  };
+
+  const shareViaTwitter = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const text = encodeURIComponent(`Check out this document: ${title}`);
+    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(getShareUrl())}&text=${text}`, '_blank');
+    setShowShareOptions(false);
+  };
+
+  const shareViaLinkedIn = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getShareUrl())}`, '_blank');
+    setShowShareOptions(false);
+  };
+
   // Fix for DocumentReminderSettings - ensure document always has fileURL property
   const documentWithFileURL: Document = {
     id,
@@ -289,6 +341,82 @@ const DocumentCard = ({
             <Bell className="h-4 w-4" />
             <span className="sr-only">Voice Reminder</span>
           </Button>
+          <Popover open={showShareOptions} onOpenChange={setShowShareOptions}>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0 rounded-full bg-green-100 text-green-600 hover:text-green-800 hover:bg-green-200"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                <Share2 className="h-4 w-4" />
+                <span className="sr-only">Share</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
+              <div className="flex flex-col gap-2">
+                <h4 className="text-sm font-medium mb-1">Share "{title}"</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="flex flex-col items-center justify-center p-2 h-auto"
+                    onClick={copyToClipboard}
+                  >
+                    <Copy className="h-5 w-5 mb-1" />
+                    <span className="text-xs">Copy Link</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="flex flex-col items-center justify-center p-2 h-auto"
+                    onClick={shareViaEmail}
+                  >
+                    <Mail className="h-5 w-5 mb-1" />
+                    <span className="text-xs">Email</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="flex flex-col items-center justify-center p-2 h-auto"
+                    onClick={shareViaWhatsApp}
+                  >
+                    <MessageSquare className="h-5 w-5 mb-1" />
+                    <span className="text-xs">WhatsApp</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="flex flex-col items-center justify-center p-2 h-auto"
+                    onClick={shareViaFacebook}
+                  >
+                    <Facebook className="h-5 w-5 mb-1" />
+                    <span className="text-xs">Facebook</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="flex flex-col items-center justify-center p-2 h-auto"
+                    onClick={shareViaTwitter}
+                  >
+                    <Twitter className="h-5 w-5 mb-1" />
+                    <span className="text-xs">Twitter</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="flex flex-col items-center justify-center p-2 h-auto"
+                    onClick={shareViaLinkedIn}
+                  >
+                    <Linkedin className="h-5 w-5 mb-1" />
+                    <span className="text-xs">LinkedIn</span>
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button 
             variant="ghost" 
             size="sm" 
@@ -476,6 +604,14 @@ const DocumentCard = ({
                 </div>
               )}
               <div className="flex justify-end gap-2 w-full mt-2">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2 bg-green-50 hover:bg-green-100 border-green-200"
+                  onClick={() => setShowShareOptions(true)}
+                >
+                  <Share2 className="h-4 w-4 text-green-600" />
+                  <span className="whitespace-nowrap">Share</span>
+                </Button>
                 <Button 
                   variant="outline" 
                   className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 border-indigo-200"

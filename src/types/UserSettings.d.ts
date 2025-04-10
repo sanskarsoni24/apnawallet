@@ -16,6 +16,7 @@ interface UserSettings {
     enabled: boolean;
     faceIdEnabled: boolean;
     fingerprintEnabled: boolean;
+    lastVerified?: string;
   };
   // Additional properties needed by the app
   subscriptionPlan?: string;
@@ -25,4 +26,17 @@ interface UserSettings {
   cloudExportProviders?: string[];
   backupKeyCreated?: boolean;
   lastKeyBackup?: string;
+  
+  // Mobile integration properties
+  mobileDeviceName?: string;
+  
+  // Google integration properties
+  googleEmail?: string;
+  googleProfilePicture?: string;
+  googleId?: string;
+  googleConnected?: boolean;
+  lastLoginMethod?: string;
+  
+  // Voice settings
+  voiceType?: string;
 }

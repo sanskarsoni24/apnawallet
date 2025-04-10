@@ -20,7 +20,7 @@ interface UserContextType {
   logout: () => void;
   updateUserSettings: (settings: Partial<UserSettings>) => void;
   // Additional methods needed by the app
-  register?: (user: User) => void;
+  register?: (email: string, password: string, name: string) => void;
   updateProfile?: (data: any) => void;
   enableTwoFactor?: () => Promise<boolean>;
   disableTwoFactor?: () => Promise<boolean>;
@@ -162,7 +162,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Mock implementations of additional methods
-  const register = (user: User) => {
+  const register = (email: string, password: string, name: string) => {
+    // Create a mock user
+    const user: User = {
+      displayName: name,
+      email,
+      userId: `user-${Date.now()}`,
+    };
     login(user);
   };
 

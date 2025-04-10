@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -69,7 +68,9 @@ const SignUp = () => {
     setIsSubmitting(true);
     try {
       // Register the new user
-      register(values.email, values.password, values.name);
+      if (register) {
+        register(values.email, values.password, values.name);
+      }
       
       toast({
         title: "Account created",
@@ -127,7 +128,7 @@ const SignUp = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Google Sign Up Button */}
-              <GoogleSignIn mode="signup" />
+              <GoogleSignIn />
               
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">

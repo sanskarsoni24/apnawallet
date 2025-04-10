@@ -24,5 +24,4 @@ interface UserSettings {
   mobileDeviceName?: string;
   mobileDeviceId?: string;
   lastMobileSync?: string;
-  googleConnected?: boolean;
 }

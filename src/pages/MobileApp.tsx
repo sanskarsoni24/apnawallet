@@ -9,8 +9,6 @@ import { Share, Download, Smartphone, Tablet, Laptop, ArrowRight, PhoneCall, Sca
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import SurakshaMobileScanner from "@/components/suraksha/SurakshaMobileScanner";
-import { useUser } from "@/contexts/UserContext";
 
 // Define a global type for the deferredPrompt
 declare global {
@@ -21,8 +19,7 @@ declare global {
 
 const MobileApp = () => {
   const navigate = useNavigate();
-  const { userSettings, updateUserSettings } = useUser();
-  const [activeTab, setActiveTab] = useState("scanner");
+  const [activeTab, setActiveTab] = useState("android");
   const [canInstall, setCanInstall] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
@@ -162,192 +159,170 @@ const MobileApp = () => {
           </AlertDescription>
         </Alert>
         
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-2">
-            <TabsTrigger value="scanner" className="flex items-center gap-2">
-              <Scan className="h-4 w-4" />
-              Mobile Scanner
-            </TabsTrigger>
-            <TabsTrigger value="download" className="flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              Download App
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="scanner" className="mt-6">
-            <SurakshaMobileScanner 
-              userSettings={userSettings} 
-              updateUserSettings={updateUserSettings}
-            />
-          </TabsContent>
-          
-          <TabsContent value="download" className="mt-6">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <h2 className="text-2xl font-semibold">Get Started Now</h2>
-                  <p className="text-muted-foreground">
-                    Download the SurakshitLocker app to securely access and manage your 
-                    important documents from anywhere.
-                  </p>
-                  
-                  <div className="grid grid-cols-3 gap-4 my-6">
-                    <div className="flex flex-col items-center text-center space-y-2">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Smartphone className="h-6 w-6 text-primary" />
-                      </div>
-                      <span className="text-sm font-medium">Mobile</span>
-                      <span className="text-xs text-muted-foreground">iOS & Android</span>
-                    </div>
-                    
-                    <div className="flex flex-col items-center text-center space-y-2">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Tablet className="h-6 w-6 text-primary" />
-                      </div>
-                      <span className="text-sm font-medium">Tablet</span>
-                      <span className="text-xs text-muted-foreground">iPad & Android</span>
-                    </div>
-                    
-                    <div className="flex flex-col items-center text-center space-y-2">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Laptop className="h-6 w-6 text-primary" />
-                      </div>
-                      <span className="text-sm font-medium">Desktop</span>
-                      <span className="text-xs text-muted-foreground">Windows & Mac</span>
-                    </div>
+        <div className="grid md:grid-cols-2 gap-8 items-center">
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold">Get Started Now</h2>
+              <p className="text-muted-foreground">
+                Download the SurakshitLocker app to securely access and manage your 
+                important documents from anywhere.
+              </p>
+              
+              <div className="grid grid-cols-3 gap-4 my-6">
+                <div className="flex flex-col items-center text-center space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Smartphone className="h-6 w-6 text-primary" />
                   </div>
+                  <span className="text-sm font-medium">Mobile</span>
+                  <span className="text-xs text-muted-foreground">iOS & Android</span>
                 </div>
                 
-                <div className="space-y-4">
-                  <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid grid-cols-2">
-                      <TabsTrigger value="android">
-                        Android
-                      </TabsTrigger>
-                      <TabsTrigger value="ios">
-                        iOS
-                      </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="android" className="space-y-4">
-                      <div className="flex flex-col gap-2">
-                        <Button 
-                          onClick={handleDownloadApp}
-                          size="lg" 
-                          className="w-full"
-                          disabled={downloading}
-                        >
-                          {downloading ? (
-                            <>
-                              <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-                              Downloading...
-                            </>
-                          ) : (
-                            <>
-                              <Download className="mr-2 h-5 w-5" />
-                              Download APK
-                            </>
-                          )}
-                        </Button>
-                        
-                        {canInstall && (
-                          <Button 
-                            onClick={handleInstallPWA} 
-                            variant="outline" 
-                            size="lg"
-                            className="w-full"
-                          >
-                            <Smartphone className="mr-2 h-5 w-5" />
-                            Install as App
-                          </Button>
-                        )}
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="ios" className="space-y-4">
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                          On iOS, you can install the app directly from your Safari browser:
-                        </p>
-                        <ol className="list-decimal text-sm pl-5 space-y-2">
-                          <li>Open this page in Safari</li>
-                          <li>Tap the Share button</li>
-                          <li>Scroll down and tap "Add to Home Screen"</li>
-                          <li>Tap "Add" in the top-right corner</li>
-                        </ol>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={handleShare} 
-                      variant="outline" 
-                      className="flex-1"
-                    >
-                      <Share className="mr-2 h-4 w-4" />
-                      Share App Link
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => navigate("/help")}
-                    >
-                      <PhoneCall className="mr-2 h-4 w-4" />
-                      Need Help?
-                    </Button>
+                <div className="flex flex-col items-center text-center space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Tablet className="h-6 w-6 text-primary" />
                   </div>
+                  <span className="text-sm font-medium">Tablet</span>
+                  <span className="text-xs text-muted-foreground">iPad & Android</span>
+                </div>
+                
+                <div className="flex flex-col items-center text-center space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Laptop className="h-6 w-6 text-primary" />
+                  </div>
+                  <span className="text-sm font-medium">Desktop</span>
+                  <span className="text-xs text-muted-foreground">Windows & Mac</span>
                 </div>
               </div>
-              
-              <Card className="border-2 border-primary/20">
-                <CardHeader className="text-center pb-2">
-                  <CardTitle className="text-xl">Scan to Download</CardTitle>
-                  <CardDescription>
-                    Use your phone's camera to scan this QR code
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-center p-8">
-                  <div className="p-4 bg-white rounded-lg">
-                    <QRCodeCanvas
-                      value={downloadUrl}
-                      size={200}
-                      bgColor="#ffffff"
-                      fgColor="#000000"
-                      level="L"
-                      includeMargin={false}
-                    />
-                  </div>
-                </CardContent>
-                <CardFooter className="flex-col gap-4">
-                  <div className="flex flex-col gap-1 text-center">
-                    <p className="text-sm font-medium">Direct link:</p>
-                    <p className="text-xs text-muted-foreground break-all">
-                      {downloadUrl}
-                    </p>
-                  </div>
-                  <Button 
-                    onClick={handleDownloadApp}
-                    className="w-full"
-                    variant="outline"
-                    disabled={downloading}
-                  >
-                    {downloading ? (
-                      <>
-                        <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></span>
-                        Downloading...
-                      </>
-                    ) : (
-                      <>
-                        Go to Download Page
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
             </div>
-          </TabsContent>
-        </Tabs>
+            
+            <div className="space-y-4">
+              <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid grid-cols-2">
+                  <TabsTrigger value="android">
+                    Android
+                  </TabsTrigger>
+                  <TabsTrigger value="ios">
+                    iOS
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="android" className="space-y-4">
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      onClick={handleDownloadApp}
+                      size="lg" 
+                      className="w-full"
+                      disabled={downloading}
+                    >
+                      {downloading ? (
+                        <>
+                          <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                          Downloading...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="mr-2 h-5 w-5" />
+                          Download APK
+                        </>
+                      )}
+                    </Button>
+                    
+                    {canInstall && (
+                      <Button 
+                        onClick={handleInstallPWA} 
+                        variant="outline" 
+                        size="lg"
+                        className="w-full"
+                      >
+                        <Smartphone className="mr-2 h-5 w-5" />
+                        Install as App
+                      </Button>
+                    )}
+                  </div>
+                </TabsContent>
+                <TabsContent value="ios" className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      On iOS, you can install the app directly from your Safari browser:
+                    </p>
+                    <ol className="list-decimal text-sm pl-5 space-y-2">
+                      <li>Open this page in Safari</li>
+                      <li>Tap the Share button</li>
+                      <li>Scroll down and tap "Add to Home Screen"</li>
+                      <li>Tap "Add" in the top-right corner</li>
+                    </ol>
+                  </div>
+                </TabsContent>
+              </Tabs>
+              
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleShare} 
+                  variant="outline" 
+                  className="flex-1"
+                >
+                  <Share className="mr-2 h-4 w-4" />
+                  Share App Link
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => navigate("/help")}
+                >
+                  <PhoneCall className="mr-2 h-4 w-4" />
+                  Need Help?
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          <Card className="border-2 border-primary/20">
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-xl">Scan to Download</CardTitle>
+              <CardDescription>
+                Use your phone's camera to scan this QR code
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center p-8">
+              <div className="p-4 bg-white rounded-lg">
+                <QRCodeCanvas
+                  value={downloadUrl}
+                  size={200}
+                  bgColor="#ffffff"
+                  fgColor="#000000"
+                  level="L"
+                  includeMargin={false}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex-col gap-4">
+              <div className="flex flex-col gap-1 text-center">
+                <p className="text-sm font-medium">Direct link:</p>
+                <p className="text-xs text-muted-foreground break-all">
+                  {downloadUrl}
+                </p>
+              </div>
+              <Button 
+                onClick={handleDownloadApp}
+                className="w-full"
+                variant="outline"
+                disabled={downloading}
+              >
+                {downloading ? (
+                  <>
+                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></span>
+                    Downloading...
+                  </>
+                ) : (
+                  <>
+                    Go to Download Page
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
         
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
           <Card>

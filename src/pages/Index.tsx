@@ -11,15 +11,16 @@ import { Shield, LayoutDashboard, Calendar, Clock, ArrowRight, Upload } from "lu
 import { Button } from "@/components/ui/button";
 import SurakshitLogo from "@/components/ui/SurakshitLogo";
 import BlurContainer from "@/components/ui/BlurContainer";
+import FullScreenCalendar from "@/components/calendar/FullScreenCalendar";
 
 interface IndexProps {
-  defaultTab?: "dashboard" | "locker";
+  defaultTab?: "dashboard" | "locker" | "calendar";
 }
 
-const Index = ({ defaultTab = "locker" }: IndexProps) => {
+const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
   const navigate = useNavigate();
   const { isLoggedIn } = useUser();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "locker">(defaultTab);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "locker" | "calendar">(defaultTab);
   const [guideDismissed, setGuideDismissed] = useState<boolean>(false);
   
   // Set the active tab when defaultTab changes
@@ -73,15 +74,6 @@ const Index = ({ defaultTab = "locker" }: IndexProps) => {
                 </div>
               </div>
             </div>
-            
-            <Button 
-              size="lg"
-              className="bg-white text-indigo-700 hover:bg-white/90 hover:text-indigo-800 px-8 py-7 h-auto text-lg font-semibold shadow-lg"
-              onClick={() => setActiveTab("locker")}
-            >
-              Open Secure Locker
-              <ArrowRight className="h-5 w-5 ml-2" />
-            </Button>
           </div>
         </BlurContainer>
       </div>
@@ -89,10 +81,10 @@ const Index = ({ defaultTab = "locker" }: IndexProps) => {
       <Tabs 
         defaultValue={activeTab} 
         value={activeTab} 
-        onValueChange={(value: "dashboard" | "locker") => setActiveTab(value)} 
+        onValueChange={(value) => setActiveTab(value as "dashboard" | "locker" | "calendar")} 
         className="w-full"
       >
-        <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto mb-8 bg-slate-100 dark:bg-slate-800/70 rounded-lg overflow-hidden">
+        <TabsList className="grid grid-cols-3 w-full max-w-xl mx-auto mb-8 bg-slate-100 dark:bg-slate-800/70 rounded-lg overflow-hidden">
           <TabsTrigger value="dashboard" className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white py-3 rounded-none">
             <div className="flex items-center gap-2">
               <LayoutDashboard className="h-4 w-4 text-indigo-600 group-data-[state=active]:text-white" />
@@ -105,6 +97,12 @@ const Index = ({ defaultTab = "locker" }: IndexProps) => {
               <span>Security Vault</span>
             </div>
           </TabsTrigger>
+          <TabsTrigger value="calendar" className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white py-3 rounded-none">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-indigo-600 group-data-[state=active]:text-white" />
+              <span>Calendar</span>
+            </div>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="locker" className="animate-fade-in">
@@ -113,6 +111,10 @@ const Index = ({ defaultTab = "locker" }: IndexProps) => {
         
         <TabsContent value="dashboard" className="animate-fade-in">
           <Dashboard />
+        </TabsContent>
+
+        <TabsContent value="calendar" className="animate-fade-in">
+          <FullScreenCalendar />
         </TabsContent>
       </Tabs>
       
@@ -130,7 +132,7 @@ const Index = ({ defaultTab = "locker" }: IndexProps) => {
           </div>
           <p className="text-muted-foreground mb-6">Keep track of document due dates and never miss important deadlines.</p>
           <Button 
-            onClick={() => setActiveTab("dashboard")} 
+            onClick={() => setActiveTab("calendar")} 
             variant="outline" 
             className="w-full bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 border-amber-200 dark:border-amber-800/30 text-amber-700 dark:text-amber-400 hover:from-amber-100 hover:to-amber-200 dark:hover:from-amber-900/30 dark:hover:to-amber-800/30"
           >

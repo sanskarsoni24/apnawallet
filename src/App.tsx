@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "@/components/theme-provider";
 import Index from "@/pages/Index";
 import Documents from "@/pages/Documents";
 import Settings from "@/pages/Settings";

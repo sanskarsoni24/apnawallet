@@ -1,5 +1,5 @@
 
-declare interface UserSettings {
+interface UserSettings {
   theme: "light" | "dark" | "system";
   emailNotifications: boolean;
   pushNotifications: boolean;
@@ -8,22 +8,21 @@ declare interface UserSettings {
   twoFactorEnabled: boolean;
   autoBackup: boolean;
   backupFrequency: "daily" | "weekly" | "monthly" | "never";
-  lastBackupDate?: string;
   sharePreferences: {
     defaultExpiry: number;
     requirePassword: boolean;
   };
-  googleEmail?: string;
-  googleProfilePicture?: string;
-  googleId?: string;
-  lastLoginMethod?: string;
-  mobileDeviceName?: string;
-  voiceType?: "default" | "male" | "female";
-  biometricAuth?: {
+  biometricAuth: {
     enabled: boolean;
     faceIdEnabled: boolean;
     fingerprintEnabled: boolean;
-    lastVerified?: string;
   };
-  googleConnected?: boolean;
+  // Additional properties needed by the app
+  subscriptionPlan?: string;
+  documentLimit?: number;
+  documentSizeLimit?: number;
+  email?: string;
+  cloudExportProviders?: string[];
+  backupKeyCreated?: boolean;
+  lastKeyBackup?: string;
 }

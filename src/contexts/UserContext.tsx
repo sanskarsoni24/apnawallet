@@ -19,6 +19,13 @@ interface UserContextType {
   login: (user: User) => void;
   logout: () => void;
   updateUserSettings: (settings: Partial<UserSettings>) => void;
+  // Additional methods needed by the app
+  register?: (user: User) => void;
+  updateProfile?: (data: any) => void;
+  enableTwoFactor?: () => Promise<boolean>;
+  disableTwoFactor?: () => Promise<boolean>;
+  createBackupKey?: () => Promise<string>;
+  restoreFromBackupKey?: (key: string) => Promise<boolean>;
 }
 
 const UserContext = createContext<UserContextType>({
@@ -80,7 +87,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           enabled: false,
           faceIdEnabled: false,
           fingerprintEnabled: false,
-        }
+        },
+        subscriptionPlan: "free",
+        documentLimit: 10,
+        documentSizeLimit: 5, // MB
+        cloudExportProviders: [],
+        backupKeyCreated: false
       });
     }
     
@@ -117,7 +129,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           enabled: false,
           faceIdEnabled: false,
           fingerprintEnabled: false,
-        }
+        },
+        subscriptionPlan: "free",
+        documentLimit: 10,
+        documentSizeLimit: 5, // MB
+        cloudExportProviders: [],
+        backupKeyCreated: false
       };
       setUserSettings(defaultSettings);
       localStorage.setItem("userSettings", JSON.stringify(defaultSettings));
@@ -144,6 +161,50 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Mock implementations of additional methods
+  const register = (user: User) => {
+    login(user);
+  };
+
+  const updateProfile = (data: any) => {
+    if (data.displayName) setDisplayName(data.displayName);
+    if (data.email) setEmail(data.email);
+    if (data.photoURL) setPhotoURL(data.photoURL);
+    
+    const updatedUser = {
+      displayName: data.displayName || displayName,
+      email: data.email || email,
+      userId: userId || "",
+      photoURL: data.photoURL || photoURL
+    };
+    
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
+  const enableTwoFactor = async (): Promise<boolean> => {
+    updateUserSettings({ twoFactorEnabled: true });
+    return true;
+  };
+
+  const disableTwoFactor = async (): Promise<boolean> => {
+    updateUserSettings({ twoFactorEnabled: false });
+    return true;
+  };
+
+  const createBackupKey = async (): Promise<string> => {
+    const key = `backup-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    updateUserSettings({ 
+      backupKeyCreated: true,
+      lastKeyBackup: new Date().toISOString()
+    });
+    return key;
+  };
+
+  const restoreFromBackupKey = async (key: string): Promise<boolean> => {
+    // In a real app this would validate the key and restore data
+    return true;
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -157,6 +218,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         updateUserSettings,
+        register,
+        updateProfile,
+        enableTwoFactor,
+        disableTwoFactor,
+        createBackupKey,
+        restoreFromBackupKey,
       }}
     >
       {children}

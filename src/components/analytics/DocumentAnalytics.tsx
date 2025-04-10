@@ -1,10 +1,14 @@
 
 import React, { useMemo } from "react";
 import { useDocuments } from "@/contexts/DocumentContext";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
-import { BarChart3, PieChart as PieChartIcon, Calendar, FileText, Filter, Clock, Shield } from "lucide-react";
+import { 
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid 
+} from "recharts";
+import { ChartPie, BarChart3, Calendar, FileText, TrendingUp, AlertCircle, CheckCircle2, Info } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
-import { Card } from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 const COLORS = ['#8B5CF6', '#EC4899', '#10B981', '#F97316', '#0EA5E9', '#6366F1'];
@@ -152,7 +156,7 @@ const DocumentAnalytics: React.FC = () => {
     return (
       <BlurContainer variant="default" className="p-6">
         <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="h-5 w-5 text-muted-foreground" />
+          <BarChart3 className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-semibold">Document Analytics</h2>
         </div>
         <Card className="p-8 text-center bg-muted/30">
@@ -172,108 +176,181 @@ const DocumentAnalytics: React.FC = () => {
     <BlurContainer variant="default" className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-muted-foreground" />
+          <BarChart3 className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-semibold">Document Analytics</h2>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Document Distribution By Type */}
-        <div className="bg-muted/30 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <FileText className="h-4 w-4 text-primary" />
-            <h3 className="font-medium">Document Types</h3>
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={documentsByType}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 50, bottom: 5 }}
-              >
-                <XAxis type="number" />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={100} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#8B5CF6" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+      <Tabs defaultValue="charts" className="w-full">
+        <TabsList className="mb-6 bg-muted/30">
+          <TabsTrigger value="charts" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Charts
+          </TabsTrigger>
+          <TabsTrigger value="status" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+            <Info className="h-4 w-4 mr-2" />
+            Status
+          </TabsTrigger>
+          <TabsTrigger value="timeline" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Timeline
+          </TabsTrigger>
+        </TabsList>
         
-        {/* Document Status Distribution */}
-        <div className="bg-muted/30 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Filter className="h-4 w-4 text-amber-500" />
-            <h3 className="font-medium">Document Status</h3>
+        <TabsContent value="charts" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Document Distribution By Type */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-md font-medium flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary" />
+                  Document Types
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={documentsByType}
+                      layout="vertical"
+                      margin={{ top: 5, right: 30, left: 50, bottom: 5 }}
+                    >
+                      <XAxis type="number" />
+                      <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={100} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="value" fill="#8B5CF6" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Document Status Distribution */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-md font-medium flex items-center gap-2">
+                  <ChartPie className="h-4 w-4 text-amber-500" />
+                  Document Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={documentsByStatus}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {documentsByStatus.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <div className="h-64 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={documentsByStatus}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {documentsByStatus.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Document Expiry Timeline */}
-        <div className="bg-muted/30 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Calendar className="h-4 w-4 text-emerald-500" />
-            <h3 className="font-medium">Expiry Timeline</h3>
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={documentsByExpiry}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#10B981" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        </TabsContent>
         
-        {/* Document Volume Over Time */}
-        <div className="bg-muted/30 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Clock className="h-4 w-4 text-blue-500" />
-            <h3 className="font-medium">Document Volume (Last 6 Months)</h3>
+        <TabsContent value="status" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Document Categories */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-md font-medium flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-blue-500" />
+                  Document Categories
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={documentsByCategory}
+                      layout="vertical"
+                      margin={{ top: 5, right: 30, left: 50, bottom: 5 }}
+                    >
+                      <XAxis type="number" />
+                      <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={100} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="value" fill="#0EA5E9" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Document Expiry Status */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-md font-medium flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-emerald-500" />
+                  Expiry Timeline
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={documentsByExpiry}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="value" fill="#10B981" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={documentsByMonth}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#0EA5E9" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
+        </TabsContent>
+        
+        <TabsContent value="timeline" className="space-y-6">
+          {/* Document Volume Over Time */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-md font-medium flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-blue-500" />
+                Document Volume (Last 6 Months)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart 
+                    data={documentsByMonth}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="#8B5CF6" 
+                      strokeWidth={2}
+                      dot={{ r: 4, strokeWidth: 1, fill: "#8B5CF6" }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </BlurContainer>
   );
 };

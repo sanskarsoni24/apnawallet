@@ -18,7 +18,7 @@ interface Document {
   isStarred?: boolean;
   isArchived?: boolean;
   notes?: string;
-  status?: 'active' | 'expired' | 'pending';
+  status?: 'active' | 'expired' | 'pending' | 'completed' | 'deleted';
   summary?: string;
   daysRemaining?: number;
   dueDate?: string;

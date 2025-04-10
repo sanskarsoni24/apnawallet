@@ -15,6 +15,12 @@ export interface Document {
   importance?: 'low' | 'medium' | 'high' | 'critical';
   createdAt?: string;
   categories?: string[];
+  status?: 'active' | 'expired' | 'pending' | 'completed' | 'deleted';
+  expiryDate?: string;
+  category?: string;
+  tags?: string[];
+  notes?: string;
+  dateAdded?: string;
 }
 
 interface DocumentContextType {
@@ -32,6 +38,12 @@ interface DocumentContextType {
   sortDocuments: (documents: Document[], sortBy: string) => Document[];
   addDocumentType: (type: string) => void;
   removeDocumentType: (type: string) => void;
+  markDocumentComplete: (id: string) => void;
+  markDocumentExpired: (id: string) => void;
+  scheduleRenewal: (id: string, newDueDate: string) => void;
+  getExpiredDocuments: () => Document[];
+  getActiveDocuments: () => Document[];
+  getCompletedDocuments: () => Document[];
 }
 
 const DocumentContext = createContext<DocumentContextType>({
@@ -49,6 +61,12 @@ const DocumentContext = createContext<DocumentContextType>({
   sortDocuments: () => [],
   addDocumentType: () => {},
   removeDocumentType: () => {},
+  markDocumentComplete: () => {},
+  markDocumentExpired: () => {},
+  scheduleRenewal: () => {},
+  getExpiredDocuments: () => [],
+  getActiveDocuments: () => [],
+  getCompletedDocuments: () => [],
 });
 
 export const useDocuments = () => useContext(DocumentContext);
@@ -140,7 +158,8 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       createdAt: new Date().toISOString(),
       importance: doc.importance || 'medium',
       // Initialize categories array if it doesn't exist
-      categories: doc.categories || []
+      categories: doc.categories || [],
+      status: doc.status || 'active',
     };
     
     setDocuments(prev => [...prev, newDoc]);
@@ -334,6 +353,132 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   };
   
+  // Mark a document as completed
+  const markDocumentComplete = (id: string) => {
+    setDocuments(prev => 
+      prev.map(doc => {
+        if (doc.id === id) {
+          return { ...doc, status: 'completed' };
+        }
+        return doc;
+      })
+    );
+    
+    toast({
+      title: "Document Completed",
+      description: "The document has been marked as completed.",
+      variant: "default",
+    });
+  };
+  
+  // Mark a document as expired and set it up for automatic deletion in 30 days
+  const markDocumentExpired = (id: string) => {
+    setDocuments(prev => 
+      prev.map(doc => {
+        if (doc.id === id) {
+          const expiryDate = new Date();
+          // Set status to expired
+          return { 
+            ...doc, 
+            status: 'expired',
+            expiryDate: expiryDate.toISOString(),
+          };
+        }
+        return doc;
+      })
+    );
+    
+    toast({
+      title: "Document Expired",
+      description: "The document has been marked as expired and will be automatically deleted in 30 days unless renewed.",
+      variant: "default",
+    });
+    
+    // Schedule check for auto-deletion
+    setTimeout(() => {
+      cleanupExpiredDocuments();
+    }, 1000 * 60 * 60 * 24); // Check daily
+  };
+  
+  // Get all expired documents
+  const getExpiredDocuments = () => {
+    return documents.filter(doc => doc.status === 'expired');
+  };
+  
+  // Get all active documents
+  const getActiveDocuments = () => {
+    return documents.filter(doc => doc.status === 'active' || !doc.status);
+  };
+  
+  // Get all completed documents
+  const getCompletedDocuments = () => {
+    return documents.filter(doc => doc.status === 'completed');
+  };
+  
+  // Schedule a renewal for an expired document
+  const scheduleRenewal = (id: string, newDueDate: string) => {
+    setDocuments(prev => 
+      prev.map(doc => {
+        if (doc.id === id) {
+          // Calculate new days remaining
+          const dueDate = new Date(newDueDate);
+          const today = new Date();
+          const diffTime = dueDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          return { 
+            ...doc, 
+            status: 'active',
+            dueDate: newDueDate,
+            daysRemaining: diffDays
+          };
+        }
+        return doc;
+      })
+    );
+    
+    toast({
+      title: "Renewal Scheduled",
+      description: "The document has been renewed and scheduled with a new due date.",
+      variant: "default",
+    });
+  };
+  
+  // Clean up expired documents (auto-delete after 30 days)
+  const cleanupExpiredDocuments = () => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const docsToDelete: string[] = [];
+    
+    documents.forEach(doc => {
+      if (doc.status === 'expired' && doc.expiryDate) {
+        const expiryDate = new Date(doc.expiryDate);
+        if (expiryDate < thirtyDaysAgo) {
+          docsToDelete.push(doc.id);
+        }
+      }
+    });
+    
+    // Delete expired documents
+    if (docsToDelete.length > 0) {
+      setDocuments(prev => prev.filter(doc => !docsToDelete.includes(doc.id)));
+      
+      toast({
+        title: "Expired Documents Deleted",
+        description: `${docsToDelete.length} expired documents have been automatically deleted.`,
+        variant: "default",
+      });
+    }
+  };
+  
+  // Check for expired documents on load
+  useEffect(() => {
+    if (documents.length > 0) {
+      cleanupExpiredDocuments();
+    }
+  }, []);
+  
   return (
     <DocumentContext.Provider 
       value={{ 
@@ -350,7 +495,13 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setCustomReminderDays,
         sortDocuments,
         addDocumentType,
-        removeDocumentType
+        removeDocumentType,
+        markDocumentComplete,
+        markDocumentExpired,
+        scheduleRenewal,
+        getExpiredDocuments,
+        getActiveDocuments,
+        getCompletedDocuments
       }}
     >
       {children}

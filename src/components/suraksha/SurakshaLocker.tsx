@@ -1,12 +1,15 @@
 
-import React, { useState } from "react";
-import { Shield, LockKeyhole, Plus, FileText, Key, Trash2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Shield, LockKeyhole, Plus, FileText, Key, Trash2, Eye, EyeOff, Lock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import BlurContainer from "@/components/ui/BlurContainer";
 import MobileQRCodeModal from "@/components/mobile/MobileQRCodeModal";
 import PasswordRecovery from "@/components/security/PasswordRecovery";
+import ForgotPassword from "@/components/auth/ForgotPassword";
+import { toast } from "@/hooks/use-toast";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface SecretItem {
   id: string;
@@ -17,6 +20,9 @@ interface SecretItem {
 }
 
 const SurakshaLocker: React.FC = () => {
+  const [isLocked, setIsLocked] = useState(true);
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("passwords");
   const [secrets, setSecrets] = useState<SecretItem[]>([
     {
@@ -45,6 +51,42 @@ const SurakshaLocker: React.FC = () => {
   const [newItemTitle, setNewItemTitle] = useState("");
   const [newItemValue, setNewItemValue] = useState("");
   
+  useEffect(() => {
+    // Check if vault has been unlocked in this session
+    const isVaultUnlocked = sessionStorage.getItem("vaultUnlocked") === "true";
+    if (isVaultUnlocked) {
+      setIsLocked(false);
+    }
+  }, []);
+  
+  const handleUnlock = () => {
+    // This is a simplified authentication. In a real app, you would verify against stored credentials
+    if (password === "password123" || password === "1234") {
+      setIsLocked(false);
+      sessionStorage.setItem("vaultUnlocked", "true");
+      toast({
+        title: "Vault unlocked",
+        description: "You now have access to your secure vault",
+      });
+    } else {
+      toast({
+        title: "Access denied",
+        description: "The password you entered is incorrect",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleLock = () => {
+    setIsLocked(true);
+    setPassword("");
+    sessionStorage.removeItem("vaultUnlocked");
+    toast({
+      title: "Vault locked",
+      description: "Your secure vault has been locked",
+    });
+  };
+  
   const handleAddItem = () => {
     if (newItemTitle && newItemValue) {
       const newItem: SecretItem = {
@@ -65,6 +107,80 @@ const SurakshaLocker: React.FC = () => {
     setSecrets(secrets.filter(item => item.id !== id));
   };
 
+  if (isLocked) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl font-bold">Secure Vault</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <MobileQRCodeModal deviceName="Chrome Mobile" />
+          </div>
+        </div>
+        
+        <BlurContainer>
+          <Card className="border-none shadow-none">
+            <CardHeader className="text-center">
+              <CardTitle className="flex items-center justify-center gap-2 text-xl">
+                <Lock className="h-5 w-5 text-primary" />
+                Password Protected
+              </CardTitle>
+              <CardDescription>
+                Enter your vault password to access your secure information
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter vault password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pr-10"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleUnlock();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+                
+                <Button 
+                  onClick={handleUnlock} 
+                  className="w-full"
+                >
+                  Unlock Vault
+                </Button>
+                
+                <div className="text-center mt-2">
+                  <ForgotPassword />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </BlurContainer>
+        
+        <div className="space-y-1 mt-4">
+          <PasswordRecovery />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -73,6 +189,10 @@ const SurakshaLocker: React.FC = () => {
           <h2 className="text-2xl font-bold">Secure Vault</h2>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleLock}>
+            <Lock className="h-4 w-4 mr-2" />
+            Lock Vault
+          </Button>
           <MobileQRCodeModal deviceName="Chrome Mobile" />
         </div>
       </div>

@@ -41,14 +41,6 @@ const MobileQRCodeModal: React.FC<MobileQRCodeModalProps> = ({ deviceName }) => 
               size={200}
               level="H"
               includeMargin={true}
-              imageSettings={{
-                src: "/android-chrome-192x192.png",
-                x: undefined,
-                y: undefined,
-                height: 40,
-                width: 40,
-                excavate: true,
-              }}
             />
           </div>
           <p className="text-sm text-muted-foreground text-center">

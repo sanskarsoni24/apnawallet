@@ -5,22 +5,21 @@ import Container from "@/components/layout/Container";
 import Dashboard from "@/components/dashboard/Dashboard";
 import LandingPage from "@/components/landing/LandingPage";
 import { useUser } from "@/contexts/UserContext";
-import SurakshaLocker from "@/components/suraksha/SurakshaLocker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, LayoutDashboard, Calendar, Clock, ArrowRight, Upload } from "lucide-react";
+import { LayoutDashboard, Calendar, ArrowRight, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SurakshitLogo from "@/components/ui/SurakshitLogo";
 import BlurContainer from "@/components/ui/BlurContainer";
 import FullScreenCalendar from "@/components/calendar/FullScreenCalendar";
 
 interface IndexProps {
-  defaultTab?: "dashboard" | "locker" | "calendar";
+  defaultTab?: "dashboard" | "calendar";
 }
 
 const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
   const navigate = useNavigate();
   const { isLoggedIn } = useUser();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "locker" | "calendar">(defaultTab);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "calendar">(defaultTab);
   const [guideDismissed, setGuideDismissed] = useState<boolean>(false);
   
   // Set the active tab when defaultTab changes
@@ -81,20 +80,14 @@ const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
       <Tabs 
         defaultValue={activeTab} 
         value={activeTab} 
-        onValueChange={(value) => setActiveTab(value as "dashboard" | "locker" | "calendar")} 
+        onValueChange={(value) => setActiveTab(value as "dashboard" | "calendar")} 
         className="w-full"
       >
-        <TabsList className="grid grid-cols-3 w-full max-w-xl mx-auto mb-8 bg-slate-100 dark:bg-slate-800/70 rounded-lg overflow-hidden">
+        <TabsList className="grid grid-cols-2 w-full max-w-xl mx-auto mb-8 bg-slate-100 dark:bg-slate-800/70 rounded-lg overflow-hidden">
           <TabsTrigger value="dashboard" className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white py-3 rounded-none">
             <div className="flex items-center gap-2">
               <LayoutDashboard className="h-4 w-4 text-indigo-600 group-data-[state=active]:text-white" />
               <span>Dashboard</span>
-            </div>
-          </TabsTrigger>
-          <TabsTrigger value="locker" className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white py-3 rounded-none">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-indigo-600 group-data-[state=active]:text-white" />
-              <span>Security Vault</span>
             </div>
           </TabsTrigger>
           <TabsTrigger value="calendar" className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white py-3 rounded-none">
@@ -104,10 +97,6 @@ const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
             </div>
           </TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="locker" className="animate-fade-in">
-          <SurakshaLocker />
-        </TabsContent>
         
         <TabsContent value="dashboard" className="animate-fade-in">
           <Dashboard />
@@ -147,17 +136,17 @@ const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
         >
           <div className="flex items-center gap-3 mb-4">
             <div className="h-12 w-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-              <Shield className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              <LayoutDashboard className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <h3 className="font-semibold text-lg">Secure Storage</h3>
+            <h3 className="font-semibold text-lg">Document Dashboard</h3>
           </div>
-          <p className="text-muted-foreground mb-6">Store sensitive information securely in your encrypted private vault.</p>
+          <p className="text-muted-foreground mb-6">View a summary of all your stored information and recent activities.</p>
           <Button 
-            onClick={() => setActiveTab("locker")} 
+            onClick={() => setActiveTab("dashboard")} 
             variant="outline" 
             className="w-full bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 border-indigo-200 dark:border-indigo-800/30 text-indigo-700 dark:text-indigo-400 hover:from-indigo-100 hover:to-indigo-200 dark:hover:from-indigo-900/30 dark:hover:to-indigo-800/30"
           >
-            Access Locker
+            View Dashboard
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </BlurContainer>

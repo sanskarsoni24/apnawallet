@@ -201,7 +201,7 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Index defaultTab="dashboard" />} />
-                <Route path="/locker" element={<Index defaultTab="locker" />} />
+                <Route path="/calendar" element={<Index defaultTab="calendar" />} />
                 <Route path="/sign-in" element={<SignIn />} />
                 <Route path="/sign-up" element={<SignUp />} />
                 <Route path="/help" element={<Help />} />

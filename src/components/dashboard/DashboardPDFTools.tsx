@@ -26,7 +26,7 @@ const DashboardPDFTools = () => {
               </div>
             </div>
             <Link to="/pdf-tools">
-              <Button variant="primary" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2">
                 <File className="h-4 w-4" />
                 All PDF Tools
                 <ArrowRight className="h-4 w-4 ml-1" />

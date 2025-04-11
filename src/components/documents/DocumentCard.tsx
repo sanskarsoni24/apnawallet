@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell, AlertTriangle, Clock, Share2, Mail, MessageSquare, Facebook, Twitter, Linkedin, Copy, CheckCircle, FileWarning, Shield, ShieldOff } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
@@ -813,3 +814,47 @@ const DocumentCard = ({
                     variant="outline" 
                     className={`flex items-center gap-2 ${status === 'expired' ? 'bg-red-50 border-red-200 text-red-700' : ''}`}
                     onClick={() => handleStatusChange('expired')}
+                    disabled={status === 'expired'}
+                  >
+                    <FileWarning className="h-4 w-4" />
+                    <span className="whitespace-nowrap">Mark Expired</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Alert Dialog for Delete Confirmation */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the document
+              "{title}" and remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reminder Settings Dialog */}
+      {showReminderSettings && (
+        <DocumentReminderSettings
+          document={documentWithFileURL}
+          open={showReminderSettings}
+          onOpenChange={setShowReminderSettings}
+        />
+      )}
+    </>
+  );
+};
+
+export default DocumentCard;

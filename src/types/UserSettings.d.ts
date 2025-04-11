@@ -9,7 +9,6 @@ declare interface UserSettings {
   timezone: string;
   autoBackup: boolean;
   backupFrequency: 'daily' | 'weekly' | 'monthly' | 'never';
-  lastKeyBackup?: string;
   lastBackup?: string;
   twoFactorEnabled: boolean;
   lastLoginMethod?: 'email' | 'google' | 'apple' | 'password';
@@ -41,27 +40,17 @@ declare interface UserSettings {
   compactView?: boolean;
   documentSortOrder?: 'name' | 'date' | 'type' | 'importance';
   documentGrouping?: 'none' | 'category' | 'type' | 'importance';
-  
-  // Google integration properties
-  googleEmail?: string;
-  googleProfilePicture?: string;
-  googleId?: string;
-  googleConnected?: boolean;
-  
-  // Recent documents tracking
-  recentDocuments?: string[];
-  recentDocumentsMaxCount?: number;
-  lastViewedDocument?: string;
-  
-  // Biometric authentication
   biometricAuth?: {
     enabled: boolean;
     faceIdEnabled?: boolean;
     fingerprintEnabled?: boolean;
     lastVerified?: string;
   };
-  
-  // Backup functionality
+  // Added properties for Google integration
+  googleEmail?: string;
+  googleProfilePicture?: string;
+  googleId?: string;
+  // Improved backup functionality
   backupEncrypted?: boolean;
   backupLocations?: ('local' | 'cloud' | 'external')[];
   backupPassword?: string;
@@ -69,36 +58,12 @@ declare interface UserSettings {
   lastBackupStatus?: 'success' | 'failed' | 'pending';
   lastAutoBackupAttempt?: string;
   backupRetentionCount?: number;
-  
-  // Recovery keys
+  // Recovery keys improvements
   recoveryKeys?: string[];
   recoveryKeyLastGenerated?: string;
   recoveryKeyUsageHistory?: {date: string, keyId: string}[];
-  
-  // Mobile device integration
-  mobileDeviceName?: string;
-  
-  // PDF editing tools settings
-  pdfMergeHistory?: string[];
-  pdfSplitHistory?: string[];
-  pdfSignaturePresets?: {name: string, image: string}[];
-  pdfEditingPreferences?: {
-    defaultPageSize: string;
-    defaultOrientation: 'portrait' | 'landscape';
-  };
-  
-  // Subscription information
-  subscriptionPlan?: 'free' | 'basic' | 'premium' | 'enterprise';
-  documentLimit?: number;
-  documentSizeLimit?: number;
-  
-  // Voice settings
-  voiceReminders?: boolean;
-  reminderDays?: number;
-  voiceType?: string;
-  
-  // Properties for display name and email
-  displayName?: string;
-  email?: string;
-  isLoggedIn?: boolean;
+  // Recent documents tracking
+  recentDocuments?: string[];
+  recentDocumentsMaxCount?: number;
+  lastViewedDocument?: string;
 }

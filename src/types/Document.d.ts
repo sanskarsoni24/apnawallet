@@ -8,8 +8,7 @@ declare interface Document {
   issueDate?: string;
   dueDate?: string;
   fileName?: string;
-  fileURL?: string;
-  fileUrl?: string; // Both versions for compatibility
+  fileUrl?: string;
   fileSize?: number;
   fileType?: string;
   tags?: string[];

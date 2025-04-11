@@ -1,4 +1,3 @@
-
 import { format, parseISO, differenceInDays, addDays, parse, isValid } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 
@@ -227,78 +226,5 @@ export const generateDocumentSummary = async (text: string, category?: string): 
         resolve("This document contains important information. Key details include dates, names, and possibly amounts. Review the document for specific actions required.");
       }
     }, 1000);
-  });
-};
-
-// PDF PROCESSING FUNCTIONS
-
-// Function to merge PDF files
-export const mergePDFFiles = async (files: File[]): Promise<Blob | null> => {
-  // This would normally use PDF.js or a similar library
-  // For now, just simulate the process
-  
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Return a simulated PDF blob
-      resolve(new Blob([new Uint8Array(100)], { type: 'application/pdf' }));
-    }, 2000);
-  });
-};
-
-// Function to split a PDF file
-export const splitPDFFile = async (file: File, pageRanges: string[]): Promise<Blob[] | null> => {
-  // This would normally use PDF.js or a similar library
-  // For now, just simulate the process
-  
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Return simulated PDF blobs
-      const results: Blob[] = [];
-      
-      pageRanges.forEach(() => {
-        results.push(new Blob([new Uint8Array(50)], { type: 'application/pdf' }));
-      });
-      
-      resolve(results);
-    }, 2000);
-  });
-};
-
-// Function to add a signature to a PDF
-export const signPDFFile = async (file: File, signatureImage: string, position: { x: number, y: number, page: number }): Promise<Blob | null> => {
-  // This would normally use PDF.js or a similar library
-  // For now, just simulate the process
-  
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Return a simulated signed PDF blob
-      resolve(new Blob([new Uint8Array(120)], { type: 'application/pdf' }));
-    }, 2000);
-  });
-};
-
-// Function to convert images to PDF
-export const convertImagesToPDF = async (imageFiles: File[], options: { pageSize: string, orientation: string, quality: string }): Promise<Blob | null> => {
-  // This would normally use jsPDF or a similar library
-  // For now, just simulate the process
-  
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Return a simulated PDF blob
-      resolve(new Blob([new Uint8Array(imageFiles.length * 80)], { type: 'application/pdf' }));
-    }, 2000 + imageFiles.length * 500); // Simulate longer processing for more images
-  });
-};
-
-// Function to simulate editing a PDF
-export const editPDFContent = async (file: File, edits: { text?: string, images?: string[] }): Promise<Blob | null> => {
-  // This would normally use PDF.js or a similar library
-  // For now, just simulate the process
-  
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Return a simulated edited PDF blob
-      resolve(new Blob([new Uint8Array(150)], { type: 'application/pdf' }));
-    }, 3000);
   });
 };

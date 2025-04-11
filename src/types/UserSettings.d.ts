@@ -46,11 +46,11 @@ declare interface UserSettings {
     fingerprintEnabled?: boolean;
     lastVerified?: string;
   };
-  // Added properties for Google integration
+  // Google integration
   googleEmail?: string;
   googleProfilePicture?: string;
   googleId?: string;
-  // Improved backup functionality
+  // Backup functionality
   backupEncrypted?: boolean;
   backupLocations?: ('local' | 'cloud' | 'external')[];
   backupPassword?: string;
@@ -58,7 +58,7 @@ declare interface UserSettings {
   lastBackupStatus?: 'success' | 'failed' | 'pending';
   lastAutoBackupAttempt?: string;
   backupRetentionCount?: number;
-  // Recovery keys improvements
+  // Recovery keys
   recoveryKeys?: string[];
   recoveryKeyLastGenerated?: string;
   recoveryKeyUsageHistory?: {date: string, keyId: string}[];
@@ -66,4 +66,12 @@ declare interface UserSettings {
   recentDocuments?: string[];
   recentDocumentsMaxCount?: number;
   lastViewedDocument?: string;
+  // PDF settings
+  defaultPdfView?: 'single' | 'double' | 'continuous';
+  pdfTextSelection?: boolean;
+  pdfAnnotationEnabled?: boolean;
+  pdfDefaultZoom?: number;
+  pdfHighlightColor?: string;
+  pdfRememberLastPage?: boolean;
+  pdfShowThumbnails?: boolean;
 }

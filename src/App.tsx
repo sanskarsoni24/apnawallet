@@ -21,6 +21,7 @@ import UserProfile from "./pages/UserProfile";
 import Help from "./pages/Help";
 import GuidedMessage, { GuideStep } from "./components/onboarding/GuidedMessage";
 import { getGuidesForPath, shouldShowGuide, markGuideAsCompleted } from "./services/OnboardingService";
+import PdfTools from "./components/pdf/PdfTools";
 
 const queryClient = new QueryClient();
 
@@ -210,6 +211,14 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <Documents />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/pdf-tools" 
+                  element={
+                    <ProtectedRoute>
+                      <PdfTools />
                     </ProtectedRoute>
                   } 
                 />

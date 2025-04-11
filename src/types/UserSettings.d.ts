@@ -42,7 +42,7 @@ declare interface UserSettings {
   documentSortOrder?: 'name' | 'date' | 'type' | 'importance';
   documentGrouping?: 'none' | 'category' | 'type' | 'importance';
   
-  // Properties used in components but missing from the interface
+  // Google integration properties
   googleEmail?: string;
   googleProfilePicture?: string;
   googleId?: string;
@@ -96,4 +96,9 @@ declare interface UserSettings {
   voiceReminders?: boolean;
   reminderDays?: number;
   voiceType?: string;
+  
+  // Properties for display name and email
+  displayName?: string;
+  email?: string;
+  isLoggedIn?: boolean;
 }

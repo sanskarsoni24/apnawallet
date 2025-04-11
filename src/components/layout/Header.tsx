@@ -1,149 +1,222 @@
-
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/ui/mode-toggle";
+import MobileNav from "../ui/mobile-nav";
+import SurakshitLogo from "../ui/SurakshitLogo";
+import { Bell, Menu, User, HelpCircle, Settings } from "lucide-react";
+import { ModeToggle } from "../ui/mode-toggle";
 import { useUser } from "@/contexts/UserContext";
-import SurakshitLogo from "@/components/ui/SurakshitLogo";
-import MobileNav from "@/components/ui/mobile-nav";
-import { Bell, LogOut, Settings, FileText, Archive, Home, Calendar, HelpCircle, FileIcon } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { toast } from "@/hooks/use-toast";
-
-// Define props for MobileNav to fix type errors
-interface MobileNavProps {
-  navigation: {
-    name: string;
-    href: string;
-    icon: React.ComponentType<any>;
-    current: boolean;
-    disabled?: boolean;
-  }[];
-  isLoggedIn: boolean;
-  logout: () => Promise<void>;
-  user?: { email?: string };
-}
+import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import MobileBanner from "../ui/MobileBanner";
+import MobileQRCodeModal from "../mobile/MobileQRCodeModal";
 
 const Header = () => {
-  const { isLoggedIn, logout, userSettings } = useUser();
   const location = useLocation();
-  const pathname = location.pathname;
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const { isLoggedIn, displayName, email, userSettings, logout } = useUser();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
+  
+  // User avatar placeholder (first letter of name or email)
+  const avatarFallback = (displayName || email || "U").charAt(0).toUpperCase();
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      });
-    } catch (error) {
-      toast({
-        title: "Logout Failed",
-        description: "There was an error logging out. Please try again.",
-        variant: "destructive",
-      });
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 20;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [scrolled]);
+
+  useEffect(() => {
+    // Close mobile menu when route changes
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Check if the user is on a mobile device
+  useEffect(() => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+    
+    // Show mobile banner if user is on mobile and hasn't dismissed it
+    if (isMobile) {
+      const dismissed = localStorage.getItem("mobile_banner_dismissed") === "true";
+      if (!dismissed) {
+        setShowBanner(true);
+      }
     }
+  }, []);
+  
+  const handleDismissBanner = () => {
+    setShowBanner(false);
+    localStorage.setItem("mobile_banner_dismissed", "true");
   };
 
-  // Create navigation links
-  const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home, current: pathname === '/dashboard' },
-    { name: 'Documents', href: '/documents', icon: FileText, current: pathname === '/documents' },
-    { name: 'PDF Tools', href: '/pdf-tools', icon: FileIcon, current: pathname === '/pdf-tools' },
-    { name: 'Locker', href: '/locker', icon: Archive, current: pathname === '/locker' },
-    { name: 'Calendar', href: '/calendar', icon: Calendar, current: pathname === '/calendar', disabled: true },
-    { name: 'Help', href: '/help', icon: HelpCircle, current: pathname === '/help' },
+  const navItems = [
+    { name: "Dashboard", path: "/dashboard" },
+    { name: "Documents", path: "/documents" },
+    { name: "Pricing", path: "/pricing" },
+    { name: "Help", path: "/help" },
   ];
 
-  // Create user object for MobileNav
-  const user = { email: userSettings?.googleEmail || "" };
+  // Check for unread notifications
+  const hasUnreadNotifications = userSettings?.emailNotifications;
 
   return (
-    <header className="bg-background sticky top-0 z-50 border-b">
-      <div className="container flex h-16 items-center justify-between py-4">
-        <div className="flex lg:hidden">
-          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="sm">
-                {isMobileMenuOpen ? (
-                  <span className="h-5 w-5">✕</span>
-                ) : (
-                  <span className="h-5 w-5">☰</span>
-                )}
-                <span className="sr-only">Toggle Menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-full sm:w-60">
-              <MobileNav
-                navigation={navigation}
-                isLoggedIn={isLoggedIn}
-                logout={handleLogout}
-                user={user}
-              />
-            </SheetContent>
-          </Sheet>
-        </div>
+    <>
+      {showBanner && <MobileBanner onDismiss={handleDismissBanner} />}
+      <header
+        className={`fixed top-0 left-0 right-0 z-40 ${
+          scrolled ? "bg-background/80 backdrop-blur-md shadow-sm" : "bg-transparent"
+        } transition-all duration-200`}
+      >
+        <div className="container flex h-16 items-center justify-between">
+          <div className="flex items-center gap-6">
+            <Link to="/" className="flex items-center gap-2">
+              <SurakshitLogo size="sm" />
+              <span className="font-semibold text-xl hidden sm:inline-block">
+                ApnaWallet
+              </span>
+            </Link>
 
-        <Link to="/" className="flex items-center space-x-2">
-          <SurakshitLogo className="h-6 w-6" />
-          <span className="hidden sm:inline-block font-bold">
-            Apna<span className="font-semibold">Wallet</span>
-          </span>
-        </Link>
+            <nav className="hidden md:flex items-center gap-6">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path || 
+                               (item.path === "/dashboard" && location.pathname === "/");
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`text-sm font-medium transition-colors hover:text-primary ${
+                      isActive
+                        ? "text-foreground"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
 
-        <div className="hidden lg:flex items-center space-x-4">
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`flex items-center space-x-2 ${item.current ? 'text-foreground' : 'text-muted-foreground hover:text-foreground transition-colors'
-                  } ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                aria-disabled={item.disabled}
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.name}</span>
-              </Link>
-            ))}
-          </nav>
-        </div>
+          <div className="flex items-center gap-2">
+            <Link 
+              to="/help" 
+              className="md:hidden text-muted-foreground hover:text-primary transition-colors"
+            >
+              <HelpCircle className="h-5 w-5" />
+            </Link>
 
-        <div className="flex items-center space-x-2">
-          <ModeToggle />
-          {isLoggedIn ? (
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm">
-                <Bell className="h-4 w-4" />
-                <span className="sr-only">Notifications</span>
-              </Button>
-              <Link to="/profile">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={userSettings?.googleProfilePicture || ""} />
-                  <AvatarFallback>{user?.email?.[0]?.toUpperCase() || "U"}</AvatarFallback>
-                </Avatar>
-              </Link>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          ) : (
-            <>
-              <Link to="/sign-in">
-                <Button variant="outline" size="sm">
-                  Sign In
+            <ModeToggle />
+            
+            {isLoggedIn && <MobileQRCodeModal deviceName={userSettings?.mobileDeviceName} />}
+            
+            {isLoggedIn ? (
+              <>
+                {/* Settings button in the header */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/settings")}
+                  className="relative"
+                  title="Settings"
+                >
+                  <Settings className="h-5 w-5" />
                 </Button>
-              </Link>
-              <Link to="/sign-up">
-                <Button size="sm">Sign Up</Button>
-              </Link>
-            </>
-          )}
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative"
+                  onClick={() => navigate("/settings?tab=notifications")}
+                >
+                  <Bell className="h-5 w-5" />
+                  {hasUnreadNotifications && (
+                    <span className="absolute top-1 right-1.5 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                  )}
+                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="overflow-hidden rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback>
+                          {avatarFallback}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/profile")}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/documents")}>
+                      Documents
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/settings")}>
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link to="/sign-in">Login</Link>
+                </Button>
+                <Button asChild className="bg-indigo-600 hover:bg-indigo-700">
+                  <Link to="/sign-up">Sign up free</Link>
+                </Button>
+              </>
+            )}
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setMobileMenuOpen(true)}
+            >
+              <Menu className="h-6 w-6" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Mobile Navigation */}
+      <MobileNav 
+        open={mobileMenuOpen} 
+        onOpenChange={setMobileMenuOpen}
+      />
+
+      <div className="pb-16"></div>
+    </>
   );
 };
 

@@ -21,7 +21,6 @@ import UserProfile from "./pages/UserProfile";
 import Help from "./pages/Help";
 import GuidedMessage, { GuideStep } from "./components/onboarding/GuidedMessage";
 import { getGuidesForPath, shouldShowGuide, markGuideAsCompleted } from "./services/OnboardingService";
-import PdfTools from "./components/pdf/PdfTools";
 
 const queryClient = new QueryClient();
 
@@ -107,6 +106,7 @@ const OnboardingGuides = () => {
 };
 
 // NotificationCheck component to handle notifications
+// This is a separate component to use the hooks inside the providers
 const NotificationCheck = () => {
   const { documents } = useDocuments();
   const { email, userSettings } = useUser();
@@ -200,7 +200,7 @@ const App = () => {
               <OnboardingGuides />
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<Index />} />
+                <Route path="/dashboard" element={<Index defaultTab="dashboard" />} />
                 <Route path="/locker" element={<Index defaultTab="locker" />} />
                 <Route path="/sign-in" element={<SignIn />} />
                 <Route path="/sign-up" element={<SignUp />} />
@@ -210,14 +210,6 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <Documents />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/pdf-tools" 
-                  element={
-                    <ProtectedRoute>
-                      <PdfTools />
                     </ProtectedRoute>
                   } 
                 />

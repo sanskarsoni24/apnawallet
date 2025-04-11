@@ -1,30 +1,23 @@
 
-export interface Document {
+declare interface Document {
   id: string;
+  userId: string;
   title: string;
-  type?: string;
-  category?: string;
-  tags?: string[];
+  description?: string;
+  type: "id_card" | "passport" | "driving_license" | "insurance" | "certificate" | "invoice" | "contract" | "tax" | "other";
+  issueDate?: string;
   dueDate?: string;
-  isImportant?: boolean;
-  created?: string;
-  updated?: string;
-  importanceLevel?: 'low' | 'medium' | 'high' | 'critical';
-  reminderDate?: string;
-  reminderSent?: boolean;
-  isShared?: boolean;
-  sharedWith?: string[];
-  isArchived?: boolean;
-  isDeleted?: boolean;
-  notes?: string;
-  summary?: string;
-  
-  // PDF specific properties
-  fileType?: string;
   fileName?: string;
+  fileUrl?: string;
   fileSize?: number;
-  pdfPageCount?: number;
-  pdfLastPage?: number;
-  pdfPassword?: string;
-  isPasswordProtected?: boolean;
+  fileType?: string;
+  tags?: string[];
+  daysRemaining?: number;
+  customReminderDays?: number;
+  summary?: string;
+  category?: string;
+  notes?: string;
+  inSecureVault?: boolean;
+  status?: "active" | "expired" | "pending" | "completed" | "deleted";
+  importance?: "low" | "medium" | "high" | "critical";
 }

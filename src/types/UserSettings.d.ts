@@ -40,26 +40,17 @@ declare interface UserSettings {
   compactView?: boolean;
   documentSortOrder?: 'name' | 'date' | 'type' | 'importance';
   documentGrouping?: 'none' | 'category' | 'type' | 'importance';
-  
-  // Recent documents tracking
-  recentDocuments?: string[];
-  recentDocumentsMaxCount?: number;
-  lastViewedDocument?: string;
-  
-  // Biometric authentication
   biometricAuth?: {
     enabled: boolean;
     faceIdEnabled?: boolean;
     fingerprintEnabled?: boolean;
     lastVerified?: string;
   };
-  
-  // Google integration
+  // Added properties for Google integration
   googleEmail?: string;
   googleProfilePicture?: string;
   googleId?: string;
-  
-  // Backup functionality
+  // Improved backup functionality
   backupEncrypted?: boolean;
   backupLocations?: ('local' | 'cloud' | 'external')[];
   backupPassword?: string;
@@ -67,22 +58,12 @@ declare interface UserSettings {
   lastBackupStatus?: 'success' | 'failed' | 'pending';
   lastAutoBackupAttempt?: string;
   backupRetentionCount?: number;
-  
-  // Recovery keys
+  // Recovery keys improvements
   recoveryKeys?: string[];
   recoveryKeyLastGenerated?: string;
   recoveryKeyUsageHistory?: {date: string, keyId: string}[];
-  
-  // PDF settings
-  defaultPdfView?: 'single' | 'double' | 'continuous';
-  pdfTextSelection?: boolean;
-  pdfAnnotationEnabled?: boolean;
-  pdfDefaultZoom?: number;
-  pdfHighlightColor?: string;
-  pdfRememberLastPage?: boolean;
-  pdfShowThumbnails?: boolean;
-  
-  // Mobile app settings
-  mobileDeviceName?: string;
-  lastKeyBackup?: string;
+  // Recent documents tracking
+  recentDocuments?: string[];
+  recentDocumentsMaxCount?: number;
+  lastViewedDocument?: string;
 }

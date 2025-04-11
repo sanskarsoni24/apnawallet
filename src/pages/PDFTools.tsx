@@ -3,8 +3,12 @@ import React from 'react';
 import Container from '@/components/layout/Container';
 import PDFEditingTools from '@/components/pdf/PDFEditingTools';
 import { FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const PDFTools = () => {
+  const navigate = useNavigate();
+  
   return (
     <Container>
       <div className="space-y-6">
@@ -18,6 +22,13 @@ const PDFTools = () => {
               Manage, edit, and organize your PDF documents with these powerful tools
             </p>
           </div>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2"
+          >
+            Back to Dashboard
+          </Button>
         </div>
         
         <PDFEditingTools />

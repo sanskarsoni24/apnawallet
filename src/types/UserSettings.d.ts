@@ -10,6 +10,7 @@ declare interface UserSettings {
   autoBackup: boolean;
   backupFrequency: 'daily' | 'weekly' | 'monthly' | 'never';
   lastBackup?: string;
+  lastKeyBackup?: string;
   twoFactorEnabled: boolean;
   lastLoginMethod?: 'email' | 'google' | 'apple' | 'password';
   accountRecoveryEmail?: string;
@@ -40,17 +41,22 @@ declare interface UserSettings {
   compactView?: boolean;
   documentSortOrder?: 'name' | 'date' | 'type' | 'importance';
   documentGrouping?: 'none' | 'category' | 'type' | 'importance';
+  
+  // Biometric authentication
   biometricAuth?: {
     enabled: boolean;
     faceIdEnabled?: boolean;
     fingerprintEnabled?: boolean;
     lastVerified?: string;
   };
-  // Added properties for Google integration
+  
+  // Google integration properties
   googleEmail?: string;
   googleProfilePicture?: string;
   googleId?: string;
-  // Improved backup functionality
+  googleConnected?: boolean;
+  
+  // Backup functionality
   backupEncrypted?: boolean;
   backupLocations?: ('local' | 'cloud' | 'external')[];
   backupPassword?: string;
@@ -58,16 +64,20 @@ declare interface UserSettings {
   lastBackupStatus?: 'success' | 'failed' | 'pending';
   lastAutoBackupAttempt?: string;
   backupRetentionCount?: number;
-  // Recovery keys improvements
+  
+  // Recovery keys
   recoveryKeys?: string[];
   recoveryKeyLastGenerated?: string;
   recoveryKeyUsageHistory?: {date: string, keyId: string}[];
+  
   // Recent documents tracking
   recentDocuments?: string[];
   recentDocumentsMaxCount?: number;
   lastViewedDocument?: string;
+  
   // Mobile device integration
   mobileDeviceName?: string;
+  
   // PDF editing tools settings
   pdfMergeHistory?: string[];
   pdfSplitHistory?: string[];
@@ -76,4 +86,14 @@ declare interface UserSettings {
     defaultPageSize: string;
     defaultOrientation: 'portrait' | 'landscape';
   };
+  
+  // Subscription information
+  subscriptionPlan?: 'free' | 'basic' | 'premium' | 'enterprise';
+  documentLimit?: number;
+  documentSizeLimit?: number;
+  
+  // Voice settings
+  voiceReminders?: boolean;
+  reminderDays?: number;
+  voiceType?: string;
 }

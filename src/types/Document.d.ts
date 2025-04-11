@@ -1,5 +1,5 @@
 
-declare interface Document {
+export interface Document {
   id: string;
   userId: string;
   title: string;

@@ -1,5 +1,5 @@
 
-declare interface UserSettings {
+export interface UserSettings {
   theme: "light" | "dark" | "system";
   emailNotifications: boolean;
   pushNotifications: boolean;

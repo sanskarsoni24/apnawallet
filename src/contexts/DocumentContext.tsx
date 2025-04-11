@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useState,
@@ -17,6 +18,15 @@ interface DocumentContextType {
   getDocumentById: (id: string) => Document | undefined;
   filterDocumentsByType: (filterType: string) => Document[];
   getSecureVaultDocuments: () => Document[];
+  setCustomReminderDays: (id: string, days: number) => void;
+  categories: string[];
+  documentTypes: string[];
+  addCategory: (category: string) => void;
+  removeCategory: (category: string) => void;
+  addDocumentType: (type: string) => void;
+  markDocumentComplete: (id: string) => void;
+  markDocumentExpired: (id: string) => void;
+  scheduleRenewal: (id: string, date: string) => void;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -44,11 +54,29 @@ export const DocumentProvider = ({ children }: DocumentProviderProps) => {
     return storedDocuments ? JSON.parse(storedDocuments) : [];
   });
 
+  const [categories, setCategories] = useState<string[]>(() => {
+    if (typeof window === "undefined") {
+      return ["Personal", "Financial", "Medical", "Travel", "Work"];
+    }
+    const storedCategories = localStorage.getItem("document_categories");
+    return storedCategories ? JSON.parse(storedCategories) : ["Personal", "Financial", "Medical", "Travel", "Work"];
+  });
+
+  const [documentTypes, setDocumentTypes] = useState<string[]>(() => {
+    return ["id_card", "passport", "driving_license", "insurance", "certificate", "invoice", "contract", "tax", "other"];
+  });
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("documents", JSON.stringify(documents));
     }
   }, [documents]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("document_categories", JSON.stringify(categories));
+    }
+  }, [categories]);
 
   const addDocument = (document: Omit<Document, "id">) => {
     const newDocument: Document = {
@@ -62,7 +90,6 @@ export const DocumentProvider = ({ children }: DocumentProviderProps) => {
     setDocuments(documents.filter((document) => document.id !== id));
   };
 
-  // Add function to update a document
   const updateDocument = (id: string, updates: Partial<Document>) => {
     setDocuments(
       documents.map((doc) => (doc.id === id ? { ...doc, ...updates } : doc))
@@ -73,12 +100,10 @@ export const DocumentProvider = ({ children }: DocumentProviderProps) => {
     return documents.find((document) => document.id === id);
   };
 
-  // Filter documents by secure vault
   const getSecureVaultDocuments = () => {
     return documents.filter((doc) => doc.inSecureVault === true);
   };
 
-  // Update the filterDocumentsByType function to respect the secure vault flag
   const filterDocumentsByType = (filterType: string) => {
     if (filterType === "All") {
       return documents.filter((doc) => doc.inSecureVault !== true);
@@ -87,6 +112,7 @@ export const DocumentProvider = ({ children }: DocumentProviderProps) => {
     if (filterType === "upcoming") {
       return documents.filter(
         (doc) =>
+          doc.daysRemaining !== undefined &&
           doc.daysRemaining >= 0 &&
           doc.daysRemaining <= 7 &&
           doc.inSecureVault !== true
@@ -96,6 +122,42 @@ export const DocumentProvider = ({ children }: DocumentProviderProps) => {
     return documents.filter(
       (doc) => doc.type === filterType.toLowerCase() && doc.inSecureVault !== true
     );
+  };
+
+  // Custom reminder days for a document
+  const setCustomReminderDays = (id: string, days: number) => {
+    updateDocument(id, { customReminderDays: days });
+  };
+
+  // Category management
+  const addCategory = (category: string) => {
+    if (!categories.includes(category)) {
+      setCategories([...categories, category]);
+    }
+  };
+
+  const removeCategory = (category: string) => {
+    setCategories(categories.filter(c => c !== category));
+  };
+
+  // Document type management
+  const addDocumentType = (type: string) => {
+    if (!documentTypes.includes(type)) {
+      setDocumentTypes([...documentTypes, type]);
+    }
+  };
+
+  // Document status management
+  const markDocumentComplete = (id: string) => {
+    updateDocument(id, { status: "completed" } as any);
+  };
+
+  const markDocumentExpired = (id: string) => {
+    updateDocument(id, { status: "expired" } as any);
+  };
+
+  const scheduleRenewal = (id: string, date: string) => {
+    updateDocument(id, { renewalDate: date } as any);
   };
 
   return (
@@ -108,6 +170,15 @@ export const DocumentProvider = ({ children }: DocumentProviderProps) => {
         getDocumentById,
         filterDocumentsByType,
         getSecureVaultDocuments,
+        setCustomReminderDays,
+        categories,
+        documentTypes,
+        addCategory,
+        removeCategory,
+        addDocumentType,
+        markDocumentComplete,
+        markDocumentExpired,
+        scheduleRenewal
       }}
     >
       {children}

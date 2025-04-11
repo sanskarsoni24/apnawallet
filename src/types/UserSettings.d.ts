@@ -1,28 +1,34 @@
 
 declare interface UserSettings {
-  theme: "light" | "dark" | "system";
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  voiceReminders: boolean;
-  reminderDays: number;
-  twoFactorEnabled: boolean;
-  autoBackup: boolean;
-  backupFrequency: "daily" | "weekly" | "monthly" | "never";
-  lastBackupDate?: string;
-  sharePreferences: {
-    defaultExpiry: number;
-    requirePassword: boolean;
-  };
-  googleEmail?: string;
-  googleProfilePicture?: string;
-  googleId?: string;
-  lastLoginMethod?: string;
+  displayName?: string;
+  email?: string;
+  isLoggedIn?: boolean;
+  emailNotifications?: boolean;
+  pushNotifications?: boolean;
+  voiceReminders?: boolean;
+  reminderDays?: number;
+  theme?: string;
+  lastLogin?: string;
+  voiceType?: string;
+  subscriptionPlan?: 'free' | 'basic' | 'premium' | 'enterprise';
+  documentLimit?: number;
+  documentSizeLimit?: number;
+  twoFactorEnabled?: boolean;
+  recoveryEmail?: string;
+  backupKeyCreated?: boolean;
+  backupKeyLocation?: string;
+  lastKeyBackup?: string;
+  autoBackup?: boolean;
+  backupFrequency?: string;
+  cloudExportProviders?: string[];
   mobileDeviceName?: string;
-  voiceType?: "default" | "male" | "female";
+  googleConnected?: boolean;
   biometricAuth?: {
     enabled: boolean;
-    faceIdEnabled: boolean;
-    fingerprintEnabled: boolean;
+    type?: 'fingerprint' | 'face' | 'pin' | 'pattern';
     lastVerified?: string;
+    registeredDevices?: string[];
+    failedAttempts?: number;
+    locked?: boolean;
   };
 }

@@ -3,7 +3,7 @@ import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { FcGoogle } from "react-icons/fc";
+import { Google } from "lucide-react";
 
 interface GoogleSignInProps {
   mode: "signin" | "signup";
@@ -34,11 +34,10 @@ const GoogleSignIn = ({ mode, onSuccess }: GoogleSignInProps) => {
       
       // Update user settings with Google information
       updateUserSettings({
-        lastLoginMethod: "google",
-        // These are now valid properties in UserSettings
-        googleEmail: mockGoogleUser.email,
-        googleProfilePicture: mockGoogleUser.picture,
-        googleId: mockGoogleUser.id
+        googleConnected: true,
+        displayName: mockGoogleUser.name,
+        email: mockGoogleUser.email,
+        recoveryEmail: mockGoogleUser.email,
       });
       
       toast({
@@ -69,7 +68,7 @@ const GoogleSignIn = ({ mode, onSuccess }: GoogleSignInProps) => {
       onClick={handleGoogleSignIn}
       disabled={isLoading}
     >
-      <FcGoogle className="w-5 h-5" />
+      <Google className="w-5 h-5 text-blue-500" />
       {isLoading ? "Connecting..." : buttonText}
     </Button>
   );

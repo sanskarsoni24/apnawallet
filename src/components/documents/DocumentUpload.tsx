@@ -7,10 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, File, FilePlus, Upload, X } from "lucide-react";
+import { CalendarIcon, FilePlus, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +20,13 @@ import { DocumentCategory } from "@/components/documents/DocumentCategory";
 import { DocumentTag } from "@/components/documents/DocumentTag";
 import { DocumentImportance } from "@/components/documents/DocumentImportance";
 
+// Define type for file with preview
+interface FileWithPreview extends File {
+  preview: string;
+}
+
 const DocumentUpload = () => {
+  // ... keep existing code (state variables)
   const [documentTitle, setDocumentTitle] = useState<string>("");
   const [documentType, setDocumentType] = useState<string>("id_card");
   const [category, setCategory] = useState<string>("");
@@ -32,7 +37,7 @@ const DocumentUpload = () => {
   const [reminderEnabled, setReminderEnabled] = useState<boolean>(false);
   const [reminderDays, setReminderDays] = useState<number>(7);
   const [notes, setNotes] = useState<string>("");
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [fileUrl, setFileUrl] = useState<string>("");
   const [aiSummary, setAiSummary] = useState<string>("");
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
@@ -41,13 +46,13 @@ const DocumentUpload = () => {
   
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
-    setFiles(
-      acceptedFiles.map((file) =>
-        Object.assign(file, {
-          preview: URL.createObjectURL(file),
-        })
-      )
-    );
+    const filesWithPreview = acceptedFiles.map((file) => 
+      Object.assign(file, {
+        preview: URL.createObjectURL(file),
+      })
+    ) as FileWithPreview[];
+    
+    setFiles(filesWithPreview);
     
     // Generate a temporary URL for the file
     setFileUrl(URL.createObjectURL(file));
@@ -74,7 +79,7 @@ const DocumentUpload = () => {
   ));
   
   // Remove file from preview
-  const removeFile = (fileToRemove: File) => {
+  const removeFile = (fileToRemove: FileWithPreview) => {
     setFiles((files) => files.filter((file) => file !== fileToRemove));
   };
   
@@ -86,6 +91,7 @@ const DocumentUpload = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // ... keep existing code (validation and form submission)
     if (files.length === 0) {
       toast({
         title: "No file selected",
@@ -109,7 +115,7 @@ const DocumentUpload = () => {
       userId: "current-user", // In a real app, this would be the actual user ID
       title: documentTitle || fileName,
       description: notes,
-      type: documentType,
+      type: documentType as any,
       issueDate: issueDate ? format(issueDate, "MMMM d, yyyy") : undefined,
       dueDate: dueDate ? format(dueDate, "MMMM d, yyyy") : undefined,
       fileName: fileName,
@@ -120,11 +126,10 @@ const DocumentUpload = () => {
       daysRemaining: dueDate ? differenceInDays(dueDate, new Date()) : undefined,
       reminderSet: reminderEnabled,
       customReminderDays: reminderEnabled ? reminderDays : undefined,
-      // Summary is now a valid property in Document
       summary: aiSummary || "",
       category: category || undefined,
       status: "active",
-      importance: "medium",
+      importance: importance as any,
       inSecureVault: false
     };
     
@@ -152,6 +157,7 @@ const DocumentUpload = () => {
   };
   
   const handleAiAnalysis = async () => {
+    // ... keep existing code (AI analysis function)
     if (files.length === 0) {
       toast({
         title: "No file selected",
@@ -179,10 +185,12 @@ const DocumentUpload = () => {
   };
   
   return (
+    // ... keep existing code (form UI)
     <div className="container mx-auto py-10">
       <h1 className="text-3xl font-bold mb-5">Upload Document</h1>
       
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Document Title */}
         <div>
           <Label htmlFor="documentTitle">Document Title</Label>
           <Input
@@ -194,26 +202,31 @@ const DocumentUpload = () => {
           />
         </div>
         
+        {/* Document Type */}
         <div>
           <Label htmlFor="documentType">Document Type</Label>
           <DocumentType value={documentType} onChange={setDocumentType} />
         </div>
         
+        {/* Category */}
         <div>
           <Label htmlFor="category">Category</Label>
           <DocumentCategory value={category} onChange={setCategory} />
         </div>
         
+        {/* Tags */}
         <div>
           <Label htmlFor="tags">Tags</Label>
           <DocumentTag selectedTags={selectedTags} onChange={setSelectedTags} />
         </div>
         
+        {/* Importance */}
         <div>
           <Label htmlFor="importance">Importance</Label>
           <DocumentImportance value={importance} onChange={setImportance} />
         </div>
         
+        {/* Date fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label>Issue Date</Label>
@@ -282,6 +295,7 @@ const DocumentUpload = () => {
           </div>
         </div>
         
+        {/* Reminder setting */}
         <div className="flex items-center space-x-2">
           <Label htmlFor="reminder">Set Reminder</Label>
           <Switch id="reminder" checked={reminderEnabled} onCheckedChange={setReminderEnabled} />
@@ -304,6 +318,7 @@ const DocumentUpload = () => {
           </div>
         )}
         
+        {/* Notes */}
         <div>
           <Label htmlFor="notes">Notes</Label>
           <Textarea
@@ -314,6 +329,7 @@ const DocumentUpload = () => {
           />
         </div>
         
+        {/* File upload */}
         <div>
           <Label>Upload File</Label>
           <div {...getRootProps()} className="border-dashed border-2 rounded-md p-5 cursor-pointer bg-muted/50">
@@ -340,6 +356,7 @@ const DocumentUpload = () => {
           )}
         </div>
         
+        {/* AI Analysis */}
         <div>
           <Label htmlFor="aiSummary">AI Analysis</Label>
           <Textarea

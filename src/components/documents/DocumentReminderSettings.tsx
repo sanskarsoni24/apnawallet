@@ -11,10 +11,13 @@ import { Bell } from 'lucide-react';
 
 export interface DocumentReminderSettingsProps {
   document: Document;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onClose?: () => void;
 }
 
-const DocumentReminderSettings = ({ document, onOpenChange }: DocumentReminderSettingsProps) => {
+const DocumentReminderSettings = ({ document, open, isOpen, onOpenChange, onClose }: DocumentReminderSettingsProps) => {
   const { updateDocument } = useDocuments();
   
   // Default to document's current settings or 7 days
@@ -24,11 +27,19 @@ const DocumentReminderSettings = ({ document, onOpenChange }: DocumentReminderSe
   const [customDays, setCustomDays] = useState<number>(
     document.customReminderDays !== undefined ? document.customReminderDays : 7
   );
-  const [open, setOpen] = useState(true);
+  
+  // Handle dialog state - supports both new and old prop patterns
+  const [internalOpen, setInternalOpen] = useState(open !== undefined ? open : isOpen);
   
   const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
-    onOpenChange(newOpen);
+    setInternalOpen(newOpen);
+    
+    // Call the appropriate callback based on which props are provided
+    if (onOpenChange) {
+      onOpenChange(newOpen);
+    } else if (onClose && !newOpen) {
+      onClose();
+    }
   };
   
   const handleSave = () => {
@@ -49,8 +60,11 @@ const DocumentReminderSettings = ({ document, onOpenChange }: DocumentReminderSe
     handleOpenChange(false);
   };
   
+  // Determine the actual open state from props or internal state
+  const dialogOpen = open !== undefined ? open : (isOpen !== undefined ? isOpen : internalOpen);
+  
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

@@ -66,4 +66,8 @@ declare interface UserSettings {
   recentDocuments?: string[];
   recentDocumentsMaxCount?: number;
   lastViewedDocument?: string;
+  // PDF viewer settings
+  pdfDefaultZoom?: number;
+  pdfRememberLastPage?: boolean;
+  pdfShowThumbnails?: boolean;
 }

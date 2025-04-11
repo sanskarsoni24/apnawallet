@@ -20,4 +20,8 @@ declare interface Document {
   inSecureVault?: boolean;
   status?: "active" | "expired" | "pending" | "completed" | "deleted";
   importance?: "low" | "medium" | "high" | "critical";
+  pdfPageCount?: number;
+  isPasswordProtected?: boolean;
+  pdfLastPage?: number;
+  pdfPassword?: string;
 }

@@ -87,14 +87,14 @@ const DashboardRecent = () => {
               </div>
               
               <div className="flex items-center gap-1">
-                {doc.fileURL && (
+                {doc.fileUrl && (
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7"
                     onClick={(e) => {
                       e.stopPropagation();
-                      window.open(doc.fileURL, "_blank");
+                      window.open(doc.fileUrl, "_blank");
                     }}
                     title="Open document"
                   >

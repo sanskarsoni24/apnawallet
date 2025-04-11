@@ -1,274 +1,562 @@
-
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useDocuments } from "@/contexts/DocumentContext";
-import { Document } from "@/types/Document";
-import { useUser } from "@/contexts/UserContext";
+import { Shield, LockKeyhole, Plus, FileText, Key, Trash2, Eye, EyeOff, Lock, ScanFace, Fingerprint, AlertTriangle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Shield, Lock, Fingerprint, FolderOpen, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import BlurContainer from "@/components/ui/BlurContainer";
+import MobileQRCodeModal from "@/components/mobile/MobileQRCodeModal";
+import PasswordRecovery from "@/components/security/PasswordRecovery";
+import ForgotPassword from "@/components/auth/ForgotPassword";
 import { toast } from "@/hooks/use-toast";
-import DocumentCard from "../documents/DocumentCard";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useUser } from "@/contexts/UserContext";
 
-const SurakshaLocker = () => {
-  const { getSecureVaultDocuments, documents, updateDocument } = useDocuments();
+interface SecretItem {
+  id: string;
+  title: string;
+  value: string;
+  type: "password" | "note" | "key";
+  dateAdded: string;
+}
+
+const SurakshaLocker: React.FC = () => {
   const { userSettings } = useUser();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [secureDocuments, setSecureDocuments] = useState<Document[]>([]);
-  const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
-  const [activeTab, setActiveTab] = useState("documents");
+  const [isLocked, setIsLocked] = useState(true);
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("passwords");
+  const [secrets, setSecrets] = useState<SecretItem[]>([
+    {
+      id: "1",
+      title: "Gmail Password",
+      value: "••••••••••••",
+      type: "password",
+      dateAdded: "2023-10-15",
+    },
+    {
+      id: "2",
+      title: "Backup Recovery Key",
+      value: "XXXX-XXXX-XXXX-XXXX",
+      type: "key",
+      dateAdded: "2023-09-22",
+    },
+    {
+      id: "3",
+      title: "Travel Notes",
+      value: "Passport Number: A123456789\nEmergency Contact: +1-555-123-4567",
+      type: "note",
+      dateAdded: "2023-10-01",
+    },
+  ]);
   
-  // Check if biometric is enabled in user settings
+  const [newItemTitle, setNewItemTitle] = useState("");
+  const [newItemValue, setNewItemValue] = useState("");
+  const [showBiometricOptions, setShowBiometricOptions] = useState(false);
+  const [biometricProcessing, setBiometricProcessing] = useState(false);
+  const [biometricsSupported, setBiometricsSupported] = useState(false);
+  const [faceIdSupported, setFaceIdSupported] = useState(false);
+  const [fingerprintSupported, setFingerprintSupported] = useState(false);
+  
+  const [isInIframe, setIsInIframe] = useState(false);
+  
+  // Check if biometric auth is enabled in user settings
   const biometricEnabled = userSettings?.biometricAuth?.enabled || false;
-  const faceIdAvailable = userSettings?.biometricAuth?.faceIdEnabled || false;
-  const fingerprintAvailable = userSettings?.biometricAuth?.fingerprintEnabled || false;
+  const faceIdEnabled = userSettings?.biometricAuth?.faceIdEnabled || false;
+  const fingerprintEnabled = userSettings?.biometricAuth?.fingerprintEnabled || false;
+  
+  // Check if device supports biometrics
+  useEffect(() => {
+    // Check if running in an iframe
+    try {
+      setIsInIframe(window.self !== window.top);
+    } catch (e) {
+      // If we can't access window.top due to cross-origin restrictions, we're in an iframe
+      setIsInIframe(true);
+    }
+
+    const checkBiometricSupport = async () => {
+      if (window.PublicKeyCredential) {
+        try {
+          const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+          setBiometricsSupported(available && !isInIframe);
+          
+          if (available && !isInIframe) {
+            // Most modern laptops and phones with biometrics will return true here
+            // We're making educated guesses about specific capabilities
+            
+            // Check if device likely has fingerprint support (most biometric devices do)
+            setFingerprintSupported(true);
+            
+            // Check if device likely has facial recognition (many modern laptops and phones do)
+            const isMac = /Mac/.test(navigator.platform);
+            const isWindows = /Win/.test(navigator.platform);
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            // Modern Macs have Face ID, Windows has Windows Hello, many mobile devices have face unlock
+            setFaceIdSupported(isMac || isWindows || isMobile);
+            
+            console.log("Biometric authentication is supported on this device");
+          } else {
+            console.log(isInIframe ? 
+              "Biometric authentication is not available in iframes due to security restrictions" : 
+              "Biometric authentication is not supported on this device");
+          }
+        } catch (error) {
+          console.error("Error checking biometric support:", error);
+          setBiometricsSupported(false);
+        }
+      } else {
+        console.log("Web Authentication API is not supported in this browser");
+        setBiometricsSupported(false);
+      }
+    };
+    
+    checkBiometricSupport();
+  }, []);
   
   useEffect(() => {
-    // Load secure documents when authenticated
-    if (isAuthenticated) {
-      const docs = getSecureVaultDocuments();
-      setSecureDocuments(docs);
-    } else {
-      setSecureDocuments([]);
+    // Check if vault has been unlocked in this session
+    const isVaultUnlocked = sessionStorage.getItem("vaultUnlocked") === "true";
+    if (isVaultUnlocked) {
+      setIsLocked(false);
     }
-  }, [isAuthenticated, documents]);
+  }, []);
   
-  const handleAuthSuccess = () => {
-    setIsAuthenticated(true);
-    toast({
-      title: "Authentication successful",
-      description: "You now have access to your secure vault",
-    });
+  // Create a credential validation function
+  const verifyBiometricCredential = async () => {
+    if (!window.PublicKeyCredential || isInIframe) {
+      if (isInIframe) {
+        // In iframe, simulate success for demo purposes
+        return true;
+      }
+      throw new Error("Web Authentication API not supported");
+    }
+    
+    try {
+      // Generate a random challenge
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+      
+      // Create the credential request options
+      const publicKeyCredentialRequestOptions = {
+        challenge,
+        rpId: window.location.hostname,
+        userVerification: "required" as UserVerificationRequirement,
+        timeout: 60000,
+      };
+      
+      // Request the credential - this will trigger the device's biometric prompt
+      await navigator.credentials.get({
+        publicKey: publicKeyCredentialRequestOptions
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Biometric verification failed:", error);
+      throw error;
+    }
   };
   
-  const handleLockVault = () => {
-    setIsAuthenticated(false);
+  const handleUnlock = () => {
+    // This is a simplified authentication. In a real app, you would verify against stored credentials
+    if (password === "password123" || password === "1234") {
+      setIsLocked(false);
+      sessionStorage.setItem("vaultUnlocked", "true");
+      toast({
+        title: "Vault unlocked",
+        description: "You now have access to your secure vault",
+      });
+    } else {
+      toast({
+        title: "Access denied",
+        description: "The password you entered is incorrect",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleBiometricAuth = async (type: 'face' | 'fingerprint') => {
+    if (!biometricsSupported && !isInIframe) {
+      toast({
+        title: "Not supported",
+        description: "Your device doesn't support biometric authentication",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check if the specific method is supported
+    if (type === 'face' && !faceIdSupported && !isInIframe) {
+      toast({
+        title: "Face ID not available",
+        description: "Your device doesn't support facial recognition",
+        variant: "destructive", 
+      });
+      return;
+    }
+    
+    if (type === 'fingerprint' && !fingerprintSupported && !isInIframe) {
+      toast({
+        title: "Fingerprint not available",
+        description: "Your device doesn't support fingerprint recognition",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Show processing state and hide options
+    setBiometricProcessing(true);
+    setShowBiometricOptions(false);
+    
+    if (isInIframe) {
+      toast({
+        title: `${type === 'face' ? 'Face' : 'Fingerprint'} scan simulated`,
+        description: "In the preview environment, biometric authentication is simulated",
+      });
+      
+      // Simulate success after a brief delay
+      setTimeout(() => {
+        setIsLocked(false);
+        sessionStorage.setItem("vaultUnlocked", "true");
+        
+        toast({
+          title: "Biometric authentication successful",
+          description: "You now have access to your secure vault",
+        });
+        
+        setBiometricProcessing(false);
+      }, 1500);
+      
+      return;
+    }
+    
     toast({
+      title: `${type === 'face' ? 'Face' : 'Fingerprint'} scan initiated`,
+      description: "Please respond to the biometric prompt from your device",
+    });
+    
+    try {
+      // This will trigger the actual biometric verification using the platform's API
+      const success = await verifyBiometricCredential();
+      
+      if (success) {
+        setIsLocked(false);
+        sessionStorage.setItem("vaultUnlocked", "true");
+        
+        toast({
+          title: "Biometric authentication successful",
+          description: "You now have access to your secure vault",
+        });
+      }
+    } catch (error) {
+      console.error("Authentication error:", error);
+      toast({
+        title: "Authentication failed",
+        description: error instanceof Error ? error.message : "Biometric verification failed",
+        variant: "destructive",
+      });
+    } finally {
+      setBiometricProcessing(false);
+    }
+  };
+  
+  const handleLock = () => {
+    setIsLocked(true);
+    setPassword("");
+    sessionStorage.removeItem("vaultUnlocked");
+    toast({
+      title: "Vault locked",
       description: "Your secure vault has been locked",
     });
   };
   
-  const simulateBiometricAuth = () => {
-    // In a real app, this would use actual biometric APIs
-    setTimeout(() => {
-      handleAuthSuccess();
-      setShowBiometricPrompt(false);
-    }, 1500);
+  const handleAddItem = () => {
+    if (newItemTitle && newItemValue) {
+      const newItem: SecretItem = {
+        id: Date.now().toString(),
+        title: newItemTitle,
+        value: newItemValue,
+        type: activeTab === "passwords" ? "password" : activeTab === "notes" ? "note" : "key",
+        dateAdded: new Date().toISOString().split("T")[0],
+      };
+      
+      setSecrets([...secrets, newItem]);
+      setNewItemTitle("");
+      setNewItemValue("");
+    }
   };
   
-  const removeFromSecureVault = (id: string) => {
-    updateDocument(id, { inSecureVault: false });
-    toast({
-      title: "Document moved",
-      description: "Document has been removed from the secure vault",
-    });
-    
-    // Refresh the secure documents list
-    const docs = getSecureVaultDocuments();
-    setSecureDocuments(docs);
+  const handleDeleteItem = (id: string) => {
+    setSecrets(secrets.filter(item => item.id !== id));
   };
-  
-  // If not authenticated, show auth screen
-  if (!isAuthenticated) {
+
+  if (isLocked) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
-        <div className="w-full max-w-md">
-          <Card className="border-primary/20 shadow-md">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl font-bold">Secure Vault</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <MobileQRCodeModal deviceName="Chrome Mobile" />
+          </div>
+        </div>
+        
+        <BlurContainer>
+          <Card className="border-none shadow-none">
             <CardHeader className="text-center">
-              <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <Shield className="h-8 w-8 text-primary" />
-              </div>
-              <CardTitle className="text-2xl">Secure Vault</CardTitle>
+              <CardTitle className="flex items-center justify-center gap-2 text-xl">
+                <Lock className="h-5 w-5 text-primary" />
+                Password Protected
+              </CardTitle>
               <CardDescription>
-                Your documents in the secure vault are encrypted and require authentication to access
+                Enter your vault password to access your secure information
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex flex-col items-center text-center">
-                <Lock className="h-16 w-16 text-muted-foreground mb-2" />
-                <p className="text-muted-foreground">
-                  Authentication required to view your secure documents
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                {biometricEnabled ? (
-                  <Button 
-                    onClick={() => setShowBiometricPrompt(true)} 
-                    variant="default" 
-                    size="lg" 
-                    className="w-full bg-primary"
+            <CardContent>
+              <div className="space-y-4">
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter vault password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pr-10"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleUnlock();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
                   >
-                    {faceIdAvailable ? (
-                      <>
-                        <Fingerprint className="mr-2 h-4 w-4" />
-                        Unlock with Face ID
-                      </>
-                    ) : fingerprintAvailable ? (
-                      <>
-                        <Fingerprint className="mr-2 h-4 w-4" />
-                        Unlock with Fingerprint
-                      </>
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
                     ) : (
-                      <>
-                        <Fingerprint className="mr-2 h-4 w-4" />
-                        Unlock with Biometrics
-                      </>
+                      <Eye className="h-5 w-5" />
                     )}
-                  </Button>
-                ) : (
-                  <Button 
-                    onClick={handleAuthSuccess} 
-                    variant="default" 
-                    size="lg" 
-                    className="w-full bg-primary"
-                  >
-                    <Shield className="mr-2 h-4 w-4" />
-                    Unlock Vault
-                  </Button>
+                  </button>
+                </div>
+                
+                <Button 
+                  onClick={handleUnlock} 
+                  className="w-full"
+                >
+                  Unlock Vault
+                </Button>
+                
+                {/* Biometric authentication options */}
+                {biometricEnabled && (faceIdEnabled || fingerprintEnabled) && (
+                  <div className="mt-4">
+                    <div className="flex justify-center">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowBiometricOptions(!showBiometricOptions)}
+                        className="text-sm"
+                        disabled={biometricProcessing}
+                      >
+                        Use biometric authentication
+                      </Button>
+                    </div>
+                    
+                    {showBiometricOptions && (
+                      <div className="flex justify-center gap-3 mt-4 animate-fade-in">
+                        {faceIdEnabled && (
+                          <Button
+                            variant="outline"
+                            onClick={() => handleBiometricAuth('face')}
+                            className="flex flex-col items-center p-4 h-auto gap-2"
+                            disabled={biometricProcessing || !biometricsSupported || !faceIdSupported}
+                          >
+                            <ScanFace className="h-10 w-10 text-primary" />
+                            <span>Face ID</span>
+                          </Button>
+                        )}
+                        
+                        {fingerprintEnabled && (
+                          <Button
+                            variant="outline"
+                            onClick={() => handleBiometricAuth('fingerprint')}
+                            className="flex flex-col items-center p-4 h-auto gap-2"
+                            disabled={biometricProcessing || !biometricsSupported || !fingerprintSupported}
+                          >
+                            <Fingerprint className="h-10 w-10 text-primary" />
+                            <span>Fingerprint</span>
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    
+                    {biometricProcessing && (
+                      <div className="text-center mt-4 text-primary animate-pulse">
+                        <p>Waiting for biometric verification...</p>
+                      </div>
+                    )}
+                    
+                    {!biometricsSupported && showBiometricOptions && (
+                      <div className="flex items-start space-x-2 rounded-md bg-amber-50 dark:bg-amber-950/20 p-3 mt-4 text-amber-800 dark:text-amber-300">
+                        <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-medium">Biometric authentication {isInIframe ? "in preview mode" : "not available"}</p>
+                          <p className="text-sm">
+                            {isInIframe ? 
+                              "Biometric authentication is simulated in the preview. It will work properly in the deployed app." :
+                              "Your device or browser doesn't support the Web Authentication API needed for secure biometric authentication."}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
+                
+                <div className="text-center mt-2">
+                  <ForgotPassword />
+                </div>
               </div>
             </CardContent>
           </Card>
-        </div>
+        </BlurContainer>
         
-        {showBiometricPrompt && (
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-card border rounded-lg p-6 max-w-sm w-full shadow-lg">
-              <div className="text-center space-y-4">
-                <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Fingerprint className="h-8 w-8 text-primary animate-pulse" />
-                </div>
-                <h3 className="text-lg font-medium">Biometric Verification</h3>
-                <p className="text-sm text-muted-foreground">
-                  Place your finger on the sensor or look at the camera to verify your identity
-                </p>
-                <div className="pt-4 space-x-2">
-                  <Button variant="outline" onClick={() => setShowBiometricPrompt(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={simulateBiometricAuth}>
-                    Simulate Successful Auth
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <div className="space-y-1 mt-4">
+          <PasswordRecovery />
+        </div>
       </div>
     );
   }
-  
-  // When authenticated, show secure vault content
+
   return (
-    <div className="animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
-            <h1 className="text-2xl font-semibold tracking-tight">Secure Vault</h1>
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-              Unlocked
-            </Badge>
-          </div>
-          <p className="text-muted-foreground mt-1">
-            Your encrypted and protected documents
-          </p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Shield className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold">Secure Vault</h2>
         </div>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleLockVault}
-          className="flex items-center gap-1"
-        >
-          <Lock className="h-3.5 w-3.5" />
-          Lock Vault
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleLock}>
+            <Lock className="h-4 w-4 mr-2" />
+            Lock Vault
+          </Button>
+          <MobileQRCodeModal deviceName="Chrome Mobile" />
+        </div>
       </div>
       
-      <Tabs 
-        value={activeTab} 
-        onValueChange={setActiveTab} 
-        className="w-full mb-6"
-      >
-        <TabsList className="grid grid-cols-2 w-full max-w-sm">
-          <TabsTrigger value="documents">Secure Documents</TabsTrigger>
-          <TabsTrigger value="settings">Vault Settings</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="documents" className="space-y-6 mt-4">
-          {secureDocuments.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {secureDocuments.map((doc) => (
-                <DocumentCard key={doc.id} {...doc} />
-              ))}
-            </div>
-          ) : (
-            <Card className="border-dashed border-2 border-muted py-8">
-              <CardContent className="text-center flex flex-col items-center">
-                <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-3">
-                  <FolderOpen className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-medium mb-1">No secure documents</h3>
-                <p className="text-muted-foreground text-sm mb-4 max-w-sm mx-auto">
-                  You don't have any documents in your secure vault. You can move sensitive documents here for extra protection.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="settings" className="space-y-6 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Vault Security Settings</CardTitle>
-              <CardDescription>
-                Configure how your secure vault is protected
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">Biometric Authentication</h4>
-                  <p className="text-sm text-muted-foreground">Use your fingerprint or face to unlock the vault</p>
-                </div>
-                <Badge variant={biometricEnabled ? "default" : "outline"}>
-                  {biometricEnabled ? "Enabled" : "Disabled"}
-                </Badge>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">Auto-Lock Timeout</h4>
-                  <p className="text-sm text-muted-foreground">Automatically lock vault after period of inactivity</p>
-                </div>
-                <Badge variant="outline">5 minutes</Badge>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">Document Previews</h4>
-                  <p className="text-sm text-muted-foreground">Show document previews in secure vault</p>
-                </div>
-                <Badge variant="outline">Enabled</Badge>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" size="sm" className="ml-auto">
-                Configure Settings
+      <BlurContainer className="overflow-hidden p-0">
+        <Tabs 
+          defaultValue="passwords" 
+          value={activeTab} 
+          onValueChange={setActiveTab} 
+          className="w-full"
+        >
+          <TabsList className="flex justify-start px-6 pt-4 w-full border-b border-gray-100 dark:border-gray-800 gap-1 bg-transparent">
+            <TabsTrigger 
+              value="passwords" 
+              className="data-[state=active]:bg-primary/10 dark:data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-t-lg data-[state=active]:border-b-2 data-[state=active]:border-primary"
+            >
+              <LockKeyhole className="h-4 w-4 mr-2" />
+              Passwords
+            </TabsTrigger>
+            <TabsTrigger 
+              value="notes" 
+              className="data-[state=active]:bg-primary/10 dark:data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-t-lg data-[state=active]:border-b-2 data-[state=active]:border-primary"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Secure Notes
+            </TabsTrigger>
+            <TabsTrigger 
+              value="keys" 
+              className="data-[state=active]:bg-primary/10 dark:data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-t-lg data-[state=active]:border-b-2 data-[state=active]:border-primary"
+            >
+              <Key className="h-4 w-4 mr-2" />
+              Recovery Keys
+            </TabsTrigger>
+          </TabsList>
+          
+          <div className="p-6">
+            <div className="mb-6 flex flex-col sm:flex-row gap-2">
+              <Input
+                placeholder={`New ${activeTab === "passwords" ? "password title" : activeTab === "notes" ? "note title" : "recovery key name"}`}
+                value={newItemTitle}
+                onChange={(e) => setNewItemTitle(e.target.value)}
+                className="flex-1"
+              />
+              <Input
+                placeholder={`${activeTab === "passwords" ? "Password value" : activeTab === "notes" ? "Note content" : "Recovery key"}`}
+                type={activeTab === "passwords" ? "password" : "text"}
+                value={newItemValue}
+                onChange={(e) => setNewItemValue(e.target.value)}
+                className="flex-1"
+              />
+              <Button onClick={handleAddItem}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add
               </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </div>
+            
+            <div className="space-y-4">
+              {secrets
+                .filter(item => 
+                  (activeTab === "passwords" && item.type === "password") ||
+                  (activeTab === "notes" && item.type === "note") ||
+                  (activeTab === "keys" && item.type === "key")
+                )
+                .map(item => (
+                  <div 
+                    key={item.id} 
+                    className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 group"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        {item.type === "password" && <LockKeyhole className="h-5 w-5 text-blue-500" />}
+                        {item.type === "note" && <FileText className="h-5 w-5 text-green-500" />}
+                        {item.type === "key" && <Key className="h-5 w-5 text-amber-500" />}
+                        <h3 className="font-medium">{item.title}</h3>
+                      </div>
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
+                          onClick={() => handleDeleteItem(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="ml-7">
+                      <p className={`text-sm ${item.type === "password" ? "font-mono" : ""}`}>
+                        {item.value}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Added: {item.dateAdded}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                
+              {secrets.filter(item => 
+                (activeTab === "passwords" && item.type === "password") ||
+                (activeTab === "notes" && item.type === "note") ||
+                (activeTab === "keys" && item.type === "key")
+              ).length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    No {activeTab === "passwords" ? "passwords" : activeTab === "notes" ? "notes" : "recovery keys"} found.
+                    Add one to get started.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </Tabs>
+      </BlurContainer>
+      
+      <div className="space-y-1">
+        <PasswordRecovery />
+      </div>
     </div>
   );
 };

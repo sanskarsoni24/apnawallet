@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
-import { Document } from "@/types/Document";
-import { useDocuments } from "@/contexts/DocumentContext";
+import { Document, useDocuments } from "@/contexts/DocumentContext";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Bell, Calendar, Clock, Volume2 } from "lucide-react";
@@ -26,7 +25,7 @@ interface DocumentReminderSettingsProps {
 }
 
 const DocumentReminderSettings = ({ document, isOpen, onClose }: DocumentReminderSettingsProps) => {
-  const { updateDocument } = useDocuments();
+  const { setCustomReminderDays } = useDocuments();
   const { userSettings } = useUser();
   
   // Ensure we have a default value even if userSettings is undefined
@@ -52,7 +51,7 @@ const DocumentReminderSettings = ({ document, isOpen, onClose }: DocumentReminde
 
   const handleSave = () => {
     const finalDays = useCustomDays ? customDays : reminderDays;
-    updateDocument(document.id, { customReminderDays: finalDays });
+    setCustomReminderDays(document.id, finalDays);
     toast({
       title: "Reminder settings updated",
       description: `Custom reminder for "${document.title}" set to ${finalDays} days before expiry.`,
@@ -170,12 +169,12 @@ const DocumentReminderSettings = ({ document, isOpen, onClose }: DocumentReminde
               <div className="px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded text-sm flex items-center justify-between">
                 <span className="dark:text-slate-300">{document.dueDate}</span>
                 <span className={`text-xs px-2 py-1 rounded-full ${
-                  document.daysRemaining! < 0 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                  document.daysRemaining! <= 3 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                  document.daysRemaining < 0 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                  document.daysRemaining <= 3 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
                   'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                 }`}>
-                  {document.daysRemaining! < 0 
-                    ? `Overdue by ${Math.abs(document.daysRemaining!)} days` 
+                  {document.daysRemaining < 0 
+                    ? `Overdue by ${Math.abs(document.daysRemaining)} days` 
                     : document.daysRemaining === 0 
                       ? 'Due today'
                       : document.daysRemaining === 1 

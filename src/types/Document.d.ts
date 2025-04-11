@@ -1,5 +1,5 @@
 
-export interface Document {
+declare interface Document {
   id: string;
   userId: string;
   title: string;
@@ -15,12 +15,7 @@ export interface Document {
   daysRemaining?: number;
   reminderSet?: boolean;
   customReminderDays?: number;
+  summary?: string;
   category?: string;
   notes?: string;
-  inSecureVault?: boolean;
-  importance?: "low" | "medium" | "high" | "critical";
-  status?: "active" | "completed" | "expired";
-  expiryDate?: string;
-  dateAdded?: string;
-  renewalDate?: string;
 }

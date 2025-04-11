@@ -1,5 +1,5 @@
 
-export interface UserSettings {
+declare interface UserSettings {
   theme: "light" | "dark" | "system";
   emailNotifications: boolean;
   pushNotifications: boolean;
@@ -25,5 +25,4 @@ export interface UserSettings {
     fingerprintEnabled: boolean;
     lastVerified?: string;
   };
-  subscriptionPlan?: "free" | "premium" | "enterprise";
 }

@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell, AlertTriangle, Clock, Share2, Mail, MessageSquare, Facebook, Twitter, Linkedin, Copy, CheckCircle, FileWarning } from "lucide-react";
+import { Calendar as CalendarIcon, FileText, Trash2, Download, ExternalLink, Pencil, Bell, AlertTriangle, Clock, Share2, Mail, MessageSquare, Facebook, Twitter, Linkedin, Copy, CheckCircle, FileWarning, Shield, ShieldOff } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -33,6 +32,7 @@ const DocumentCard = ({
   importance = "medium", // Default importance
   customReminderDays,
   status = "active", // Default status
+  inSecureVault = false,
 }: DocumentCardProps) => {
   const [showPreview, setShowPreview] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -43,7 +43,7 @@ const DocumentCard = ({
   const [showReminderSettings, setShowReminderSettings] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [showStatusOptions, setShowStatusOptions] = useState(false);
-  const { deleteDocument, updateDocument, updateDueDate, markDocumentComplete, markDocumentExpired, scheduleRenewal } = useDocuments();
+  const { deleteDocument, updateDocument, updateDueDate, markDocumentComplete, markDocumentExpired, scheduleRenewal, moveToSecureVault, removeFromSecureVault } = useDocuments();
   
   // Update local state when props change
   useEffect(() => {
@@ -278,6 +278,19 @@ const DocumentCard = ({
     setShowShareOptions(false);
   };
 
+  // Handle moving document to secure vault
+  const handleMoveToSecureVault = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    moveToSecureVault(id);
+    setShowPreview(false); // Close any open preview
+  };
+
+  // Handle removing document from secure vault
+  const handleRemoveFromSecureVault = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeFromSecureVault(id);
+  };
+
   // Fix for DocumentReminderSettings - ensure document always has fileURL property
   const documentWithFileURL: Document = {
     id,
@@ -289,6 +302,7 @@ const DocumentCard = ({
     customReminderDays,
     fileURL: fileURL || "",
     status,
+    inSecureVault
   };
 
   // Determine card border color based on status
@@ -309,21 +323,24 @@ const DocumentCard = ({
           className,
           getCardBorderStyle(),
           status === "completed" && "opacity-75",
+          inSecureVault && "border-l-4 border-l-purple-500 bg-purple-50 dark:bg-purple-900/10",
         )}
         hover
         onClick={handleCardClick}
       >
+        
+        
         <div className="flex items-start justify-between">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="animate-pulse-subtle">
                 {type}
               </Badge>
+              {inSecureVault && (
+                <span className="text-purple-500"><Shield className="h-4 w-4" /></span>
+              )}
               {status === "expired" && (
                 <span className="text-red-500"><FileWarning className="h-4 w-4" /></span>
-              )}
-              {status === "completed" && (
-                <span className="text-green-500"><CheckCircle className="h-4 w-4" /></span>
               )}
               {getImportance() === "critical" && status !== "expired" && status !== "completed" && (
                 <span className="text-red-500"><AlertTriangle className="h-4 w-4" /></span>
@@ -349,6 +366,7 @@ const DocumentCard = ({
           </div>
         </div>
         
+        
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <CalendarIcon className="h-4 w-4" />
@@ -360,6 +378,7 @@ const DocumentCard = ({
         </div>
         
         <div className="mt-3 flex justify-end gap-2">
+          
           {fileURL && (
             <Button 
               variant="ghost" 
@@ -523,6 +542,25 @@ const DocumentCard = ({
               </div>
             </PopoverContent>
           </Popover>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`h-8 w-8 p-0 rounded-full ${
+              inSecureVault 
+                ? "bg-purple-100 text-purple-600 hover:text-purple-800 hover:bg-purple-200" 
+                : "bg-violet-100 text-violet-600 hover:text-violet-800 hover:bg-violet-200"
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              inSecureVault ? handleRemoveFromSecureVault(e) : handleMoveToSecureVault(e);
+            }}
+            title={inSecureVault ? "Remove from Secure Vault" : "Move to Secure Vault"}
+          >
+            {inSecureVault ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
+            <span className="sr-only">{inSecureVault ? "Remove from Secure Vault" : "Move to Secure Vault"}</span>
+          </Button>
+          
           <Button 
             variant="ghost" 
             size="sm" 
@@ -744,8 +782,10 @@ const DocumentCard = ({
                   </div>
                 </div>
               )}
+              
               <div className="flex justify-between w-full mt-2 flex-wrap gap-2">
                 <div className="flex gap-2">
+                  
                   <Button 
                     variant="outline" 
                     className={`flex items-center gap-2 ${status === 'active' ? 'bg-blue-50 border-blue-200 text-blue-700' : ''}`}
@@ -773,55 +813,3 @@ const DocumentCard = ({
                     <FileWarning className="h-4 w-4" />
                     <span className="whitespace-nowrap">Mark Expired</span>
                   </Button>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    className="flex items-center gap-2 bg-sky-50 hover:bg-sky-100 border-sky-200"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    <Pencil className="h-4 w-4 text-sky-600" />
-                    <span className="whitespace-nowrap">Edit</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowPreview(false)}
-                  >
-                    Close
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Document Reminder Settings Dialog - Fix the document passed to it */}
-      <DocumentReminderSettings 
-        document={documentWithFileURL}
-        isOpen={showReminderSettings}
-        onClose={() => setShowReminderSettings(false)}
-      />
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the document "{title}". This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-};
-
-export default DocumentCard;

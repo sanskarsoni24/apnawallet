@@ -21,6 +21,7 @@ export interface Document {
   tags?: string[];
   notes?: string;
   dateAdded?: string;
+  inSecureVault?: boolean;
 }
 
 interface DocumentContextType {
@@ -44,6 +45,9 @@ interface DocumentContextType {
   getExpiredDocuments: () => Document[];
   getActiveDocuments: () => Document[];
   getCompletedDocuments: () => Document[];
+  moveToSecureVault: (id: string) => void;
+  removeFromSecureVault: (id: string) => void;
+  getSecureVaultDocuments: () => Document[];
 }
 
 const DocumentContext = createContext<DocumentContextType>({
@@ -67,6 +71,9 @@ const DocumentContext = createContext<DocumentContextType>({
   getExpiredDocuments: () => [],
   getActiveDocuments: () => [],
   getCompletedDocuments: () => [],
+  moveToSecureVault: () => {},
+  removeFromSecureVault: () => {},
+  getSecureVaultDocuments: () => [],
 });
 
 export const useDocuments = () => useContext(DocumentContext);
@@ -180,27 +187,60 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setDocuments(prev => prev.filter(doc => doc.id !== id));
   };
   
-  // Filter documents by type - IMPROVED to properly handle custom document types
+  // Move a document to the secure vault
+  const moveToSecureVault = (id: string) => {
+    setDocuments(prev => 
+      prev.map(doc => 
+        doc.id === id ? { ...doc, inSecureVault: true } : doc
+      )
+    );
+    
+    toast({
+      title: "Document Protected",
+      description: "Document has been moved to the secure vault.",
+    });
+  };
+  
+  // Remove a document from the secure vault
+  const removeFromSecureVault = (id: string) => {
+    setDocuments(prev => 
+      prev.map(doc => 
+        doc.id === id ? { ...doc, inSecureVault: false } : doc
+      )
+    );
+    
+    toast({
+      title: "Document Removed from Vault",
+      description: "Document has been removed from the secure vault.",
+    });
+  };
+  
+  // Get all documents in the secure vault
+  const getSecureVaultDocuments = () => {
+    return documents.filter(doc => doc.inSecureVault === true);
+  };
+  
+  // Filter documents by type - IMPROVED to handle secure vault documents
   const filterDocumentsByType = (type: string): Document[] => {
     if (type === "All") {
-      return documents.filter(doc => doc.userId === email);
+      return documents.filter(doc => doc.userId === email && !doc.inSecureVault);
     } else if (type === "upcoming") {
       return documents.filter(
-        doc => doc.userId === email && doc.daysRemaining >= 0 && doc.daysRemaining <= 7
+        doc => doc.userId === email && doc.daysRemaining >= 0 && doc.daysRemaining <= 7 && !doc.inSecureVault
       );
     } else if (documentTypes.includes(type)) {
       // Filter by document type
       return documents.filter(
-        doc => doc.userId === email && doc.type === type
+        doc => doc.userId === email && doc.type === type && !doc.inSecureVault
       );
     } else if (categories.includes(type)) {
       // Filter by custom category
       return documents.filter(
-        doc => doc.userId === email && doc.categories && doc.categories.includes(type)
+        doc => doc.userId === email && doc.categories && doc.categories.includes(type) && !doc.inSecureVault
       );
     } else {
       // Fallback
-      return documents.filter(doc => doc.userId === email);
+      return documents.filter(doc => doc.userId === email && !doc.inSecureVault);
     }
   };
   
@@ -501,7 +541,10 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         scheduleRenewal,
         getExpiredDocuments,
         getActiveDocuments,
-        getCompletedDocuments
+        getCompletedDocuments,
+        moveToSecureVault,
+        removeFromSecureVault,
+        getSecureVaultDocuments
       }}
     >
       {children}

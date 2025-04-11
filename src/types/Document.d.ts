@@ -18,4 +18,5 @@ declare interface Document {
   summary?: string;
   category?: string;
   notes?: string;
+  inSecureVault?: boolean;
 }

@@ -66,4 +66,6 @@ declare interface UserSettings {
   recentDocuments?: string[];
   recentDocumentsMaxCount?: number;
   lastViewedDocument?: string;
+  // Mobile device integration
+  mobileDeviceName?: string;
 }

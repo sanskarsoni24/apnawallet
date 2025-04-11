@@ -107,7 +107,6 @@ const OnboardingGuides = () => {
 };
 
 // NotificationCheck component to handle notifications
-// This is a separate component to use the hooks inside the providers
 const NotificationCheck = () => {
   const { documents } = useDocuments();
   const { email, userSettings } = useUser();
@@ -201,7 +200,7 @@ const App = () => {
               <OnboardingGuides />
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<Index defaultTab="dashboard" />} />
+                <Route path="/dashboard" element={<Index />} />
                 <Route path="/locker" element={<Index defaultTab="locker" />} />
                 <Route path="/sign-in" element={<SignIn />} />
                 <Route path="/sign-up" element={<SignUp />} />

@@ -1,203 +1,284 @@
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import Index from "./pages/Index";
+import Documents from "./pages/Documents";
+import Settings from "./pages/Settings";
+import Monetization from "./pages/Monetization";
+import NotFound from "./pages/NotFound";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
+import { DocumentProvider, useDocuments } from "./contexts/DocumentContext";
+import { UserProvider, useUser } from "./contexts/UserContext";
+import { toast } from "@/hooks/use-toast";
+import { checkForDueDocuments, createNotification, sendEmailNotification, verifyEmailNotifications } from "./services/NotificationService";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import StripeCheckout from "./pages/StripeCheckout";
+import UserProfile from "./pages/UserProfile";
+import Help from "./pages/Help";
+import GuidedMessage, { GuideStep } from "./components/onboarding/GuidedMessage";
+import { getGuidesForPath, shouldShowGuide, markGuideAsCompleted } from "./services/OnboardingService";
+import PdfTools from "./components/pdf/PdfTools";
+import { FileIcon } from "lucide-react";
+import { Button } from "./components/ui/button";
 
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import Container from "@/components/layout/Container";
-import Dashboard from "@/components/dashboard/Dashboard";
-import LandingPage from "@/components/landing/LandingPage";
-import { useUser } from "@/contexts/UserContext";
-import SurakshaLocker from "@/components/suraksha/SurakshaLocker";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, LayoutDashboard, Calendar, Clock, ArrowRight, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import SurakshitLogo from "@/components/ui/SurakshitLogo";
-import BlurContainer from "@/components/ui/BlurContainer";
-import FullScreenCalendar from "@/components/calendar/FullScreenCalendar";
+const queryClient = new QueryClient();
 
-interface IndexProps {
-  defaultTab?: "dashboard" | "locker" | "calendar";
-}
-
-const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
-  const navigate = useNavigate();
-  const { isLoggedIn } = useUser();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "locker" | "calendar">(defaultTab);
-  const [guideDismissed, setGuideDismissed] = useState<boolean>(false);
-  const [showCalendar, setShowCalendar] = useState<boolean>(false);
+// Set up theme based on localStorage or system preference
+const initializeTheme = () => {
+  // Check localStorage first
+  const storedTheme = localStorage.getItem('theme');
   
-  // Set the active tab when defaultTab changes
-  useEffect(() => {
-    if (defaultTab) {
-      setActiveTab(defaultTab);
-    }
-  }, [defaultTab]);
-  
-  // Check if user has seen the guide before
-  useEffect(() => {
-    const dismissed = localStorage.getItem("guide_dismissed") === "true";
-    setGuideDismissed(dismissed);
-  }, []);
-
-  // Effect to show calendar modal when "calendar" tab is selected
-  useEffect(() => {
-    if (activeTab === "calendar") {
-      setShowCalendar(true);
-    }
-  }, [activeTab]);
-
-  // Handler for closing the calendar modal
-  const handleCloseCalendar = () => {
-    setShowCalendar(false);
-    setActiveTab("dashboard");
-  };
-  
-  if (!isLoggedIn) {
-    return (
-      <Container>
-        <LandingPage />
-      </Container>
-    );
+  // If value in localStorage, use that
+  if (storedTheme) {
+    document.documentElement.classList.toggle('dark', storedTheme === 'dark');
+    return;
   }
   
-  return (
-    <Container>
-      {/* Hero Section for ApnaWallet */}
-      <div className="mb-10 relative overflow-hidden">
-        <BlurContainer variant="dark" className="p-8 md:p-10">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 -z-10"></div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-purple-500/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl"></div>
+  // If no value in localStorage, check system preference
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.classList.toggle('dark', prefersDark);
+  
+  // Store the inferred preference
+  localStorage.setItem('theme', prefersDark ? 'dark' : 'light');
+};
+
+// Onboarding guide component
+const OnboardingGuides = () => {
+  const location = useLocation();
+  const { isLoggedIn } = useUser();
+  const [currentGuide, setCurrentGuide] = useState<{id: string, steps: GuideStep[]} | null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
+  
+  useEffect(() => {
+    // Check for guides on path change
+    const path = location.pathname;
+    const guides = getGuidesForPath(path);
+    
+    // Only show guides if user is logged in and hasn't seen them before
+    if (isLoggedIn && guides.length > 0) {
+      // Check if user has dismissed all guides
+      const allGuidesShown = localStorage.getItem("all_guides_shown") === "true";
+      
+      if (!allGuidesShown) {
+        // Find the first guide that should be shown
+        const guideToShow = guides.find(guide => shouldShowGuide(guide.id));
+        
+        if (guideToShow) {
+          // Short delay before showing guide
+          const timer = setTimeout(() => {
+            setCurrentGuide({
+              id: guideToShow.id,
+              steps: guideToShow.steps
+            });
+            setGuideOpen(true);
+          }, 1000);
           
-          <div className="relative z-10 flex flex-col md:flex-row items-center md:justify-between gap-8">
-            <div className="text-center md:text-left">
-              <div className="flex items-center gap-3 mb-6 justify-center md:justify-start">
-                <SurakshitLogo size="lg" />
-                <h1 className="text-3xl md:text-4xl font-bold text-white">ApnaWallet</h1>
-              </div>
-              <p className="text-lg text-white/80 max-w-xl leading-relaxed">
-                Your private vault for securing sensitive information. Store passwords, notes, and documents with enterprise-grade end-to-end encryption.
-              </p>
-              
-              <div className="flex flex-wrap gap-4 mt-6 justify-center md:justify-start">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm">
-                  <div className="h-2 w-2 rounded-full bg-emerald-400"></div>
-                  <span className="text-sm text-white/80">End-to-end Encrypted</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm">
-                  <div className="h-2 w-2 rounded-full bg-amber-400"></div>
-                  <span className="text-sm text-white/80">Zero-knowledge Architecture</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </BlurContainer>
-      </div>
+          return () => clearTimeout(timer);
+        } else {
+          // If no guides to show for this path, mark all as shown
+          localStorage.setItem("all_guides_shown", "true");
+        }
+      }
+    }
+  }, [location, isLoggedIn]);
+  
+  const handleGuideComplete = () => {
+    if (currentGuide) {
+      markGuideAsCompleted(currentGuide.id);
+      setCurrentGuide(null);
       
-      <Tabs 
-        defaultValue={activeTab} 
-        value={activeTab} 
-        onValueChange={(value) => setActiveTab(value as "dashboard" | "locker" | "calendar")} 
-        className="w-full"
-      >
-        <TabsList className="grid grid-cols-3 w-full max-w-xl mx-auto mb-8 bg-slate-100 dark:bg-slate-800/70 rounded-lg overflow-hidden">
-          <TabsTrigger value="dashboard" className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white py-3 rounded-none">
-            <div className="flex items-center gap-2">
-              <LayoutDashboard className="h-4 w-4 text-indigo-600 group-data-[state=active]:text-white" />
-              <span>Dashboard</span>
-            </div>
-          </TabsTrigger>
-          <TabsTrigger value="locker" className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white py-3 rounded-none">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-indigo-600 group-data-[state=active]:text-white" />
-              <span>Security Vault</span>
-            </div>
-          </TabsTrigger>
-          <TabsTrigger value="calendar" className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-600 data-[state=active]:to-purple-600 data-[state=active]:text-white py-3 rounded-none">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-indigo-600 group-data-[state=active]:text-white" />
-              <span>Calendar</span>
-            </div>
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="locker" className="animate-fade-in">
-          <SurakshaLocker />
-        </TabsContent>
-        
-        <TabsContent value="dashboard" className="animate-fade-in">
-          <Dashboard />
-        </TabsContent>
-      </Tabs>
-      
-      {/* Calendar Modal */}
-      <FullScreenCalendar isOpen={showCalendar} onClose={handleCloseCalendar} />
-      
-      {/* Quick Access Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-        <BlurContainer 
-          className="p-6 hover:-translate-y-1 hover:shadow-lg transition-all duration-300" 
-          variant="elevated"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-12 w-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <Calendar className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-            </div>
-            <h3 className="font-semibold text-lg">Upcoming Deadlines</h3>
-          </div>
-          <p className="text-muted-foreground mb-6">Keep track of document due dates and never miss important deadlines.</p>
-          <Button 
-            onClick={() => setActiveTab("calendar")} 
-            variant="outline" 
-            className="w-full bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 border-amber-200 dark:border-amber-800/30 text-amber-700 dark:text-amber-400 hover:from-amber-100 hover:to-amber-200 dark:hover:from-amber-900/30 dark:hover:to-amber-800/30"
-          >
-            View Calendar
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </BlurContainer>
-        
-        <BlurContainer 
-          className="p-6 hover:-translate-y-1 hover:shadow-lg transition-all duration-300" 
-          variant="elevated"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-12 w-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-              <Shield className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <h3 className="font-semibold text-lg">Secure Storage</h3>
-          </div>
-          <p className="text-muted-foreground mb-6">Store sensitive information securely in your encrypted private vault.</p>
-          <Button 
-            onClick={() => setActiveTab("locker")} 
-            variant="outline" 
-            className="w-full bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 border-indigo-200 dark:border-indigo-800/30 text-indigo-700 dark:text-indigo-400 hover:from-indigo-100 hover:to-indigo-200 dark:hover:from-indigo-900/30 dark:hover:to-indigo-800/30"
-          >
-            Access Locker
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </BlurContainer>
-        
-        <BlurContainer 
-          className="p-6 hover:-translate-y-1 hover:shadow-lg transition-all duration-300" 
-          variant="elevated"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-12 w-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-              <Upload className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <h3 className="font-semibold text-lg">Upload Documents</h3>
-          </div>
-          <p className="text-muted-foreground mb-6">Upload and securely store your important documents and files.</p>
-          <Button 
-            onClick={() => navigate("/documents")} 
-            variant="outline" 
-            className="w-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 border-emerald-200 dark:border-emerald-800/30 text-emerald-700 dark:text-emerald-400 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30"
-          >
-            Upload Documents
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </BlurContainer>
-      </div>
-    </Container>
+      // Mark all guides as shown so they don't appear again
+      localStorage.setItem("all_guides_shown", "true");
+    }
+  };
+  
+  if (!currentGuide) return null;
+  
+  return (
+    <GuidedMessage
+      steps={currentGuide.steps}
+      isOpen={guideOpen}
+      onOpenChange={setGuideOpen}
+      onComplete={handleGuideComplete}
+    />
   );
 };
 
-export default Index;
+// NotificationCheck component to handle notifications
+// This is a separate component to use the hooks inside the providers
+const NotificationCheck = () => {
+  const { documents } = useDocuments();
+  const { email, userSettings } = useUser();
+  const [lastNotificationCheck, setLastNotificationCheck] = useState<string | null>(null);
+  const [emailVerified, setEmailVerified] = useState(false);
+
+  useEffect(() => {
+    const firstVisit = localStorage.getItem("firstVisit") !== "false";
+    
+    if (firstVisit) {
+      setTimeout(() => {
+        toast({
+          title: "Welcome to ApnaWallet",
+          description: "Your secure vault for managing important documents.",
+        });
+        localStorage.setItem("firstVisit", "false");
+      }, 1000);
+    }
+
+    // Verify email notification settings on component mount
+    if (email && userSettings.emailNotifications) {
+      const emailStatus = verifyEmailNotifications(email);
+      setEmailVerified(emailStatus.configured && emailStatus.enabled);
+      
+      // If email is configured but not verified, send a test email
+      if (emailStatus.configured && !emailVerified) {
+        sendEmailNotification(
+          email,
+          "ApnaWallet - Email Notifications Enabled",
+          `Hello,\n\nYour email notifications for ApnaWallet have been successfully enabled. You will now receive notifications about your documents.\n\nThank you for using ApnaWallet!`
+        );
+        setEmailVerified(true);
+      }
+    }
+
+    // Check user notification preferences - only once per hour
+    const checkNotificationPreferences = () => {
+      const now = new Date().toISOString();
+      const lastCheck = localStorage.getItem("lastNotificationCheck");
+      const oneHourAgo = new Date();
+      oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+      
+      if (!lastCheck || new Date(lastCheck) < oneHourAgo) {
+        // Get preferences from user settings
+        const preferences = {
+          emailNotifications: userSettings.emailNotifications !== false,
+          pushNotifications: userSettings.pushNotifications || false,
+          voiceReminders: userSettings.voiceReminders || false,
+          reminderDays: userSettings.reminderDays || 3,
+          voiceType: userSettings.voiceType || "default"
+        };
+        
+        // Check for documents due soon and send notifications
+        checkForDueDocuments(documents, email, preferences);
+        
+        // Update last check time
+        localStorage.setItem("lastNotificationCheck", now);
+        setLastNotificationCheck(now);
+      }
+    };
+
+    // Check for notifications after a short delay
+    const initialTimeout = setTimeout(checkNotificationPreferences, 3000);
+    
+    // Set up checks every 2 hours
+    const intervalId = setInterval(checkNotificationPreferences, 2 * 60 * 60 * 1000);
+    
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(intervalId);
+    };
+  }, [documents, email, userSettings, emailVerified]);
+
+  return null;
+};
+
+// Default tab component
+export const DefaultTab = ({ tab }: { tab: string }) => {
+  const navigate = useNavigate();
+  const { isLoggedIn } = useUser();
+  
+  return (
+    <div className="w-full">
+      {/* Add PDF Tools Button for quick access */}
+      {isLoggedIn && (
+        <div className="mb-6 p-4 bg-primary/10 rounded-lg">
+          <h3 className="text-lg font-medium mb-2">New Feature: PDF Tools</h3>
+          <p className="text-muted-foreground mb-3">
+            Try our new PDF tools to view, edit, secure, and manage your PDF documents.
+          </p>
+          <Button 
+            onClick={() => navigate("/pdf-tools")}
+            className="flex items-center gap-2"
+          >
+            <FileIcon className="h-5 w-5" />
+            Access PDF Tools
+          </Button>
+        </div>
+      )}
+      
+      {/* Rest of the dashboard content would go here */}
+    </div>
+  );
+};
+
+const App = () => {
+  useEffect(() => {
+    initializeTheme();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <UserProvider>
+          <DocumentProvider>
+            <Toaster />
+            <Sonner />
+            <NotificationCheck />
+            <BrowserRouter>
+              <OnboardingGuides />
+              <Routes>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<Index defaultTab="dashboard" />} />
+                <Route path="/locker" element={<Index defaultTab="locker" />} />
+                <Route path="/sign-in" element={<SignIn />} />
+                <Route path="/sign-up" element={<SignUp />} />
+                <Route path="/help" element={<Help />} />
+                <Route 
+                  path="/documents" 
+                  element={
+                    <ProtectedRoute>
+                      <Documents />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/pdf-tools" 
+                  element={
+                    <ProtectedRoute>
+                      <PdfTools />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/settings" 
+                  element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="/pricing" element={<Monetization />} />
+                <Route path="/checkout" element={<StripeCheckout />} />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <UserProfile />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </DocumentProvider>
+        </UserProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
+
+export default App;

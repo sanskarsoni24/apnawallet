@@ -40,16 +40,20 @@ declare interface UserSettings {
   compactView?: boolean;
   documentSortOrder?: 'name' | 'date' | 'type' | 'importance';
   documentGrouping?: 'none' | 'category' | 'type' | 'importance';
+  
+  // Biometric authentication
   biometricAuth?: {
     enabled: boolean;
     faceIdEnabled?: boolean;
     fingerprintEnabled?: boolean;
     lastVerified?: string;
   };
+  
   // Google integration
   googleEmail?: string;
   googleProfilePicture?: string;
   googleId?: string;
+  
   // Backup functionality
   backupEncrypted?: boolean;
   backupLocations?: ('local' | 'cloud' | 'external')[];
@@ -58,14 +62,17 @@ declare interface UserSettings {
   lastBackupStatus?: 'success' | 'failed' | 'pending';
   lastAutoBackupAttempt?: string;
   backupRetentionCount?: number;
+  
   // Recovery keys
   recoveryKeys?: string[];
   recoveryKeyLastGenerated?: string;
   recoveryKeyUsageHistory?: {date: string, keyId: string}[];
+  
   // Recent documents tracking
   recentDocuments?: string[];
   recentDocumentsMaxCount?: number;
   lastViewedDocument?: string;
+  
   // PDF settings
   defaultPdfView?: 'single' | 'double' | 'continuous';
   pdfTextSelection?: boolean;
@@ -74,4 +81,8 @@ declare interface UserSettings {
   pdfHighlightColor?: string;
   pdfRememberLastPage?: boolean;
   pdfShowThumbnails?: boolean;
+  
+  // Mobile app settings
+  mobileDeviceName?: string;
+  lastKeyBackup?: string;
 }

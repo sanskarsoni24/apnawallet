@@ -1,10 +1,9 @@
-
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useDocuments } from "@/contexts/DocumentContext";
 import { useUser } from "@/contexts/UserContext";
-import { Clock, FileText, X, ExternalLink } from "lucide-react";
+import { Clock, FileText, X, ExternalLink, FileIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -113,16 +112,26 @@ const DashboardRecent = () => {
               </div>
             </div>
           ))}
-          
-          <Button
-            variant="outline"
-            className="w-full mt-2"
-            onClick={() => navigate("/documents")}
-          >
-            View All Documents
-          </Button>
         </div>
       </CardContent>
+      <CardFooter className="flex flex-col gap-2">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => navigate("/documents")}
+        >
+          View All Documents
+        </Button>
+        
+        <Button
+          variant="default"
+          className="w-full flex items-center gap-2"
+          onClick={() => navigate("/pdf-tools")}
+        >
+          <FileIcon className="h-4 w-4" />
+          Try PDF Tools
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

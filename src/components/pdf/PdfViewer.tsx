@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +6,9 @@ import { Loader2, Lock } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import PdfToolbar from "./PdfToolbar";
-import { Document, useUser } from "@/contexts/UserContext";
+import { useUser } from "@/contexts/UserContext";
 import { useDocuments } from "@/contexts/DocumentContext";
+import type { Document } from "@/types/Document"; // Fixed import
 
 interface PdfViewerProps {
   document: Document;
@@ -80,7 +80,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ document, onClose }) => {
         updateDocument(document.id, { pdfLastPage: currentPage });
       }
     };
-  }, [document.id, document.isPasswordProtected, document.pdfPassword, document.pdfLastPage, document.pdfPageCount]);
+  }, [document.id, document.isPasswordProtected, document.pdfPassword, document.pdfLastPage, document.pdfPageCount, userSettings.pdfDefaultZoom, userSettings.pdfRememberLastPage, updateDocument, userSettings.pdfShowThumbnails]);
   
   const handlePasswordSubmit = () => {
     if (!passwordInput.trim()) {

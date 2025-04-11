@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Shield, LockKeyhole, Plus, FileText, Key, Trash2, Eye, EyeOff, Lock, ScanFace, Fingerprint, AlertTriangle, ShieldOff } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,7 +19,6 @@ interface SecretItem {
   value: string;
   type: "password" | "note" | "key";
   dateAdded: string;
-  isVisible?: boolean;
 }
 
 const SurakshaLocker: React.FC = () => {
@@ -33,10 +31,9 @@ const SurakshaLocker: React.FC = () => {
     {
       id: "1",
       title: "Gmail Password",
-      value: "SecurePass123!",
+      value: "••••••••••••",
       type: "password",
       dateAdded: "2023-10-15",
-      isVisible: false,
     },
     {
       id: "2",
@@ -283,7 +280,6 @@ const SurakshaLocker: React.FC = () => {
         value: newItemValue,
         type: activeTab === "passwords" ? "password" : activeTab === "notes" ? "note" : "key",
         dateAdded: new Date().toISOString().split("T")[0],
-        isVisible: false,
       };
       
       setSecrets([...secrets, newItem]);
@@ -294,15 +290,6 @@ const SurakshaLocker: React.FC = () => {
   
   const handleDeleteItem = (id: string) => {
     setSecrets(secrets.filter(item => item.id !== id));
-  };
-
-  // Toggle password visibility
-  const togglePasswordVisibility = (id: string) => {
-    setSecrets(
-      secrets.map(item => 
-        item.id === id ? { ...item, isVisible: !item.isVisible } : item
-      )
-    );
   };
 
   // Add state for vault documents
@@ -549,14 +536,6 @@ const SurakshaLocker: React.FC = () => {
                         <Button 
                           size="icon" 
                           variant="ghost" 
-                          className="h-8 w-8 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-                          onClick={() => togglePasswordVisibility(item.id)}
-                        >
-                          {item.isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
                           className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
                           onClick={() => handleDeleteItem(item.id)}
                         >
@@ -565,8 +544,8 @@ const SurakshaLocker: React.FC = () => {
                       </div>
                     </div>
                     <div className="ml-7">
-                      <p className="text-sm font-mono">
-                        {item.isVisible ? item.value : '••••••••••••'}
+                      <p className={`text-sm ${item.type === "password" ? "font-mono" : ""}`}>
+                        {item.value}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Added: {item.dateAdded}

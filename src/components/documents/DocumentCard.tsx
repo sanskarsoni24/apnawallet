@@ -283,12 +283,20 @@ const DocumentCard = ({
     e.stopPropagation();
     moveToSecureVault(id);
     setShowPreview(false); // Close any open preview
+    toast({
+      title: "Document Protected",
+      description: "Document moved to secure vault"
+    });
   };
 
   // Handle removing document from secure vault
   const handleRemoveFromSecureVault = (e: React.MouseEvent) => {
     e.stopPropagation();
     removeFromSecureVault(id);
+    toast({
+      title: "Document Unprotected",
+      description: "Document removed from secure vault"
+    });
   };
 
   // Fix for DocumentReminderSettings - ensure document always has fileURL property
@@ -328,8 +336,6 @@ const DocumentCard = ({
         hover
         onClick={handleCardClick}
       >
-        
-        
         <div className="flex items-start justify-between">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
@@ -365,7 +371,6 @@ const DocumentCard = ({
             <FileText className="h-5 w-5 text-primary" />
           </div>
         </div>
-        
         
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -808,8 +813,3 @@ const DocumentCard = ({
                     variant="outline" 
                     className={`flex items-center gap-2 ${status === 'expired' ? 'bg-red-50 border-red-200 text-red-700' : ''}`}
                     onClick={() => handleStatusChange('expired')}
-                    disabled={status === 'expired'}
-                  >
-                    <FileWarning className="h-4 w-4" />
-                    <span className="whitespace-nowrap">Mark Expired</span>
-                  </Button>

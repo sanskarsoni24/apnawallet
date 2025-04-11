@@ -9,8 +9,8 @@ declare interface UserSettings {
   timezone: string;
   autoBackup: boolean;
   backupFrequency: 'daily' | 'weekly' | 'monthly' | 'never';
-  lastBackup?: string;
   lastKeyBackup?: string;
+  lastBackup?: string;
   twoFactorEnabled: boolean;
   lastLoginMethod?: 'email' | 'google' | 'apple' | 'password';
   accountRecoveryEmail?: string;
@@ -42,6 +42,17 @@ declare interface UserSettings {
   documentSortOrder?: 'name' | 'date' | 'type' | 'importance';
   documentGrouping?: 'none' | 'category' | 'type' | 'importance';
   
+  // Properties used in components but missing from the interface
+  googleEmail?: string;
+  googleProfilePicture?: string;
+  googleId?: string;
+  googleConnected?: boolean;
+  
+  // Recent documents tracking
+  recentDocuments?: string[];
+  recentDocumentsMaxCount?: number;
+  lastViewedDocument?: string;
+  
   // Biometric authentication
   biometricAuth?: {
     enabled: boolean;
@@ -49,12 +60,6 @@ declare interface UserSettings {
     fingerprintEnabled?: boolean;
     lastVerified?: string;
   };
-  
-  // Google integration properties
-  googleEmail?: string;
-  googleProfilePicture?: string;
-  googleId?: string;
-  googleConnected?: boolean;
   
   // Backup functionality
   backupEncrypted?: boolean;
@@ -69,11 +74,6 @@ declare interface UserSettings {
   recoveryKeys?: string[];
   recoveryKeyLastGenerated?: string;
   recoveryKeyUsageHistory?: {date: string, keyId: string}[];
-  
-  // Recent documents tracking
-  recentDocuments?: string[];
-  recentDocumentsMaxCount?: number;
-  lastViewedDocument?: string;
   
   // Mobile device integration
   mobileDeviceName?: string;

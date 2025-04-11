@@ -42,7 +42,6 @@ const GoogleSignIn = ({ mode = "signin", className = "" }: GoogleSignInProps) =>
         
         // Update user settings with Google information
         updateUserSettings({
-          googleConnected: true,
           googleEmail,
           googleProfilePicture,
           googleId,
@@ -59,7 +58,6 @@ const GoogleSignIn = ({ mode = "signin", className = "" }: GoogleSignInProps) =>
         
         // Update user settings with Google information
         updateUserSettings({
-          googleConnected: true,
           googleEmail,
           googleProfilePicture,
           googleId,

@@ -18,4 +18,7 @@ declare interface Document {
   summary?: string;
   category?: string;
   notes?: string;
+  inSecureVault?: boolean;
+  status?: "active" | "expired" | "pending" | "completed" | "deleted";
+  importance?: "low" | "medium" | "high" | "critical";
 }

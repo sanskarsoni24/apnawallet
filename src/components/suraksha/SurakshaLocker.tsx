@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Shield, LockKeyhole, Plus, FileText, Key, Trash2, Eye, EyeOff, Lock, ScanFace, Fingerprint, AlertTriangle } from "lucide-react";
+import { Shield, LockKeyhole, Plus, FileText, Key, Trash2, Eye, EyeOff, Lock, ScanFace, Fingerprint, AlertTriangle, ShieldOff } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import ForgotPassword from "@/components/auth/ForgotPassword";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@/contexts/UserContext";
+import { useDocuments, Document } from "@/contexts/DocumentContext";
+import { Badge } from "@/components/ui/badge";
 
 interface SecretItem {
   id: string;
@@ -290,6 +292,20 @@ const SurakshaLocker: React.FC = () => {
     setSecrets(secrets.filter(item => item.id !== id));
   };
 
+  // Add state for vault documents
+  const [vaultDocuments, setVaultDocuments] = useState<Document[]>([]);
+  
+  // Add function to get documents from the vault
+  const { getVaultDocuments, removeFromSecureVault } = useDocuments();
+  
+  // Load vault documents when the vault is unlocked
+  useEffect(() => {
+    if (!isLocked) {
+      const docs = getVaultDocuments();
+      setVaultDocuments(docs);
+    }
+  }, [isLocked, getVaultDocuments]);
+
   if (isLocked) {
     return (
       <div className="space-y-6">
@@ -473,9 +489,16 @@ const SurakshaLocker: React.FC = () => {
               <Key className="h-4 w-4 mr-2" />
               Recovery Keys
             </TabsTrigger>
+            <TabsTrigger 
+              value="documents" 
+              className="data-[state=active]:bg-primary/10 dark:data-[state=active]:bg-primary/20 data-[state=active]:text-primary rounded-t-lg data-[state=active]:border-b-2 data-[state=active]:border-primary"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Documents
+            </TabsTrigger>
           </TabsList>
           
-          <div className="p-6">
+          <TabsContent value="passwords" className="p-6">
             <div className="mb-6 flex flex-col sm:flex-row gap-2">
               <Input
                 placeholder={`New ${activeTab === "passwords" ? "password title" : activeTab === "notes" ? "note title" : "recovery key name"}`}
@@ -498,11 +521,7 @@ const SurakshaLocker: React.FC = () => {
             
             <div className="space-y-4">
               {secrets
-                .filter(item => 
-                  (activeTab === "passwords" && item.type === "password") ||
-                  (activeTab === "notes" && item.type === "note") ||
-                  (activeTab === "keys" && item.type === "key")
-                )
+                .filter(item => item.type === "password")
                 .map(item => (
                   <div 
                     key={item.id} 
@@ -510,9 +529,7 @@ const SurakshaLocker: React.FC = () => {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        {item.type === "password" && <LockKeyhole className="h-5 w-5 text-blue-500" />}
-                        {item.type === "note" && <FileText className="h-5 w-5 text-green-500" />}
-                        {item.type === "key" && <Key className="h-5 w-5 text-amber-500" />}
+                        <LockKeyhole className="h-5 w-5 text-blue-500" />
                         <h3 className="font-medium">{item.title}</h3>
                       </div>
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -537,20 +554,204 @@ const SurakshaLocker: React.FC = () => {
                   </div>
                 ))}
                 
-              {secrets.filter(item => 
-                (activeTab === "passwords" && item.type === "password") ||
-                (activeTab === "notes" && item.type === "note") ||
-                (activeTab === "keys" && item.type === "key")
-              ).length === 0 && (
+              {secrets.filter(item => item.type === "password").length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">
-                    No {activeTab === "passwords" ? "passwords" : activeTab === "notes" ? "notes" : "recovery keys"} found.
+                    No passwords found.
                     Add one to get started.
                   </p>
                 </div>
               )}
             </div>
-          </div>
+          </TabsContent>
+          
+          <TabsContent value="notes" className="p-6">
+            <div className="mb-6 flex flex-col sm:flex-row gap-2">
+              <Input
+                placeholder={`New ${activeTab === "passwords" ? "password title" : activeTab === "notes" ? "note title" : "recovery key name"}`}
+                value={newItemTitle}
+                onChange={(e) => setNewItemTitle(e.target.value)}
+                className="flex-1"
+              />
+              <Input
+                placeholder={`${activeTab === "passwords" ? "Password value" : activeTab === "notes" ? "Note content" : "Recovery key"}`}
+                type={activeTab === "passwords" ? "password" : "text"}
+                value={newItemValue}
+                onChange={(e) => setNewItemValue(e.target.value)}
+                className="flex-1"
+              />
+              <Button onClick={handleAddItem}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              {secrets
+                .filter(item => item.type === "note")
+                .map(item => (
+                  <div 
+                    key={item.id} 
+                    className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 group"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-green-500" />
+                        <h3 className="font-medium">{item.title}</h3>
+                      </div>
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
+                          onClick={() => handleDeleteItem(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="ml-7">
+                      <p className={`text-sm ${item.type === "password" ? "font-mono" : ""}`}>
+                        {item.value}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Added: {item.dateAdded}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                
+              {secrets.filter(item => item.type === "note").length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    No notes found.
+                    Add one to get started.
+                  </p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="keys" className="p-6">
+            <div className="mb-6 flex flex-col sm:flex-row gap-2">
+              <Input
+                placeholder={`New ${activeTab === "passwords" ? "password title" : activeTab === "notes" ? "note title" : "recovery key name"}`}
+                value={newItemTitle}
+                onChange={(e) => setNewItemTitle(e.target.value)}
+                className="flex-1"
+              />
+              <Input
+                placeholder={`${activeTab === "passwords" ? "Password value" : activeTab === "notes" ? "Note content" : "Recovery key"}`}
+                type={activeTab === "passwords" ? "password" : "text"}
+                value={newItemValue}
+                onChange={(e) => setNewItemValue(e.target.value)}
+                className="flex-1"
+              />
+              <Button onClick={handleAddItem}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              {secrets
+                .filter(item => item.type === "key")
+                .map(item => (
+                  <div 
+                    key={item.id} 
+                    className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 group"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Key className="h-5 w-5 text-amber-500" />
+                        <h3 className="font-medium">{item.title}</h3>
+                      </div>
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
+                          onClick={() => handleDeleteItem(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="ml-7">
+                      <p className={`text-sm ${item.type === "password" ? "font-mono" : ""}`}>
+                        {item.value}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Added: {item.dateAdded}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                
+              {secrets.filter(item => item.type === "key").length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    No recovery keys found.
+                    Add one to get started.
+                  </p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="documents" className="p-6">
+            <div className="space-y-4">
+              {vaultDocuments.length > 0 ? (
+                vaultDocuments.map(doc => (
+                  <div 
+                    key={doc.id} 
+                    className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 group"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-purple-500" />
+                        <h3 className="font-medium">{doc.title}</h3>
+                      </div>
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
+                          onClick={() => removeFromSecureVault(doc.id)}
+                        >
+                          <ShieldOff className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="ml-7">
+                      <p className="text-sm text-muted-foreground">
+                        {doc.description || "No description provided"}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <Badge variant="outline">{doc.type}</Badge>
+                        {doc.dueDate && (
+                          <Badge 
+                            variant={doc.daysRemaining && doc.daysRemaining < 3 ? "destructive" : "outline"}
+                          >
+                            Due: {doc.dueDate}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    No documents found in your secure vault.
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Add documents to your vault from the Documents page.
+                  </p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
       </BlurContainer>
       

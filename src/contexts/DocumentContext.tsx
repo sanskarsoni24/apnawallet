@@ -21,6 +21,7 @@ export interface Document {
   tags?: string[];
   notes?: string;
   dateAdded?: string;
+  inSecureVault?: boolean;
 }
 
 interface DocumentContextType {
@@ -44,6 +45,9 @@ interface DocumentContextType {
   getExpiredDocuments: () => Document[];
   getActiveDocuments: () => Document[];
   getCompletedDocuments: () => Document[];
+  moveToSecureVault: (id: string) => void;
+  removeFromSecureVault: (id: string) => void;
+  getVaultDocuments: () => Document[];
 }
 
 const DocumentContext = createContext<DocumentContextType>({
@@ -67,6 +71,9 @@ const DocumentContext = createContext<DocumentContextType>({
   getExpiredDocuments: () => [],
   getActiveDocuments: () => [],
   getCompletedDocuments: () => [],
+  moveToSecureVault: () => {},
+  removeFromSecureVault: () => {},
+  getVaultDocuments: () => [],
 });
 
 export const useDocuments = () => useContext(DocumentContext);
@@ -472,6 +479,39 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
   
+  // Move a document to the secure vault
+  const moveToSecureVault = (id: string) => {
+    setDocuments(prev => 
+      prev.map(doc => 
+        doc.id === id ? { ...doc, inSecureVault: true } : doc
+      )
+    );
+    
+    toast({
+      title: "Document Protected",
+      description: "Document has been moved to your secure vault",
+    });
+  };
+  
+  // Remove a document from the secure vault
+  const removeFromSecureVault = (id: string) => {
+    setDocuments(prev => 
+      prev.map(doc => 
+        doc.id === id ? { ...doc, inSecureVault: false } : doc
+      )
+    );
+    
+    toast({
+      title: "Document Removed",
+      description: "Document has been removed from your secure vault",
+    });
+  };
+  
+  // Get all documents in the vault
+  const getVaultDocuments = () => {
+    return documents.filter(doc => doc.inSecureVault === true);
+  };
+  
   // Check for expired documents on load
   useEffect(() => {
     if (documents.length > 0) {
@@ -501,7 +541,10 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         scheduleRenewal,
         getExpiredDocuments,
         getActiveDocuments,
-        getCompletedDocuments
+        getCompletedDocuments,
+        moveToSecureVault,
+        removeFromSecureVault,
+        getVaultDocuments
       }}
     >
       {children}

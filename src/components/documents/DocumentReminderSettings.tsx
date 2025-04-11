@@ -1,22 +1,15 @@
 
 import React, { useState } from "react";
-import { Document, useDocuments } from "@/contexts/DocumentContext";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bell, Calendar, Clock, Volume2 } from "lucide-react";
+import { Bell, Volume2, Calendar, Mail, MessageSquare, Shield } from "lucide-react";
+import { useDocuments } from "@/contexts/DocumentContext";
 import { toast } from "@/hooks/use-toast";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle
-} from "@/components/ui/dialog";
 import { useUser } from "@/contexts/UserContext";
-import { speakNotification } from "@/services/NotificationService";
-import VoicePreview from "./VoicePreview";
-import { Slider } from "@/components/ui/slider";
 
 interface DocumentReminderSettingsProps {
   document: Document;
@@ -24,202 +17,156 @@ interface DocumentReminderSettingsProps {
   onClose: () => void;
 }
 
-const DocumentReminderSettings = ({ document, isOpen, onClose }: DocumentReminderSettingsProps) => {
-  const { setCustomReminderDays } = useDocuments();
+const DocumentReminderSettings: React.FC<DocumentReminderSettingsProps> = ({
+  document,
+  isOpen,
+  onClose
+}) => {
+  const { updateDocument, setCustomReminderDays, moveToSecureVault, removeFromSecureVault } = useDocuments();
   const { userSettings } = useUser();
   
-  // Ensure we have a default value even if userSettings is undefined
-  const defaultReminderDays = userSettings?.reminderDays ?? 3;
+  const [reminderEnabled, setReminderEnabled] = useState(document.reminderSet || false);
+  const [reminderDays, setReminderDays] = useState(document.customReminderDays || userSettings?.reminderDays || 7);
+  const [notificationType, setNotificationType] = useState<string>("all");
+  const [secureVault, setSecureVault] = useState(document.inSecureVault || false);
   
-  const [reminderDays, setReminderDays] = useState<number>(
-    document.customReminderDays !== undefined 
-      ? document.customReminderDays 
-      : defaultReminderDays
-  );
-  
-  const [customDays, setCustomDays] = useState<number>(
-    document.customReminderDays !== undefined && ![1, 3, 7, 14, 30].includes(document.customReminderDays) 
-      ? document.customReminderDays 
-      : 5
-  );
-  
-  const [useCustomDays, setUseCustomDays] = useState<boolean>(
-    document.customReminderDays !== undefined && ![1, 3, 7, 14, 30].includes(document.customReminderDays)
-  );
-
-  const [showVoicePreview, setShowVoicePreview] = useState(false);
-
-  const handleSave = () => {
-    const finalDays = useCustomDays ? customDays : reminderDays;
-    setCustomReminderDays(document.id, finalDays);
-    toast({
-      title: "Reminder settings updated",
-      description: `Custom reminder for "${document.title}" set to ${finalDays} days before expiry.`,
+  const handleSaveSettings = () => {
+    // Update document reminder settings
+    updateDocument(document.id, {
+      reminderSet: reminderEnabled
     });
+    
+    if (reminderEnabled) {
+      setCustomReminderDays(document.id, reminderDays);
+    }
+    
+    // Handle secure vault settings
+    if (secureVault !== (document.inSecureVault || false)) {
+      if (secureVault) {
+        moveToSecureVault(document.id);
+      } else {
+        removeFromSecureVault(document.id);
+      }
+    }
+    
+    toast({
+      title: "Settings Saved",
+      description: "Document reminder settings have been updated.",
+    });
+    
     onClose();
   };
   
-  const handleSelectChange = (value: string) => {
-    if (value === "custom") {
-      setUseCustomDays(true);
-    } else {
-      setUseCustomDays(false);
-      setReminderDays(Number(value));
-    }
-  };
-  
-  const handleCustomDaysChange = (value: number[]) => {
-    setCustomDays(value[0]);
-  };
-
-  const handlePreviewVoice = () => {
-    setShowVoicePreview(true);
-  };
-  
-  // Create the notification text for the document
-  const getNotificationText = () => {
-    const daysWord = document.daysRemaining === 1 ? "day" : "days";
-    return `Reminder: ${document.title} is due in ${document.daysRemaining} ${daysWord}. Don't forget to review this ${document.type.toLowerCase()} document before the deadline.`;
-  };
-
   return (
-    <>
-      <Dialog open={isOpen && !showVoicePreview} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[400px] dark:bg-slate-900 dark:border-slate-700">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/60">
-                <Bell className="h-4 w-4 text-indigo-600 dark:text-indigo-400" /> 
-              </div>
-              <span className="dark:text-white">Document Reminder Settings</span>
-            </DialogTitle>
-            <DialogDescription className="dark:text-slate-300">
-              Customize when you want to be reminded about "{document.title}"
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6 py-4">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
-                <label className="text-sm font-medium dark:text-white">Days before expiry to notify</label>
-              </div>
-              <p className="text-xs text-muted-foreground dark:text-slate-400 mb-2">
-                This setting overrides your global reminder preference for this document only.
-              </p>
-              <Select 
-                value={useCustomDays ? "custom" : String(reminderDays)} 
-                onValueChange={handleSelectChange}
-              >
-                <SelectTrigger className="dark:bg-slate-800 dark:border-slate-700">
-                  <SelectValue placeholder="Select days" />
-                </SelectTrigger>
-                <SelectContent className="dark:bg-slate-800">
-                  <SelectItem value="1">1 day before</SelectItem>
-                  <SelectItem value="3">3 days before</SelectItem>
-                  <SelectItem value="7">7 days before</SelectItem>
-                  <SelectItem value="14">14 days before</SelectItem>
-                  <SelectItem value="30">30 days before</SelectItem>
-                  <SelectItem value="custom">Custom days...</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              {useCustomDays && (
-                <div className="space-y-3 pt-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground dark:text-slate-400">
-                      Custom reminder days: <span className="font-medium text-foreground dark:text-white">{customDays}</span>
-                    </span>
-                  </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Document Settings</DialogTitle>
+          <DialogDescription>
+            Configure reminders and security for "{document.title}"
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-6 py-4">
+          <div className="space-y-4">
+            <h3 className="font-medium flex items-center gap-2">
+              <Bell className="h-4 w-4 text-amber-500" />
+              Reminder Settings
+            </h3>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="reminder-toggle" className="cursor-pointer">Enable due date reminder</Label>
+              <Switch 
+                id="reminder-toggle" 
+                checked={reminderEnabled}
+                onCheckedChange={setReminderEnabled}
+              />
+            </div>
+            
+            {reminderEnabled && (
+              <div className="space-y-4 mt-4 pl-4 border-l-2 border-muted animate-in fade-in">
+                <div className="space-y-2">
+                  <Label>Remind me {reminderDays} days before due date</Label>
                   <Slider
-                    defaultValue={[customDays]}
+                    value={[reminderDays]}
                     min={1}
-                    max={60}
+                    max={30}
                     step={1}
-                    onValueChange={handleCustomDaysChange}
-                    className="dark:bg-slate-800"
+                    onValueChange={(value) => setReminderDays(value[0])}
                   />
-                  <p className="text-xs text-muted-foreground dark:text-slate-400">
-                    Choose any value between 1 and 60 days
+                  <p className="text-xs text-muted-foreground mt-1">
+                    You'll receive a reminder {reminderDays} days before the document is due.
                   </p>
                 </div>
-              )}
-            </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="notification-type">Notification Type</Label>
+                  <Select
+                    value={notificationType}
+                    onValueChange={setNotificationType}
+                  >
+                    <SelectTrigger id="notification-type">
+                      <SelectValue placeholder="Select notification type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Notifications</SelectItem>
+                      <SelectItem value="email">Email Only</SelectItem>
+                      <SelectItem value="push">Push Notifications Only</SelectItem>
+                      <SelectItem value="voice">Voice Reminder Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Button variant="outline" size="sm" className="h-8 gap-1">
+                      <Mail className="h-3.5 w-3.5" />
+                      <span>Email</span>
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-8 gap-1">
+                      <MessageSquare className="h-3.5 w-3.5" />
+                      <span>Push</span>
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-8 gap-1">
+                      <Volume2 className="h-3.5 w-3.5" />
+                      <span>Voice</span>
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-8 gap-1">
+                      <Calendar className="h-3.5 w-3.5" />
+                      <span>Calendar</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="space-y-4 pt-2">
+            <h3 className="font-medium flex items-center gap-2">
+              <Shield className="h-4 w-4 text-purple-500" />
+              Security Settings
+            </h3>
             
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Volume2 className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
-                <span className="text-sm font-medium dark:text-white">Voice Preview</span>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="secure-vault-toggle" className="cursor-pointer">Store in Secure Vault</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Documents in the secure vault require authentication to access
+                </p>
               </div>
-              <Button 
-                variant="outline" 
-                onClick={handlePreviewVoice} 
-                className="w-full justify-start bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-              >
-                <Volume2 className="h-4 w-4 mr-2 text-indigo-500" />
-                Preview Voice Notification
-              </Button>
-            </div>
-            
-            <div className="pt-2 space-y-2 border-t dark:border-slate-700">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
-                <p className="text-sm font-medium dark:text-white">Current Due Date</p>
-              </div>
-              <div className="px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded text-sm flex items-center justify-between">
-                <span className="dark:text-slate-300">{document.dueDate}</span>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  document.daysRemaining < 0 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                  document.daysRemaining <= 3 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                  'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                }`}>
-                  {document.daysRemaining < 0 
-                    ? `Overdue by ${Math.abs(document.daysRemaining)} days` 
-                    : document.daysRemaining === 0 
-                      ? 'Due today'
-                      : document.daysRemaining === 1 
-                        ? 'Due tomorrow'
-                        : `${document.daysRemaining} days remaining`}
-                </span>
-              </div>
+              <Switch 
+                id="secure-vault-toggle" 
+                checked={secureVault}
+                onCheckedChange={setSecureVault}
+              />
             </div>
           </div>
-
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={onClose}
-              className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSave} 
-              className="bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-700 dark:hover:bg-indigo-600"
-            >
-              Save Reminder Settings
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Voice Preview Dialog */}
-      <Dialog open={showVoicePreview} onOpenChange={(open) => !open && setShowVoicePreview(false)}>
-        <DialogContent className="sm:max-w-md dark:bg-slate-900 dark:border-slate-700">
-          <DialogHeader>
-            <DialogTitle>Voice Notification Preview</DialogTitle>
-            <DialogDescription>
-              Preview how your voice notification will sound
-            </DialogDescription>
-          </DialogHeader>
-          
-          <VoicePreview 
-            text={getNotificationText()} 
-            onClose={() => setShowVoicePreview(false)} 
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSaveSettings}>Save Settings</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

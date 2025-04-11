@@ -1,225 +1,106 @@
 
-import React, { useState } from "react";
-import { Document, useDocuments } from "@/contexts/DocumentContext";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bell, Calendar, Clock, Volume2 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle
-} from "@/components/ui/dialog";
-import { useUser } from "@/contexts/UserContext";
-import { speakNotification } from "@/services/NotificationService";
-import VoicePreview from "./VoicePreview";
-import { Slider } from "@/components/ui/slider";
+import React, { useState } from 'react';
+import { Document, useDocuments } from '@/contexts/DocumentContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/hooks/use-toast';
+import { Bell } from 'lucide-react';
 
-interface DocumentReminderSettingsProps {
+export interface DocumentReminderSettingsProps {
   document: Document;
-  isOpen: boolean;
-  onClose: () => void;
+  onOpenChange: (open: boolean) => void;
 }
 
-const DocumentReminderSettings = ({ document, isOpen, onClose }: DocumentReminderSettingsProps) => {
-  const { setCustomReminderDays } = useDocuments();
-  const { userSettings } = useUser();
+const DocumentReminderSettings = ({ document, onOpenChange }: DocumentReminderSettingsProps) => {
+  const { updateDocument } = useDocuments();
   
-  // Ensure we have a default value even if userSettings is undefined
-  const defaultReminderDays = userSettings?.reminderDays ?? 3;
-  
-  const [reminderDays, setReminderDays] = useState<number>(
-    document.customReminderDays !== undefined 
-      ? document.customReminderDays 
-      : defaultReminderDays
+  // Default to document's current settings or 7 days
+  const [reminderOption, setReminderOption] = useState<string>(
+    document.customReminderDays !== undefined ? 'custom' : 'default'
   );
-  
   const [customDays, setCustomDays] = useState<number>(
-    document.customReminderDays !== undefined && ![1, 3, 7, 14, 30].includes(document.customReminderDays) 
-      ? document.customReminderDays 
-      : 5
+    document.customReminderDays !== undefined ? document.customReminderDays : 7
   );
+  const [open, setOpen] = useState(true);
   
-  const [useCustomDays, setUseCustomDays] = useState<boolean>(
-    document.customReminderDays !== undefined && ![1, 3, 7, 14, 30].includes(document.customReminderDays)
-  );
-
-  const [showVoicePreview, setShowVoicePreview] = useState(false);
-
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    onOpenChange(newOpen);
+  };
+  
   const handleSave = () => {
-    const finalDays = useCustomDays ? customDays : reminderDays;
-    setCustomReminderDays(document.id, finalDays);
+    const newSettings = {
+      reminderSet: true,
+      customReminderDays: reminderOption === 'custom' ? customDays : undefined
+    };
+    
+    updateDocument(document.id, newSettings);
+    
     toast({
       title: "Reminder settings updated",
-      description: `Custom reminder for "${document.title}" set to ${finalDays} days before expiry.`,
+      description: reminderOption === 'custom'
+        ? `You'll be reminded ${customDays} days before this document is due.`
+        : "Default reminder settings applied.",
     });
-    onClose();
+    
+    handleOpenChange(false);
   };
   
-  const handleSelectChange = (value: string) => {
-    if (value === "custom") {
-      setUseCustomDays(true);
-    } else {
-      setUseCustomDays(false);
-      setReminderDays(Number(value));
-    }
-  };
-  
-  const handleCustomDaysChange = (value: number[]) => {
-    setCustomDays(value[0]);
-  };
-
-  const handlePreviewVoice = () => {
-    setShowVoicePreview(true);
-  };
-  
-  // Create the notification text for the document
-  const getNotificationText = () => {
-    const daysWord = document.daysRemaining === 1 ? "day" : "days";
-    return `Reminder: ${document.title} is due in ${document.daysRemaining} ${daysWord}. Don't forget to review this ${document.type.toLowerCase()} document before the deadline.`;
-  };
-
   return (
-    <>
-      <Dialog open={isOpen && !showVoicePreview} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[400px] dark:bg-slate-900 dark:border-slate-700">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/60">
-                <Bell className="h-4 w-4 text-indigo-600 dark:text-indigo-400" /> 
-              </div>
-              <span className="dark:text-white">Document Reminder Settings</span>
-            </DialogTitle>
-            <DialogDescription className="dark:text-slate-300">
-              Customize when you want to be reminded about "{document.title}"
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6 py-4">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
-                <label className="text-sm font-medium dark:text-white">Days before expiry to notify</label>
-              </div>
-              <p className="text-xs text-muted-foreground dark:text-slate-400 mb-2">
-                This setting overrides your global reminder preference for this document only.
-              </p>
-              <Select 
-                value={useCustomDays ? "custom" : String(reminderDays)} 
-                onValueChange={handleSelectChange}
-              >
-                <SelectTrigger className="dark:bg-slate-800 dark:border-slate-700">
-                  <SelectValue placeholder="Select days" />
-                </SelectTrigger>
-                <SelectContent className="dark:bg-slate-800">
-                  <SelectItem value="1">1 day before</SelectItem>
-                  <SelectItem value="3">3 days before</SelectItem>
-                  <SelectItem value="7">7 days before</SelectItem>
-                  <SelectItem value="14">14 days before</SelectItem>
-                  <SelectItem value="30">30 days before</SelectItem>
-                  <SelectItem value="custom">Custom days...</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              {useCustomDays && (
-                <div className="space-y-3 pt-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground dark:text-slate-400">
-                      Custom reminder days: <span className="font-medium text-foreground dark:text-white">{customDays}</span>
-                    </span>
-                  </div>
-                  <Slider
-                    defaultValue={[customDays]}
-                    min={1}
-                    max={60}
-                    step={1}
-                    onValueChange={handleCustomDaysChange}
-                    className="dark:bg-slate-800"
-                  />
-                  <p className="text-xs text-muted-foreground dark:text-slate-400">
-                    Choose any value between 1 and 60 days
-                  </p>
-                </div>
-              )}
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Volume2 className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
-                <span className="text-sm font-medium dark:text-white">Voice Preview</span>
-              </div>
-              <Button 
-                variant="outline" 
-                onClick={handlePreviewVoice} 
-                className="w-full justify-start bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-              >
-                <Volume2 className="h-4 w-4 mr-2 text-indigo-500" />
-                Preview Voice Notification
-              </Button>
-            </div>
-            
-            <div className="pt-2 space-y-2 border-t dark:border-slate-700">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
-                <p className="text-sm font-medium dark:text-white">Current Due Date</p>
-              </div>
-              <div className="px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded text-sm flex items-center justify-between">
-                <span className="dark:text-slate-300">{document.dueDate}</span>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  document.daysRemaining < 0 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                  document.daysRemaining <= 3 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                  'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                }`}>
-                  {document.daysRemaining < 0 
-                    ? `Overdue by ${Math.abs(document.daysRemaining)} days` 
-                    : document.daysRemaining === 0 
-                      ? 'Due today'
-                      : document.daysRemaining === 1 
-                        ? 'Due tomorrow'
-                        : `${document.daysRemaining} days remaining`}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={onClose}
-              className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSave} 
-              className="bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-700 dark:hover:bg-indigo-600"
-            >
-              Save Reminder Settings
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Voice Preview Dialog */}
-      <Dialog open={showVoicePreview} onOpenChange={(open) => !open && setShowVoicePreview(false)}>
-        <DialogContent className="sm:max-w-md dark:bg-slate-900 dark:border-slate-700">
-          <DialogHeader>
-            <DialogTitle>Voice Notification Preview</DialogTitle>
-            <DialogDescription>
-              Preview how your voice notification will sound
-            </DialogDescription>
-          </DialogHeader>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" /> Reminder Settings
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="py-4 space-y-4">
+          <h4 className="text-sm font-medium">Set reminder for "{document.title}"</h4>
           
-          <VoicePreview 
-            text={getNotificationText()} 
-            onClose={() => setShowVoicePreview(false)} 
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+          <RadioGroup 
+            className="space-y-3" 
+            value={reminderOption} 
+            onValueChange={setReminderOption}
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="default" id="default" />
+              <Label htmlFor="default">Default (use system settings)</Label>
+            </div>
+            <div className="flex items-start space-x-2">
+              <RadioGroupItem value="custom" id="custom" className="mt-1" />
+              <div className="grid gap-1.5">
+                <Label htmlFor="custom">Custom notification time</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={90}
+                    className="w-20"
+                    value={customDays}
+                    onChange={(e) => setCustomDays(parseInt(e.target.value, 10) || 1)}
+                    disabled={reminderOption !== 'custom'}
+                  />
+                  <span className="text-sm text-muted-foreground">days before due date</span>
+                </div>
+              </div>
+            </div>
+          </RadioGroup>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave}>
+            Save Settings
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

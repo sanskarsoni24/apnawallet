@@ -19,4 +19,7 @@ declare interface Document {
   category?: string;
   notes?: string;
   inSecureVault?: boolean;
+  fileURL?: string;
+  status?: "active" | "completed" | "expired";
+  importance?: "low" | "medium" | "high" | "critical";
 }

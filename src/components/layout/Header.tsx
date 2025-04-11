@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,13 +6,27 @@ import { ModeToggle } from "@/components/ui/mode-toggle";
 import { useUser } from "@/contexts/UserContext";
 import SurakshitLogo from "@/components/ui/SurakshitLogo";
 import MobileNav from "@/components/ui/mobile-nav";
-import { Bell, User, Menu, X, LogOut, Settings, FileText, Archive, Home, Calendar, HelpCircle, FileIcon } from "lucide-react";
+import { Bell, LogOut, Settings, FileText, Archive, Home, Calendar, HelpCircle, FileIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 
+// Define props for MobileNav to fix type errors
+interface MobileNavProps {
+  navigation: {
+    name: string;
+    href: string;
+    icon: React.ComponentType<any>;
+    current: boolean;
+    disabled?: boolean;
+  }[];
+  isLoggedIn: boolean;
+  logout: () => Promise<void>;
+  user?: { email?: string };
+}
+
 const Header = () => {
-  const { isLoggedIn, logout, user, userSettings } = useUser();
+  const { isLoggedIn, logout, userSettings } = useUser();
   const location = useLocation();
   const pathname = location.pathname;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -42,6 +57,9 @@ const Header = () => {
     { name: 'Help', href: '/help', icon: HelpCircle, current: pathname === '/help' },
   ];
 
+  // Create user object for MobileNav
+  const user = { email: userSettings?.googleEmail || "" };
+
   return (
     <header className="bg-background sticky top-0 z-50 border-b">
       <div className="container flex h-16 items-center justify-between py-4">
@@ -50,9 +68,9 @@ const Header = () => {
             <SheetTrigger asChild>
               <Button variant="ghost" size="sm">
                 {isMobileMenuOpen ? (
-                  <X className="h-5 w-5" />
+                  <span className="h-5 w-5">✕</span>
                 ) : (
-                  <Menu className="h-5 w-5" />
+                  <span className="h-5 w-5">☰</span>
                 )}
                 <span className="sr-only">Toggle Menu</span>
               </Button>

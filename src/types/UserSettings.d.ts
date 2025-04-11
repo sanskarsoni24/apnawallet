@@ -41,6 +41,11 @@ declare interface UserSettings {
   documentSortOrder?: 'name' | 'date' | 'type' | 'importance';
   documentGrouping?: 'none' | 'category' | 'type' | 'importance';
   
+  // Recent documents tracking
+  recentDocuments?: string[];
+  recentDocumentsMaxCount?: number;
+  lastViewedDocument?: string;
+  
   // Biometric authentication
   biometricAuth?: {
     enabled: boolean;
@@ -67,11 +72,6 @@ declare interface UserSettings {
   recoveryKeys?: string[];
   recoveryKeyLastGenerated?: string;
   recoveryKeyUsageHistory?: {date: string, keyId: string}[];
-  
-  // Recent documents tracking
-  recentDocuments?: string[];
-  recentDocumentsMaxCount?: number;
-  lastViewedDocument?: string;
   
   // PDF settings
   defaultPdfView?: 'single' | 'double' | 'continuous';

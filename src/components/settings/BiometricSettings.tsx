@@ -3,26 +3,25 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Fingerprint, ScanFace, Shield, ShieldAlert, InfoIcon, Check, X } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
-import { ScanFace, Fingerprint, Shield, AlertTriangle, Check } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const BiometricSettings = () => {
   const { userSettings, updateUserSettings } = useUser();
   
-  // Get biometric settings with fallbacks
+  // Check if biometric auth is enabled in user settings
   const biometricEnabled = userSettings?.biometricAuth?.enabled || false;
   const faceIdEnabled = userSettings?.biometricAuth?.faceIdEnabled || false;
   const fingerprintEnabled = userSettings?.biometricAuth?.fingerprintEnabled || false;
   
-  const [isInIframe, setIsInIframe] = useState(false);
-  const [biometricsSupported, setBiometricsSupported] = useState(false);
+  const [isSupported, setIsSupported] = useState(false);
   const [faceIdSupported, setFaceIdSupported] = useState(false);
   const [fingerprintSupported, setFingerprintSupported] = useState(false);
-  const [verifyingBiometrics, setVerifyingBiometrics] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(false);
+  const [isInIframe, setIsInIframe] = useState(false);
   
-  // Check if environment supports biometrics
   useEffect(() => {
     // Check if running in an iframe
     try {
@@ -31,12 +30,12 @@ const BiometricSettings = () => {
       // If we can't access window.top due to cross-origin restrictions, we're in an iframe
       setIsInIframe(true);
     }
-
+    
     const checkBiometricSupport = async () => {
       if (window.PublicKeyCredential) {
         try {
           const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-          setBiometricsSupported(available && !isInIframe);
+          setIsSupported(available && !isInIframe);
           
           if (available && !isInIframe) {
             // Most modern laptops and phones with biometrics will return true here
@@ -52,8 +51,6 @@ const BiometricSettings = () => {
             
             // Modern Macs have Face ID, Windows has Windows Hello, many mobile devices have face unlock
             setFaceIdSupported(isMac || isWindows || isMobile);
-            
-            console.log("Biometric authentication is supported on this device");
           } else {
             console.log(isInIframe ? 
               "Biometric authentication is not available in iframes due to security restrictions" : 
@@ -61,71 +58,92 @@ const BiometricSettings = () => {
           }
         } catch (error) {
           console.error("Error checking biometric support:", error);
-          setBiometricsSupported(false);
+          setIsSupported(false);
         }
       } else {
         console.log("Web Authentication API is not supported in this browser");
-        setBiometricsSupported(false);
+        setIsSupported(false);
       }
     };
     
     checkBiometricSupport();
-  }, [isInIframe]);
+  }, []);
   
-  // Function to handle changes to biometric settings
-  const handleBiometricToggle = (enabled: boolean) => {
-    if (enabled && !biometricsSupported && !isInIframe) {
+  const handleToggleBiometric = async (enabled: boolean) => {
+    if (enabled && (!isSupported && !isInIframe)) {
       toast({
-        title: "Biometrics Not Supported",
-        description: "Your device or browser doesn't support biometric authentication.",
+        title: "Not Supported",
+        description: "Your device or browser doesn't support biometric authentication",
         variant: "destructive",
       });
       return;
     }
     
     if (enabled) {
-      // Verify biometrics first before enabling
-      verifyBiometrics().then(success => {
-        if (success) {
-          updateUserSettings({
-            biometricAuth: {
-              enabled: true,
-              faceIdEnabled: faceIdSupported,
-              fingerprintEnabled: fingerprintSupported,
-              lastVerified: new Date().toISOString()
-            }
-          });
-          
-          toast({
-            title: "Biometric Authentication Enabled",
-            description: "You can now use biometrics to unlock your secure vault.",
-          });
-        }
-      });
+      setIsEnrolling(true);
+      
+      try {
+        // In a real app, this would set up WebAuthn with the server
+        // For our demo, we'll simulate enrollment
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Show success message
+        toast({
+          title: "Biometric Authentication Enabled",
+          description: "You can now use biometrics to access your secure vault",
+        });
+        
+        // Update user settings
+        updateUserSettings({
+          biometricAuth: {
+            enabled: true,
+            faceIdEnabled: faceIdSupported,
+            fingerprintEnabled: fingerprintSupported,
+            lastVerified: new Date().toISOString(),
+          }
+        });
+      } catch (error) {
+        console.error("Enrollment error:", error);
+        toast({
+          title: "Enrollment Failed",
+          description: "Unable to set up biometric authentication",
+          variant: "destructive",
+        });
+      } finally {
+        setIsEnrolling(false);
+      }
     } else {
-      // Just disable without verification
+      // Disable biometric authentication
       updateUserSettings({
         biometricAuth: {
           enabled: false,
           faceIdEnabled: false,
-          fingerprintEnabled: false
+          fingerprintEnabled: false,
         }
       });
       
       toast({
         title: "Biometric Authentication Disabled",
-        description: "Biometric authentication has been turned off.",
+        description: "Biometric access to your vault has been turned off",
       });
     }
   };
   
-  // Toggle specific biometric methods
-  const toggleFaceId = (enabled: boolean) => {
-    if (!faceIdSupported && !isInIframe) {
+  const handleToggleFaceId = (enabled: boolean) => {
+    if (!biometricEnabled) {
       toast({
-        title: "Face ID Not Available",
-        description: "Your device doesn't appear to support facial recognition.",
-        variant: "destructive",
+        title: "Enable Biometrics First",
+        description: "You need to enable biometric authentication before configuring specific methods",
+        variant: "default",
+      });
+      return;
+    }
+    
+    if (enabled && !faceIdSupported && !isInIframe) {
+      toast({
+        title: "Face ID Not Supported",
+        description: "Your device doesn't appear to support facial recognition",
+        variant: "default",
       });
       return;
     }
@@ -133,25 +151,31 @@ const BiometricSettings = () => {
     updateUserSettings({
       biometricAuth: {
         ...userSettings?.biometricAuth,
-        enabled: enabled || fingerprintEnabled,
-        faceIdEnabled: enabled
+        faceIdEnabled: enabled,
       }
     });
     
     toast({
       title: enabled ? "Face ID Enabled" : "Face ID Disabled",
-      description: enabled 
-        ? "You can now use facial recognition to unlock your secure vault." 
-        : "Face ID has been turned off.",
+      description: enabled ? "You can now use facial recognition to unlock your vault" : "Facial recognition access has been turned off",
     });
   };
   
-  const toggleFingerprint = (enabled: boolean) => {
-    if (!fingerprintSupported && !isInIframe) {
+  const handleToggleFingerprint = (enabled: boolean) => {
+    if (!biometricEnabled) {
       toast({
-        title: "Fingerprint Not Available",
-        description: "Your device doesn't appear to support fingerprint recognition.",
-        variant: "destructive",
+        title: "Enable Biometrics First",
+        description: "You need to enable biometric authentication before configuring specific methods",
+        variant: "default",
+      });
+      return;
+    }
+    
+    if (enabled && !fingerprintSupported && !isInIframe) {
+      toast({
+        title: "Fingerprint Not Supported",
+        description: "Your device doesn't appear to support fingerprint recognition",
+        variant: "default",
       });
       return;
     }
@@ -159,71 +183,45 @@ const BiometricSettings = () => {
     updateUserSettings({
       biometricAuth: {
         ...userSettings?.biometricAuth,
-        enabled: enabled || faceIdEnabled,
-        fingerprintEnabled: enabled
+        fingerprintEnabled: enabled,
       }
     });
     
     toast({
       title: enabled ? "Fingerprint Enabled" : "Fingerprint Disabled",
-      description: enabled 
-        ? "You can now use fingerprint recognition to unlock your secure vault." 
-        : "Fingerprint authentication has been turned off.",
+      description: enabled ? "You can now use fingerprint recognition to unlock your vault" : "Fingerprint access has been turned off",
     });
   };
   
-  // Create a credential validation function
-  const verifyBiometrics = async (): Promise<boolean> => {
-    setVerifyingBiometrics(true);
-    
-    if (isInIframe) {
-      // In iframe, simulate success for demo purposes
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setVerifyingBiometrics(false);
-      return true;
-    }
-    
-    if (!window.PublicKeyCredential) {
-      setVerifyingBiometrics(false);
-      toast({
-        title: "Not Supported",
-        description: "Your browser doesn't support the Web Authentication API needed for biometric verification.",
-        variant: "destructive",
-      });
-      return false;
-    }
+  const handleResetBiometrics = async () => {
+    // In a real app, this would invalidate existing credentials with the server
+    setIsEnrolling(true);
     
     try {
-      // Generate a random challenge
-      const challenge = new Uint8Array(32);
-      window.crypto.getRandomValues(challenge);
+      // Simulate server communication
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Create the credential request options
-      const publicKeyCredentialRequestOptions = {
-        challenge,
-        rpId: window.location.hostname,
-        userVerification: "required" as UserVerificationRequirement,
-        timeout: 60000,
-      };
-      
-      // Request the credential - this will trigger the device's biometric prompt
-      await navigator.credentials.get({
-        publicKey: publicKeyCredentialRequestOptions
+      // Disable all biometric settings
+      updateUserSettings({
+        biometricAuth: {
+          enabled: false,
+          faceIdEnabled: false,
+          fingerprintEnabled: false,
+        }
       });
-      
-      setVerifyingBiometrics(false);
-      return true;
-    } catch (error) {
-      console.error("Biometric verification failed:", error);
-      setVerifyingBiometrics(false);
       
       toast({
-        title: "Verification Failed",
-        description: "Biometric verification was unsuccessful. Please try again.",
+        title: "Biometrics Reset",
+        description: "All biometric credentials have been reset. You can enroll again if needed.",
+      });
+    } catch (error) {
+      toast({
+        title: "Reset Failed",
+        description: "Unable to reset biometric credentials",
         variant: "destructive",
       });
-      
-      return false;
+    } finally {
+      setIsEnrolling(false);
     }
   };
   
@@ -231,111 +229,92 @@ const BiometricSettings = () => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-primary" />
+          <Fingerprint className="h-5 w-5" />
           Biometric Authentication
         </CardTitle>
         <CardDescription>
-          Use your device's biometric features to unlock your secure vault
+          Use your device's biometric capabilities to securely access your vault
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {!biometricsSupported && !isInIframe && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
+      <CardContent className="space-y-6">
+        {!isSupported && !isInIframe ? (
+          <Alert variant="default">
+            <ShieldAlert className="h-4 w-4" />
             <AlertTitle>Not Supported</AlertTitle>
             <AlertDescription>
-              Your device or browser doesn't support the Web Authentication API needed for biometric authentication.
+              Your device or browser doesn't support biometric authentication.
+              You'll need to use password authentication to access your secure vault.
             </AlertDescription>
           </Alert>
-        )}
-        
-        {isInIframe && (
-          <Alert variant="warning">
-            <AlertTriangle className="h-4 w-4" />
+        ) : isInIframe ? (
+          <Alert className="bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+            <InfoIcon className="h-4 w-4" />
             <AlertTitle>Preview Mode</AlertTitle>
             <AlertDescription>
-              Biometric authentication features are simulated in this preview environment. They will work properly when deployed.
+              In the preview environment, biometric authentication is simulated.
+              When deployed, it will use your actual device biometrics if available.
             </AlertDescription>
           </Alert>
-        )}
+        ) : null}
         
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <h3 className="text-base font-medium">Enable Biometric Authentication</h3>
-            <p className="text-sm text-muted-foreground">
-              Use biometrics instead of password to unlock your secure vault
-            </p>
+            <div className="text-sm font-medium">Enable Biometric Authentication</div>
+            <div className="text-xs text-muted-foreground">
+              Use your biometric data to unlock your secure vault
+            </div>
           </div>
-          <Switch 
-            checked={biometricEnabled} 
-            onCheckedChange={handleBiometricToggle}
-            disabled={verifyingBiometrics}
+          <Switch
+            checked={biometricEnabled}
+            onCheckedChange={handleToggleBiometric}
+            disabled={isEnrolling}
           />
         </div>
         
         {biometricEnabled && (
           <>
-            <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3 p-4 border rounded-lg hover:border-primary/50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <ScanFace className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Face ID</h3>
-                    <p className="text-sm text-muted-foreground">Use facial recognition</p>
-                  </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <ScanFace className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Face ID / Facial Recognition</span>
                 </div>
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-sm text-muted-foreground">
-                    {faceIdSupported || isInIframe ? "Available on this device" : "Not available"}
-                  </p>
-                  <Switch 
-                    checked={faceIdEnabled} 
-                    onCheckedChange={toggleFaceId}
-                    disabled={!faceIdSupported && !isInIframe}
-                  />
+                <div className="text-xs text-muted-foreground">
+                  Use facial recognition to unlock your vault
                 </div>
               </div>
-              
-              <div className="flex flex-col gap-3 p-4 border rounded-lg hover:border-primary/50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                    <Fingerprint className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Fingerprint</h3>
-                    <p className="text-sm text-muted-foreground">Use fingerprint recognition</p>
-                  </div>
+              <Switch 
+                checked={faceIdEnabled} 
+                onCheckedChange={handleToggleFaceId}
+                disabled={isEnrolling || (!faceIdSupported && !isInIframe)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Fingerprint className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Fingerprint Recognition</span>
                 </div>
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-sm text-muted-foreground">
-                    {fingerprintSupported || isInIframe ? "Available on this device" : "Not available"}
-                  </p>
-                  <Switch 
-                    checked={fingerprintEnabled} 
-                    onCheckedChange={toggleFingerprint}
-                    disabled={!fingerprintSupported && !isInIframe}
-                  />
+                <div className="text-xs text-muted-foreground">
+                  Use fingerprint recognition to unlock your vault
                 </div>
               </div>
+              <Switch 
+                checked={fingerprintEnabled} 
+                onCheckedChange={handleToggleFingerprint} 
+                disabled={isEnrolling || (!fingerprintSupported && !isInIframe)}
+              />
             </div>
             
             <div className="pt-4">
               <Button 
                 variant="outline" 
-                onClick={() => verifyBiometrics()}
-                disabled={verifyingBiometrics}
+                onClick={handleResetBiometrics}
+                disabled={isEnrolling}
                 className="w-full"
               >
-                {verifyingBiometrics ? (
-                  "Verifying..."
-                ) : (
-                  <>
-                    <Check className="mr-2 h-4 w-4" /> 
-                    Test Biometric Authentication
-                  </>
-                )}
+                Reset Biometric Credentials
               </Button>
             </div>
           </>

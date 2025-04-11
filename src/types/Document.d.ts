@@ -15,7 +15,8 @@ declare interface Document {
   daysRemaining?: number;
   reminderSet?: boolean;
   customReminderDays?: number;
-  summary?: string;
   category?: string;
   notes?: string;
+  inSecureVault?: boolean;
+  importance?: "low" | "medium" | "high" | "critical";
 }

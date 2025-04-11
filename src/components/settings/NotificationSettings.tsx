@@ -1,17 +1,15 @@
+
 import React, { useState, useEffect } from "react";
+import { Bell, VolumeX, Volume2, Calendar, Clock } from "lucide-react";
 import BlurContainer from "@/components/ui/BlurContainer";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Bell, Clock, Volume, Check, Globe, Mail, Tablet, Info, Smartphone } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useNavigate } from "react-router-dom";
+import { useUser } from "@/contexts/UserContext";
+import { createNotification, speakNotification, testVoiceSettings, getAvailableVoices } from "@/services/NotificationService";
 
 interface NotificationSettingsProps {
   settings: {
@@ -19,409 +17,248 @@ interface NotificationSettingsProps {
     pushNotifications: boolean;
     voiceReminders: boolean;
     reminderDays: number;
-    voiceType: string;
-    deviceTokens?: string[];
-    emailAddress?: string;
+    voiceType?: string;
   };
   saveSettings: (settings: any) => void;
 }
 
-const NotificationSettings = ({ settings, saveSettings }: NotificationSettingsProps) => {
-  const [localSettings, setLocalSettings] = React.useState(settings);
-  const [sendingTest, setSendingTest] = useState(false);
-  const [activeTab, setActiveTab] = useState('general');
-  const [email, setEmail] = useState(settings.emailAddress || '');
-  const [testSent, setTestSent] = useState<'success' | 'error' | null>(null);
-  const navigate = useNavigate();
+const NotificationSettings: React.FC<NotificationSettingsProps> = ({ 
+  settings: initialSettings,
+  saveSettings
+}) => {
+  const { email } = useUser();
   
-  // Demo devices
-  const [devices] = useState([
-    { id: 'device-1', name: 'iPhone 12', type: 'mobile', lastActive: 'Today, 2:30 PM' },
-    { id: 'device-2', name: 'Chrome', type: 'browser', lastActive: 'Just now' },
-  ]);
+  // Local state for settings
+  const [settings, setSettings] = useState({ ...initialSettings });
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   
+  // Load available voices
   useEffect(() => {
-    // Reset the test notification state after 5 seconds
-    if (testSent) {
-      const timer = setTimeout(() => {
-        setTestSent(null);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [testSent]);
-  
-  const handleSettingChange = (key: string, value: any) => {
-    setLocalSettings(prev => ({ ...prev, [key]: value }));
-  };
-  
-  const handleSaveSettings = () => {
-    // Update email address
-    const updatedSettings = {
-      ...localSettings,
-      emailAddress: email
+    // Wait for the browser's speech synthesis to initialize
+    const loadVoices = () => {
+      const availableVoices = getAvailableVoices();
+      if (availableVoices.length > 0) {
+        setVoices(availableVoices);
+      }
     };
     
-    saveSettings(updatedSettings);
+    // Load voices immediately if available
+    loadVoices();
     
+    // Also set up an event listener for when voices change
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    
+    return () => {
+      // Cleanup
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
+  }, []);
+  
+  // Handle setting changes
+  const handleChange = (key: string, value: any) => {
+    const newSettings = { ...settings, [key]: value };
+    setSettings(newSettings);
+  };
+  
+  // Test email notification
+  const testEmailNotification = () => {
+    if (!email) {
+      toast({
+        title: "Email not available",
+        description: "Please set your email address in account settings",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Send a test email notification
+    createNotification(
+      "Test Notification",
+      "This is a test notification from ApnaWallet. If you received this email, your notification settings are working correctly.",
+      { variant: "default" }
+    );
+    
+    // Show confirmation to user
     toast({
-      title: "Settings saved",
-      description: "Your notification preferences have been updated."
+      title: "Test notification sent",
+      description: `A test notification has been sent to ${email}`,
     });
-    
-    // Show a sample notification to demonstrate it works
-    if (updatedSettings.pushNotifications) {
-      setTimeout(() => {
+  };
+  
+  // Test voice notification
+  const testVoiceNotification = () => {
+    if (settings.voiceReminders) {
+      const success = testVoiceSettings();
+      
+      if (success) {
         toast({
-          title: "Sample notification",
-          description: "This is how your notifications will look",
+          title: "Voice test successful",
+          description: "Voice notifications are working correctly",
         });
-      }, 1000);
+      } else {
+        toast({
+          title: "Voice test failed",
+          description: "Your browser may not support speech synthesis",
+          variant: "destructive"
+        });
+      }
+    } else {
+      speakNotification("Voice notifications are currently disabled. Enable them in settings to use this feature.");
+      toast({
+        title: "Voice notifications disabled",
+        description: "Enable voice notifications to test this feature",
+        variant: "destructive"
+      });
     }
   };
   
-  const handleSendTestEmail = () => {
-    setSendingTest(true);
+  // Save settings
+  const handleSaveSettings = () => {
+    // Call the parent's save function
+    saveSettings(settings);
     
-    // Mock API call to send test email
-    setTimeout(() => {
-      setSendingTest(false);
-      setTestSent('success');
-      
-      toast({
-        title: "Test email sent",
-        description: "Please check your inbox for the test notification email.",
-      });
-      
-      // Log that we're sending an email notification
-      console.log("[Email Notification] Sending email to:", email);
-      console.log("[Email Notification] Subject: ApnaWallet - Email Notifications Enabled");
-      console.log("[Email Notification] Body: Hello,\n\nYour email notifications for ApnaWallet have been successfully enabled. You will now receive notifications about your documents.\n\nThank you for using ApnaWallet!\n");
-    }, 1500);
+    // Persist settings in localStorage as a backup mechanism
+    try {
+      localStorage.setItem('notification_settings', JSON.stringify(settings));
+    } catch (e) {
+      console.error("Could not save notification settings to localStorage", e);
+    }
+    
+    // Demo sending a test notification to verify email settings
+    if (settings.emailNotifications && email) {
+      // Create a test notification for new settings
+      createNotification(
+        "ApnaWallet - Email Notifications Enabled",
+        `Hello,\n\nYour email notifications for ApnaWallet have been successfully enabled. You will now receive notifications about your documents.\n\nThank you for using ApnaWallet!`,
+        { variant: "default" }
+      );
+    }
   };
   
-  const handleSendTestPush = () => {
-    setSendingTest(true);
-    
-    // Mock API call to send test push notification
-    setTimeout(() => {
-      setSendingTest(false);
-      setTestSent('success');
-      
-      toast({
-        title: "Push notification sent",
-        description: "You should see a browser notification shortly.",
-      });
-      
-      // Simulate native notification (won't work unless permission granted)
-      try {
-        if ('Notification' in window) {
-          if (Notification.permission === 'granted') {
-            new Notification('SurakshitLocker Test Notification', {
-              body: 'Your push notifications are working correctly!',
-              icon: '/android-chrome-192x192.png'
-            });
-          } else if (Notification.permission !== 'denied') {
-            Notification.requestPermission().then(permission => {
-              if (permission === 'granted') {
-                new Notification('SurakshitLocker Test Notification', {
-                  body: 'Your push notifications are now enabled!',
-                  icon: '/android-chrome-192x192.png'
-                });
-              }
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error sending native notification:', error);
-      }
-    }, 1500);
-  };
-
   return (
-    <BlurContainer variant="default" className="p-6">
-      <h2 className="text-2xl font-semibold mb-6">Notification Settings</h2>
+    <BlurContainer className="p-8 animate-fade-in bg-gradient-to-br from-white to-slate-50 dark:from-slate-900/80 dark:to-slate-800/80">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-200 dark:from-indigo-900/40 dark:to-indigo-800/40 flex items-center justify-center shadow-sm">
+          <Bell className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+        </div>
+        <h2 className="text-xl font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">Notification Settings</h2>
+      </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
-        <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="email">Email</TabsTrigger>
-          <TabsTrigger value="devices">Devices</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="general" className="space-y-6 mt-6">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-indigo-500" />
-                <h3 className="text-lg font-medium">Email Notifications</h3>
+      <div className="space-y-6">
+        <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
+          <h3 className="text-md font-medium mb-4">Email & Push Notifications</h3>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base">Email Notifications</Label>
+                <p className="text-sm text-muted-foreground">Receive document reminders via email</p>
               </div>
               <Switch 
-                checked={localSettings.emailNotifications} 
-                onCheckedChange={(checked) => handleSettingChange("emailNotifications", checked)}
+                checked={settings.emailNotifications} 
+                onCheckedChange={(value) => handleChange('emailNotifications', value)} 
               />
             </div>
             
-            <p className="text-sm text-muted-foreground mb-4">
-              Receive document expiration reminders and important updates via email
-            </p>
-            
-            {!localSettings.emailNotifications && !localSettings.pushNotifications && (
-              <Alert variant="destructive" className="mt-4">
-                <AlertTitle>No notifications enabled</AlertTitle>
-                <AlertDescription>
-                  You won't receive any alerts about document expirations. We recommend enabling at least one notification method.
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
-          
-          <Separator />
-          
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Globe className="h-5 w-5 text-indigo-500" />
-                <h3 className="text-lg font-medium">Push Notifications</h3>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base">Push Notifications</Label>
+                <p className="text-sm text-muted-foreground">Receive notifications in your browser</p>
               </div>
               <Switch 
-                checked={localSettings.pushNotifications} 
-                onCheckedChange={(checked) => handleSettingChange("pushNotifications", checked)}
+                checked={settings.pushNotifications} 
+                onCheckedChange={(value) => handleChange('pushNotifications', value)}
               />
             </div>
             
-            <p className="text-sm text-muted-foreground">
-              Receive browser push notifications for important alerts
-            </p>
-            
-            {localSettings.pushNotifications && (
-              <div className="mt-4 flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleSendTestPush}
-                  disabled={sendingTest}
-                >
-                  {sendingTest ? 'Sending...' : 'Send test notification'}
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  Check if notifications are working properly
-                </span>
-              </div>
-            )}
-          </div>
-          
-          <Separator />
-          
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Volume className="h-5 w-5 text-indigo-500" />
-                <h3 className="text-lg font-medium">Voice Reminders</h3>
-              </div>
-              <Switch 
-                checked={localSettings.voiceReminders} 
-                onCheckedChange={(checked) => handleSettingChange("voiceReminders", checked)}
-              />
-            </div>
-            
-            <p className="text-sm text-muted-foreground mb-4">
-              Enable voice notifications when you visit the application
-            </p>
-            
-            {localSettings.voiceReminders && (
-              <div className="space-y-4 mt-4 bg-slate-50 dark:bg-slate-800/80 rounded-md p-4">
-                <div>
-                  <Label className="mb-2 block">Voice Type</Label>
-                  <select 
-                    className="w-full p-2 border rounded-md bg-background"
-                    value={localSettings.voiceType}
-                    onChange={(e) => handleSettingChange("voiceType", e.target.value)}
-                  >
-                    <option value="default">Default</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
-                </div>
-                <Alert className="bg-indigo-50 border-indigo-100 dark:bg-indigo-900/10 dark:border-indigo-900/30">
-                  <Info className="h-4 w-4 text-indigo-500" />
-                  <AlertTitle className="text-indigo-700 dark:text-indigo-300">Demo feature</AlertTitle>
-                  <AlertDescription className="text-indigo-600 dark:text-indigo-400">
-                    Voice will announce when documents are about to expire when you open the app.
-                  </AlertDescription>
-                </Alert>
-              </div>
-            )}
-          </div>
-          
-          <Separator />
-          
-          <div>
-            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-indigo-500" />
-              Reminder Settings
-            </h3>
-            <div className="space-y-6">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <Label>Days before expiration to notify</Label>
-                  <span className="text-sm font-medium">
-                    {localSettings.reminderDays} {localSettings.reminderDays === 1 ? 'day' : 'days'}
-                  </span>
-                </div>
-                <Slider 
-                  value={[localSettings.reminderDays]} 
-                  min={1}
-                  max={30}
-                  step={1}
-                  onValueChange={(values) => handleSettingChange("reminderDays", values[0])}
-                  className="my-4"
-                />
-                <p className="text-xs text-muted-foreground">
-                  You'll be notified {localSettings.reminderDays} {localSettings.reminderDays === 1 ? 'day' : 'days'} before your documents expire
-                </p>
-              </div>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="email" className="space-y-6 mt-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium flex items-center gap-2">
-              <Mail className="h-5 w-5 text-indigo-500" />
-              Email Preferences
-            </h3>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email address for notifications</Label>
-              <Input 
-                id="email" 
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                This is where we'll send all notification emails
-              </p>
-            </div>
-            
-            {localSettings.emailNotifications && (
-              <div className="space-y-4 mt-6">
-                <h4 className="font-medium">Email Notification Types</h4>
-                
-                <div className="space-y-3 bg-slate-50 dark:bg-slate-800 p-4 rounded-md">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Document Expiry Reminders</p>
-                      <p className="text-xs text-muted-foreground">Notifications when documents are about to expire</p>
-                    </div>
-                    <Switch checked={true} onCheckedChange={() => {}} />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Document Sharing</p>
-                      <p className="text-xs text-muted-foreground">Notifications when someone shares a document with you</p>
-                    </div>
-                    <Switch checked={true} onCheckedChange={() => {}} />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Security Alerts</p>
-                      <p className="text-xs text-muted-foreground">Notifications about account security and login attempts</p>
-                    </div>
-                    <Switch checked={true} onCheckedChange={() => {}} />
-                  </div>
-                </div>
-                
-                <div className="mt-4 flex items-center gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleSendTestEmail}
-                    disabled={sendingTest}
-                  >
-                    {sendingTest ? (
-                      <span className="flex items-center gap-2">
-                        <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
-                        Sending...
-                      </span>
-                    ) : (
-                      'Send test email'
-                    )}
-                  </Button>
-                  
-                  {testSent === 'success' && (
-                    <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-200">
-                      <Check className="mr-1 h-3 w-3" /> Sent
-                    </Badge>
-                  )}
-                  
-                  {testSent === 'error' && (
-                    <Badge variant="destructive">Failed</Badge>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="devices" className="space-y-6 mt-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium flex items-center gap-2">
-              <Tablet className="h-5 w-5 text-indigo-500" />
-              Connected Devices
-            </h3>
-            
-            <p className="text-sm text-muted-foreground">
-              Manage which devices receive push notifications
-            </p>
-            
-            <div className="space-y-3">
-              {devices.map(device => (
-                <div key={device.id} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-3 rounded-md">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      {device.type === 'mobile' ? (
-                        <Smartphone className="h-5 w-5 text-primary" />
-                      ) : (
-                        <Globe className="h-5 w-5 text-primary" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium">{device.name}</p>
-                      <p className="text-xs text-muted-foreground">Last active: {device.lastActive}</p>
-                    </div>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-              ))}
-            </div>
-            
-            <Alert className="bg-indigo-50 border-indigo-100 dark:bg-indigo-900/10 dark:border-indigo-900/30 mt-4">
-              <Info className="h-4 w-4 text-indigo-500" />
-              <AlertDescription className="text-indigo-700 dark:text-indigo-300">
-                Install our mobile app to receive notifications on your phone even when you're offline.
-              </AlertDescription>
-            </Alert>
-            
-            <div className="flex justify-end">
-              <Button 
-                variant="outline" 
-                onClick={() => navigate("/mobile-app")}
-                className="text-primary"
-              >
-                Download Mobile App
+            <div className="pt-2">
+              <Button onClick={testEmailNotification} variant="outline" size="sm">
+                Test Notification
               </Button>
             </div>
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+        
+        <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
+          <h3 className="text-md font-medium mb-4">Voice Reminders</h3>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base">Voice Reminders</Label>
+                <p className="text-sm text-muted-foreground">Spoken reminders for important documents</p>
+              </div>
+              <Switch 
+                checked={settings.voiceReminders} 
+                onCheckedChange={(value) => handleChange('voiceReminders', value)}
+              />
+            </div>
+            
+            {settings.voiceReminders && (
+              <>
+                <div className="space-y-3">
+                  <Label>Voice Type</Label>
+                  <Select 
+                    value={settings.voiceType || "default"} 
+                    onValueChange={(value) => handleChange('voiceType', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a voice type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">System Default</SelectItem>
+                      <SelectItem value="male">Male Voice</SelectItem>
+                      <SelectItem value="female">Female Voice</SelectItem>
+                      {voices.slice(0, 5).map((voice) => (
+                        <SelectItem key={voice.name} value={voice.name}>
+                          {voice.name} ({voice.lang})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="pt-2">
+                  <Button onClick={testVoiceNotification} variant="outline" size="sm">
+                    Test Voice
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        
+        <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm">
+          <h3 className="text-md font-medium mb-4">Reminder Settings</h3>
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Days Before Due Date</Label>
+                <span className="text-sm font-medium">{settings.reminderDays} days</span>
+              </div>
+              <Slider 
+                min={1} 
+                max={30} 
+                step={1} 
+                value={[settings.reminderDays]} 
+                onValueChange={(value) => handleChange('reminderDays', value[0])}
+              />
+              <p className="text-sm text-muted-foreground">
+                Receive reminders {settings.reminderDays} days before documents expire
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
       
-      <div className="flex justify-end pt-4">
-        <Button onClick={handleSaveSettings}>
-          Save notification settings
+      <div className="mt-6 flex justify-end">
+        <Button 
+          className="bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white"
+          onClick={handleSaveSettings}
+        >
+          Save Notification Settings
         </Button>
       </div>
     </BlurContainer>

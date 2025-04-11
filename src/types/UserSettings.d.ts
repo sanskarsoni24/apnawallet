@@ -68,4 +68,12 @@ declare interface UserSettings {
   lastViewedDocument?: string;
   // Mobile device integration
   mobileDeviceName?: string;
+  // PDF editing tools settings
+  pdfMergeHistory?: string[];
+  pdfSplitHistory?: string[];
+  pdfSignaturePresets?: {name: string, image: string}[];
+  pdfEditingPreferences?: {
+    defaultPageSize: string;
+    defaultOrientation: 'portrait' | 'landscape';
+  };
 }

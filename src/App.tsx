@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import './App.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from './components/ui/theme-provider';
+import { ThemeProvider } from '@/components/ui/theme-provider';
 import { Toaster } from 'sonner';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
@@ -20,6 +20,7 @@ import MobileApp from './pages/MobileApp';
 import StripeCheckout from './pages/StripeCheckout';
 import Monetization from './pages/Monetization';
 import DashboardPDFTools from './components/dashboard/DashboardPDFTools';
+import PDFTools from './pages/PDFTools';
 
 function App() {
   const { isLoggedIn, userSettings } = useUser();
@@ -59,6 +60,7 @@ function App() {
               <DashboardPDFTools />
             </ProtectedRoute>
           } />
+          <Route path="/pdf-tools" element={<ProtectedRoute><PDFTools /></ProtectedRoute>} />
           <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />

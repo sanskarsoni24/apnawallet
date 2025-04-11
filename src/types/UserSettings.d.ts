@@ -25,4 +25,5 @@ export interface UserSettings {
     fingerprintEnabled: boolean;
     lastVerified?: string;
   };
+  subscriptionPlan?: "free" | "premium" | "enterprise";
 }

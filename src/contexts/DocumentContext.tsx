@@ -7,7 +7,7 @@ import React, {
   Dispatch,
   SetStateAction,
 } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { generateId } from "@/lib/utils";
 import { Document } from "@/types/Document";
 
 interface DocumentContextType {
@@ -80,7 +80,7 @@ export const DocumentProvider = ({ children }: DocumentProviderProps) => {
 
   const addDocument = (document: Omit<Document, "id">) => {
     const newDocument: Document = {
-      id: uuidv4(),
+      id: generateId(),
       ...document,
     };
     setDocuments([...documents, newDocument]);
@@ -149,15 +149,15 @@ export const DocumentProvider = ({ children }: DocumentProviderProps) => {
 
   // Document status management
   const markDocumentComplete = (id: string) => {
-    updateDocument(id, { status: "completed" } as any);
+    updateDocument(id, { status: "completed" });
   };
 
   const markDocumentExpired = (id: string) => {
-    updateDocument(id, { status: "expired" } as any);
+    updateDocument(id, { status: "expired" });
   };
 
   const scheduleRenewal = (id: string, date: string) => {
-    updateDocument(id, { renewalDate: date } as any);
+    updateDocument(id, { renewalDate: date });
   };
 
   return (
@@ -185,3 +185,5 @@ export const DocumentProvider = ({ children }: DocumentProviderProps) => {
     </DocumentContext.Provider>
   );
 };
+
+export type { Document };

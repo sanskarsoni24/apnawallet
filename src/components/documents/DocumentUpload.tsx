@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Plus, File, X, Tag, Text, BookText } from "lucide-react";
 import { useDropzone } from "react-dropzone";
@@ -10,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useDocuments } from "@/contexts/DocumentContext";
 import { generateId } from "@/lib/utils";
+import { Document } from "@/types/Document";
 import {
   Select,
   SelectContent,
@@ -24,7 +26,7 @@ const DocumentUpload = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [documentTitle, setDocumentTitle] = useState("");
   const [documentDescription, setDocumentDescription] = useState("");
-  const [documentType, setDocumentType] = useState("id_card");
+  const [documentType, setDocumentType] = useState<Document["type"]>("id_card");
   const [issueDate, setIssueDate] = useState<string | null>(null);
   const [expiryDate, setExpiryDate] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -87,12 +89,11 @@ const DocumentUpload = () => {
       return;
     }
     
-    const documentData: Document = {
-      id: generateId(),
+    const newDocument: Omit<Document, "id"> = {
       userId: "user123",
       title: documentTitle,
       description: documentDescription,
-      type: documentType as Document['type'],
+      type: documentType,
       issueDate: issueDate || undefined,
       dueDate: expiryDate || undefined,
       fileName: file?.name,
@@ -102,9 +103,11 @@ const DocumentUpload = () => {
       tags: selectedTags,
       category: documentCategory || undefined,
       notes: notes || undefined,
+      dateAdded: new Date().toISOString(),
+      status: "active"
     };
 
-    addDocument(documentData);
+    addDocument(newDocument);
 
     // Reset form
     setFile(null);

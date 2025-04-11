@@ -19,4 +19,8 @@ export interface Document {
   notes?: string;
   inSecureVault?: boolean;
   importance?: "low" | "medium" | "high" | "critical";
+  status?: "active" | "completed" | "expired";
+  expiryDate?: string;
+  dateAdded?: string;
+  renewalDate?: string;
 }

@@ -24,13 +24,12 @@ const DocumentReminderSettings: React.FC<DocumentReminderSettingsProps> = ({
 }) => {
   const { updateDocument, moveToSecureVault, removeFromSecureVault } = useDocuments();
   
-  const [reminderEnabled, setReminderEnabled] = useState<boolean>(!!document.reminderSet);
+  const [reminderEnabled, setReminderEnabled] = useState<boolean>(document.customReminderDays !== undefined);
   const [reminderDays, setReminderDays] = useState<number>(document.customReminderDays || 7);
   
   const handleSave = () => {
     updateDocument(document.id, {
-      customReminderDays: reminderDays,
-      reminderSet: reminderEnabled
+      customReminderDays: reminderEnabled ? reminderDays : undefined
     });
     
     toast({

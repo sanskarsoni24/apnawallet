@@ -13,7 +13,6 @@ declare interface Document {
   fileType?: string;
   tags?: string[];
   daysRemaining?: number;
-  reminderSet?: boolean;
   customReminderDays?: number;
   summary?: string;
   category?: string;

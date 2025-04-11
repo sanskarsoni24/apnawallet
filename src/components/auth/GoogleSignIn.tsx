@@ -3,7 +3,7 @@ import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Google } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 const GoogleSignIn = ({ mode, onSuccess }: { mode?: "signin" | "signup", onSuccess?: () => void }) => {
   const { login, updateUserSettings } = useUser();
@@ -29,7 +29,9 @@ const GoogleSignIn = ({ mode, onSuccess }: { mode?: "signin" | "signup", onSucce
       
       // Update user settings with Google information
       updateUserSettings({
-        lastLoginMethod: "google",
+        googleEmail: mockGoogleUser.email,
+        googleProfilePicture: mockGoogleUser.picture,
+        googleId: mockGoogleUser.id
       });
       
       toast({
@@ -60,7 +62,12 @@ const GoogleSignIn = ({ mode, onSuccess }: { mode?: "signin" | "signup", onSucce
       onClick={handleGoogleSignIn}
       disabled={isLoading}
     >
-      <Google className="w-5 h-5 text-red-500" />
+      <div className="w-5 h-5 text-red-500 flex items-center justify-center">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"></path>
+          <path d="M8 12l3 3 6-6"></path>
+        </svg>
+      </div>
       {isLoading ? "Connecting..." : buttonText}
     </Button>
   );

@@ -50,4 +50,20 @@ declare interface UserSettings {
   googleEmail?: string;
   googleProfilePicture?: string;
   googleId?: string;
+  // Improved backup functionality
+  backupEncrypted?: boolean;
+  backupLocations?: ('local' | 'cloud' | 'external')[];
+  backupPassword?: string;
+  backupSize?: number;
+  lastBackupStatus?: 'success' | 'failed' | 'pending';
+  lastAutoBackupAttempt?: string;
+  backupRetentionCount?: number;
+  // Recovery keys improvements
+  recoveryKeys?: string[];
+  recoveryKeyLastGenerated?: string;
+  recoveryKeyUsageHistory?: {date: string, keyId: string}[];
+  // Recent documents tracking
+  recentDocuments?: string[];
+  recentDocumentsMaxCount?: number;
+  lastViewedDocument?: string;
 }

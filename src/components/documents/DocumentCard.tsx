@@ -15,6 +15,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { speakNotification } from "@/services/NotificationService";
 import DocumentReminderSettings from "./DocumentReminderSettings";
+import { useUser } from "@/contexts/UserContext";
 
 interface DocumentCardProps extends Document {
   className?: string;
@@ -35,6 +36,7 @@ const DocumentCard = ({
   inSecureVault = false,
 }: DocumentCardProps) => {
   const { updateDocument, deleteDocument, moveToSecureVault, removeFromSecureVault } = useDocuments();
+  const { userSettings, updateUserSettings } = useUser();
   const [showPreview, setShowPreview] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [notes, setNotes] = useState(description || "");
@@ -45,8 +47,32 @@ const DocumentCard = ({
   
   const [isCopied, setIsCopied] = useState(false);
   
+  // Add document to recent list when card is clicked
+  const addToRecentDocuments = () => {
+    const maxRecentDocs = userSettings.recentDocumentsMaxCount || 5;
+    const currentRecent = userSettings.recentDocuments || [];
+    
+    // Remove the document from its current position (if it exists)
+    let updatedRecent = currentRecent.filter(docId => docId !== id);
+    
+    // Add to the beginning of the array
+    updatedRecent.unshift(id);
+    
+    // Limit the number of recent documents
+    if (updatedRecent.length > maxRecentDocs) {
+      updatedRecent = updatedRecent.slice(0, maxRecentDocs);
+    }
+    
+    // Update user settings
+    updateUserSettings({
+      recentDocuments: updatedRecent,
+      lastViewedDocument: id
+    });
+  };
+  
   const handleCardClick = () => {
     setShowPreview(true);
+    addToRecentDocuments();
   };
   
   const handleEditNotes = () => {
@@ -64,6 +90,14 @@ const DocumentCard = ({
       title: "Document Deleted",
       description: "This document has been permanently deleted",
     });
+    
+    // Also remove from recent documents if it exists there
+    if (userSettings.recentDocuments?.includes(id)) {
+      const updatedRecent = userSettings.recentDocuments.filter(docId => docId !== id);
+      updateUserSettings({
+        recentDocuments: updatedRecent
+      });
+    }
   };
   
   const handleDownloadDocument = () => {
@@ -144,6 +178,9 @@ const DocumentCard = ({
       description: "Document removed from secure vault"
     });
   };
+  
+  // Check if this document is in recent documents
+  const isRecent = userSettings.recentDocuments?.includes(id);
 
   return (
     <>
@@ -154,6 +191,7 @@ const DocumentCard = ({
           getCardBorderStyle(),
           status === "completed" && "opacity-75",
           inSecureVault && "border-l-4 border-l-purple-500 bg-purple-50 dark:bg-purple-900/10",
+          isRecent && "ring-2 ring-blue-200 dark:ring-blue-800"
         )}
         hover
         onClick={handleCardClick}
@@ -166,6 +204,9 @@ const DocumentCard = ({
               </Badge>
               {inSecureVault && (
                 <span className="text-purple-500"><Shield className="h-4 w-4" /></span>
+              )}
+              {isRecent && (
+                <span className="text-blue-500"><Clock className="h-4 w-4" /></span>
               )}
               {status === "completed" && (
                 <Badge variant="default" className="bg-green-500 text-white">
@@ -279,6 +320,9 @@ const DocumentCard = ({
                 )}
                 {inSecureVault && (
                   <p><strong>Vault:</strong> <span className="text-purple-500">Secured <Shield className="inline-block h-4 w-4 ml-1 align-text-bottom" /></span></p>
+                )}
+                {isRecent && (
+                  <p><strong>Recently Viewed:</strong> <span className="text-blue-500">Yes <Clock className="inline-block h-4 w-4 ml-1 align-text-bottom" /></span></p>
                 )}
               </div>
               

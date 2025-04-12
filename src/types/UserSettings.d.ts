@@ -40,18 +40,17 @@ declare interface UserSettings {
   compactView?: boolean;
   documentSortOrder?: 'name' | 'date' | 'type' | 'importance';
   documentGrouping?: 'none' | 'category' | 'type' | 'importance';
-  // Biometric authentication settings
   biometricAuth?: {
     enabled: boolean;
     faceIdEnabled?: boolean;
     fingerprintEnabled?: boolean;
     lastVerified?: string;
   };
-  // Google integration settings
+  // Added properties for Google integration
   googleEmail?: string;
   googleProfilePicture?: string;
   googleId?: string;
-  // Backup functionality settings
+  // Improved backup functionality
   backupEncrypted?: boolean;
   backupLocations?: ('local' | 'cloud' | 'external')[];
   backupPassword?: string;
@@ -59,7 +58,7 @@ declare interface UserSettings {
   lastBackupStatus?: 'success' | 'failed' | 'pending';
   lastAutoBackupAttempt?: string;
   backupRetentionCount?: number;
-  // Recovery keys
+  // Recovery keys improvements
   recoveryKeys?: string[];
   recoveryKeyLastGenerated?: string;
   recoveryKeyUsageHistory?: {date: string, keyId: string}[];
@@ -71,17 +70,4 @@ declare interface UserSettings {
   pdfDefaultZoom?: number;
   pdfRememberLastPage?: boolean;
   pdfShowThumbnails?: boolean;
-  pdfShowAnnotations?: boolean;
-  pdfEnableTextSelection?: boolean;
-  pdfNightMode?: boolean;
-  pdfShowPageControls?: boolean;
-  pdfCustomColors?: {
-    background?: string;
-    text?: string;
-    highlight?: string;
-  };
-  pdfAutoSaveAnnotations?: boolean;
-  pdfPageTransition?: 'slide' | 'fade' | 'none';
-  pdfFullScreenMode?: boolean;
-  mobileDeviceName?: string;
 }

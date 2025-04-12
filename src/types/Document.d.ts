@@ -9,7 +9,6 @@ declare interface Document {
   dueDate?: string;
   fileName?: string;
   fileUrl?: string;
-  fileURL?: string; // Keep both for compatibility
   fileSize?: number;
   fileType?: string;
   tags?: string[];
@@ -21,25 +20,8 @@ declare interface Document {
   inSecureVault?: boolean;
   status?: "active" | "expired" | "pending" | "completed" | "deleted";
   importance?: "low" | "medium" | "high" | "critical";
-  // PDF-specific properties
   pdfPageCount?: number;
   isPasswordProtected?: boolean;
   pdfLastPage?: number;
   pdfPassword?: string;
-  pdfRotation?: 0 | 90 | 180 | 270;
-  pdfAnnotations?: Array<{
-    id: string;
-    page: number;
-    type: "highlight" | "note" | "underline" | "strikethrough" | "drawing";
-    content?: string;
-    color?: string;
-    position?: { x: number; y: number; width: number; height: number };
-    createdAt: string;
-  }>;
-  pdfBookmarks?: Array<{
-    id: string;
-    page: number;
-    title: string;
-    createdAt: string;
-  }>;
 }

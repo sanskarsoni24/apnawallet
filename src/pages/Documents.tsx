@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { FileText, Filter, Search, SlidersHorizontal, ArrowDown, ArrowUp, FileIcon } from "lucide-react";
+import { FileText, Filter, Search, SlidersHorizontal, ArrowDown, ArrowUp } from "lucide-react";
 import Container from "@/components/layout/Container";
 import BlurContainer from "@/components/ui/BlurContainer";
 import DocumentCard from "@/components/documents/DocumentCard";
 import DocumentUpload from "@/components/documents/DocumentUpload";
-import PdfViewer from "@/components/documents/PdfViewer";
 import { Badge } from "@/components/ui/badge";
 import { useDocuments } from "@/contexts/DocumentContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -15,7 +14,6 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const documentTypes = ["All", "Invoice", "Warranty", "Subscription", "Boarding Pass", "Other"];
 
@@ -29,9 +27,7 @@ const Documents = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "name" | "importance" | "">("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [selectedPdfDoc, setSelectedPdfDoc] = useState<any>(null);
-  const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false);
-  const { documents, filterDocumentsByType, updateDocument } = useDocuments();
+  const { documents, filterDocumentsByType } = useDocuments();
 
   useEffect(() => {
     // Update the active filter when the URL parameter changes
@@ -72,11 +68,6 @@ const Documents = () => {
       filtered = documents.filter(doc => 
         doc.daysRemaining >= 0 && doc.daysRemaining <= 7
       );
-    } else if (activeFilter === "pdf") {
-      // Filter for PDF documents
-      filtered = documents.filter(doc => 
-        doc.fileType === "application/pdf" || (doc.fileName && doc.fileName.endsWith(".pdf"))
-      );
     } else {
       // Use the regular filter by document type
       filtered = filterDocumentsByType(activeFilter);
@@ -109,19 +100,6 @@ const Documents = () => {
     }
     
     return filtered;
-  };
-
-  // Function to open the PDF viewer for a document
-  const openPdfViewer = (doc) => {
-    if (doc.fileType === "application/pdf" || (doc.fileName && doc.fileName.endsWith(".pdf"))) {
-      setSelectedPdfDoc(doc);
-      setIsPdfViewerOpen(true);
-    } else {
-      toast({
-        title: "Not a PDF Document",
-        description: "PDF Viewer can only open PDF documents"
-      });
-    }
   };
   
   const displayedDocuments = getFilteredDocs();
@@ -164,17 +142,6 @@ const Documents = () => {
                   onClick={() => handleFilterChange("upcoming")}
                 >
                   Upcoming
-                </button>
-                <button
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                    activeFilter === "pdf" 
-                      ? "bg-primary text-primary-foreground" 
-                      : "hover:bg-secondary"
-                  }`}
-                  onClick={() => handleFilterChange("pdf")}
-                >
-                  <FileIcon className="h-4 w-4 inline mr-1" />
-                  PDFs
                 </button>
               </div>
             </BlurContainer>
@@ -257,13 +224,7 @@ const Documents = () => {
             {displayedDocuments.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                 {displayedDocuments.map((doc) => (
-                  <div key={doc.id} onClick={() => {
-                    if (doc.fileType === "application/pdf" || (doc.fileName && doc.fileName.endsWith(".pdf"))) {
-                      openPdfViewer(doc);
-                    }
-                  }}>
-                    <DocumentCard {...doc} />
-                  </div>
+                  <DocumentCard key={doc.id} {...doc} />
                 ))}
               </div>
             ) : (
@@ -306,46 +267,11 @@ const Documents = () => {
                     </div>
                   );
                 })}
-                <div 
-                  className="flex items-center justify-between cursor-pointer hover:bg-secondary/50 p-2 rounded-md transition-colors bg-red-50 dark:bg-red-900/10"
-                  onClick={() => handleFilterChange("pdf")}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
-                      <FileIcon className="h-4 w-4 text-red-500" />
-                    </div>
-                    <span className="text-sm">PDF Documents</span>
-                  </div>
-                  <Badge variant="outline">
-                    {documents.filter(doc => 
-                      doc.fileType === "application/pdf" || (doc.fileName && doc.fileName.endsWith(".pdf"))
-                    ).length}
-                  </Badge>
-                </div>
               </div>
             </BlurContainer>
           </div>
         </div>
       </div>
-
-      {/* PDF Viewer Dialog */}
-      <Dialog open={isPdfViewerOpen} onOpenChange={setIsPdfViewerOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>PDF Viewer</DialogTitle>
-            <DialogDescription>
-              View and interact with your PDF document
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedPdfDoc && (
-            <PdfViewer 
-              document={selectedPdfDoc} 
-              onUpdateDocument={updateDocument}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </Container>
   );
 };

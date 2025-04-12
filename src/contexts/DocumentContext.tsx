@@ -22,6 +22,16 @@ export interface Document {
   notes?: string;
   dateAdded?: string;
   inSecureVault?: boolean;
+  // PDF-related fields
+  pdfPageCount?: number;
+  pdfLastPage?: number;
+  isPasswordProtected?: boolean;
+  pdfPassword?: string;
+  pdfRotation?: number;
+  fileName?: string;
+  fileSize?: number;
+  fileType?: string;
+  fileUrl?: string; // Include for backwards compatibility
 }
 
 interface DocumentContextType {

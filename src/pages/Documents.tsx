@@ -42,7 +42,6 @@ const Documents = () => {
     navigate(`/documents?filter=${filter}`);
   };
   
-  // Updated sort function to include importance
   const handleSort = (type: "date" | "name" | "importance") => {
     if (sortBy === type) {
       // Toggle direction if clicking the same sort type
@@ -68,6 +67,15 @@ const Documents = () => {
       filtered = documents.filter(doc => 
         doc.daysRemaining >= 0 && doc.daysRemaining <= 7
       );
+    } else if (activeFilter === "completed") {
+      // Filter for completed documents
+      filtered = documents.filter(doc => doc.status === 'completed');
+    } else if (activeFilter === "expired") {
+      // Filter for expired documents
+      filtered = documents.filter(doc => doc.status === 'expired');
+    } else if (activeFilter === "pending") {
+      // Filter for pending documents
+      filtered = documents.filter(doc => doc.status === 'pending');
     } else {
       // Use the regular filter by document type
       filtered = filterDocumentsByType(activeFilter);
@@ -75,7 +83,10 @@ const Documents = () => {
     
     // Apply search term filter
     filtered = filtered.filter(doc => 
-      doc.title.toLowerCase().includes(searchTerm.toLowerCase())
+      doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (doc.type && doc.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (doc.fileName && doc.fileName.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     
     // Apply sorting
@@ -142,6 +153,37 @@ const Documents = () => {
                   onClick={() => handleFilterChange("upcoming")}
                 >
                   Upcoming
+                </button>
+                {/* New filter buttons for document status */}
+                <button
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    activeFilter === "completed" 
+                      ? "bg-green-600 text-white" 
+                      : "hover:bg-green-100"
+                  }`}
+                  onClick={() => handleFilterChange("completed")}
+                >
+                  Completed
+                </button>
+                <button
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    activeFilter === "pending" 
+                      ? "bg-amber-600 text-white" 
+                      : "hover:bg-amber-100"
+                  }`}
+                  onClick={() => handleFilterChange("pending")}
+                >
+                  Pending
+                </button>
+                <button
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    activeFilter === "expired" 
+                      ? "bg-red-600 text-white" 
+                      : "hover:bg-red-100"
+                  }`}
+                  onClick={() => handleFilterChange("expired")}
+                >
+                  Expired
                 </button>
               </div>
             </BlurContainer>
@@ -262,6 +304,43 @@ const Documents = () => {
                           <FileText className="h-4 w-4 text-primary" />
                         </div>
                         <span className="text-sm">{type}</span>
+                      </div>
+                      <Badge variant="outline">{count}</Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            </BlurContainer>
+            
+            {/* Document Status Overview */}
+            <BlurContainer className="p-5">
+              <h3 className="text-base font-medium mb-4">Document Status</h3>
+              <div className="space-y-3">
+                {["active", "pending", "completed", "expired"].map((status) => {
+                  const count = documents.filter(doc => doc.status === status || (!doc.status && status === "active")).length;
+                  const statusColors = {
+                    active: "bg-blue-100 text-blue-600",
+                    pending: "bg-amber-100 text-amber-600",
+                    completed: "bg-green-100 text-green-600",
+                    expired: "bg-red-100 text-red-600",
+                  };
+                  const statusIcons = {
+                    active: <Clock className="h-4 w-4" />,
+                    pending: <Clock className="h-4 w-4" />,
+                    completed: <CheckCircle className="h-4 w-4" />,
+                    expired: <AlertTriangle className="h-4 w-4" />,
+                  };
+                  return (
+                    <div 
+                      key={status} 
+                      className="flex items-center justify-between cursor-pointer hover:bg-secondary/50 p-2 rounded-md transition-colors"
+                      onClick={() => handleFilterChange(status)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center ${statusColors[status]}`}>
+                          {statusIcons[status]}
+                        </div>
+                        <span className="text-sm capitalize">{status}</span>
                       </div>
                       <Badge variant="outline">{count}</Badge>
                     </div>

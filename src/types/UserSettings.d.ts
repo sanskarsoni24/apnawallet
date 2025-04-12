@@ -46,6 +46,16 @@ declare interface UserSettings {
     fingerprintEnabled?: boolean;
     lastVerified?: string;
   };
+  // Recent documents tracking
+  recentDocuments?: string[];
+  recentDocumentsMaxCount?: number;
+  lastViewedDocument?: string;
+  // PDF viewer settings
+  pdfDefaultZoom?: number;
+  pdfRememberLastPage?: boolean;
+  pdfShowThumbnails?: boolean;
+  pdfShowPageControls?: boolean;
+  pdfNightMode?: boolean;
   // Added properties for Google integration
   googleEmail?: string;
   googleProfilePicture?: string;
@@ -62,12 +72,4 @@ declare interface UserSettings {
   recoveryKeys?: string[];
   recoveryKeyLastGenerated?: string;
   recoveryKeyUsageHistory?: {date: string, keyId: string}[];
-  // Recent documents tracking
-  recentDocuments?: string[];
-  recentDocumentsMaxCount?: number;
-  lastViewedDocument?: string;
-  // PDF viewer settings
-  pdfDefaultZoom?: number;
-  pdfRememberLastPage?: boolean;
-  pdfShowThumbnails?: boolean;
 }

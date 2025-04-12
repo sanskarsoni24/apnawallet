@@ -9,6 +9,7 @@ declare interface Document {
   dueDate?: string;
   fileName?: string;
   fileUrl?: string;
+  fileURL?: string;
   fileSize?: number;
   fileType?: string;
   tags?: string[];
@@ -24,4 +25,5 @@ declare interface Document {
   isPasswordProtected?: boolean;
   pdfLastPage?: number;
   pdfPassword?: string;
+  pdfRotation?: number;
 }

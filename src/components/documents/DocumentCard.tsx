@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { speakNotification } from "@/services/NotificationService";
 import DocumentReminderSettings from "./DocumentReminderSettings";
 import { useUser } from "@/contexts/UserContext";
+import DocumentStatusSelector from "./DocumentStatusSelector";
 
 interface DocumentCardProps extends Document {
   className?: string;
@@ -182,6 +183,24 @@ const DocumentCard = ({
   // Check if this document is in recent documents
   const isRecent = userSettings.recentDocuments?.includes(id);
 
+  // Get status icon for display in card
+  const getStatusIcon = () => {
+    switch (status) {
+      case "active":
+        return <Clock className="h-4 w-4 text-blue-500" />;
+      case "expired":
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      case "pending":
+        return <Clock className="h-4 w-4 text-amber-500" />;
+      case "completed":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "deleted":
+        return <Trash2 className="h-4 w-4 text-gray-500" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       <BlurContainer 
@@ -208,19 +227,22 @@ const DocumentCard = ({
               {isRecent && (
                 <span className="text-blue-500"><Clock className="h-4 w-4" /></span>
               )}
-              {status === "completed" && (
-                <Badge variant="default" className="bg-green-500 text-white">
-                  Completed
+              {status && (
+                <Badge variant={
+                  status === "completed" ? "default" : 
+                  status === "expired" ? "destructive" : 
+                  status === "pending" ? "warning" : 
+                  "outline"
+                } className={status === "completed" ? "bg-green-500 text-white" : ""}>
+                  <span className="flex items-center gap-1">
+                    {getStatusIcon()}
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </span>
                 </Badge>
               )}
               {daysRemaining !== undefined && daysRemaining <= 7 && status !== "completed" && (
                 <Badge variant="destructive">
                   {daysRemaining === 0 ? "Due Today" : `Due in ${daysRemaining} Days`}
-                </Badge>
-              )}
-              {status === "expired" && (
-                <Badge variant="destructive">
-                  Expired
                 </Badge>
               )}
             </div>
@@ -281,6 +303,9 @@ const DocumentCard = ({
             <span className="sr-only">{inSecureVault ? "Remove from Secure Vault" : "Move to Secure Vault"}</span>
           </Button>
           
+          {/* Status selector (compact mode) */}
+          <DocumentStatusSelector documentId={id} currentStatus={status} compact={true} />
+          
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full bg-blue-100 text-blue-600 hover:text-blue-800 hover:bg-blue-200" onClick={(e) => {e.stopPropagation(); setShowReminderSettings(true)}}>
             <Bell className="h-4 w-4" />
             <span className="sr-only">Edit Reminder Settings</span>
@@ -315,9 +340,6 @@ const DocumentCard = ({
                 {daysRemaining !== undefined && (
                   <p><strong>Days Remaining:</strong> {daysRemaining}</p>
                 )}
-                {status && (
-                  <p><strong>Status:</strong> {status}</p>
-                )}
                 {inSecureVault && (
                   <p><strong>Vault:</strong> <span className="text-purple-500">Secured <Shield className="inline-block h-4 w-4 ml-1 align-text-bottom" /></span></p>
                 )}
@@ -325,6 +347,9 @@ const DocumentCard = ({
                   <p><strong>Recently Viewed:</strong> <span className="text-blue-500">Yes <Clock className="inline-block h-4 w-4 ml-1 align-text-bottom" /></span></p>
                 )}
               </div>
+              
+              {/* Add the document status selector in full size variant */}
+              <DocumentStatusSelector documentId={id} currentStatus={status} />
               
               <div className="space-y-2">
                 <h3 className="text-lg font-medium">Notes</h3>

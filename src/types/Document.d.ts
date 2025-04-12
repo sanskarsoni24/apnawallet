@@ -9,6 +9,7 @@ declare interface Document {
   dueDate?: string;
   fileName?: string;
   fileUrl?: string;
+  fileURL?: string; // Keep both for compatibility
   fileSize?: number;
   fileType?: string;
   tags?: string[];

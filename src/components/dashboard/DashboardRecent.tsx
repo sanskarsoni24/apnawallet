@@ -82,19 +82,28 @@ const DashboardRecent = () => {
                         Due: {format(new Date(doc.dueDate), "MMM d")}
                       </span>
                     )}
+                    {doc.status && (
+                      <Badge 
+                        variant={doc.status === "completed" ? "default" : 
+                               doc.status === "expired" ? "destructive" : "outline"}
+                        className="text-xs ml-2"
+                      >
+                        {doc.status}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
               
               <div className="flex items-center gap-1">
-                {doc.fileUrl && (
+                {(doc.fileURL || doc.fileUrl) && (
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7"
                     onClick={(e) => {
                       e.stopPropagation();
-                      window.open(doc.fileUrl, "_blank");
+                      window.open(doc.fileURL || doc.fileUrl, "_blank");
                     }}
                     title="Open document"
                   >

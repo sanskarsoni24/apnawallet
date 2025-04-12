@@ -70,4 +70,5 @@ declare interface UserSettings {
   pdfDefaultZoom?: number;
   pdfRememberLastPage?: boolean;
   pdfShowThumbnails?: boolean;
+  mobileDeviceName?: string;
 }

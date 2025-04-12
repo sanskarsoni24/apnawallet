@@ -82,16 +82,16 @@ const DocumentStatusSelector: React.FC<DocumentStatusSelectorProps> = ({
     }
   };
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" => {
     switch (status) {
       case "active":
         return "default";
       case "expired":
         return "destructive";
       case "pending":
-        return "warning";
+        return "secondary";
       case "completed":
-        return "success";
+        return "outline";
       case "deleted":
         return "outline";
       default:
@@ -137,7 +137,7 @@ const DocumentStatusSelector: React.FC<DocumentStatusSelectorProps> = ({
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">Status</span>
-        <Badge variant={getStatusBadgeVariant(currentStatus) as any} className="flex items-center gap-1">
+        <Badge variant={getStatusBadgeVariant(currentStatus)} className="flex items-center gap-1">
           {getStatusIcon(currentStatus)}
           <span>{getStatusLabel(currentStatus)}</span>
         </Badge>

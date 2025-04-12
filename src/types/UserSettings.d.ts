@@ -72,4 +72,6 @@ declare interface UserSettings {
   recoveryKeys?: string[];
   recoveryKeyLastGenerated?: string;
   recoveryKeyUsageHistory?: {date: string, keyId: string}[];
+  // Mobile device integration
+  mobileDeviceName?: string;
 }

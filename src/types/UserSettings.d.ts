@@ -70,5 +70,18 @@ declare interface UserSettings {
   pdfDefaultZoom?: number;
   pdfRememberLastPage?: boolean;
   pdfShowThumbnails?: boolean;
+  pdfShowAnnotations?: boolean;
+  pdfEnableTextSelection?: boolean;
+  pdfNightMode?: boolean;
+  pdfRotation?: 0 | 90 | 180 | 270;
+  pdfCustomColors?: {
+    background?: string;
+    text?: string;
+    highlight?: string;
+  };
+  pdfAutoSaveAnnotations?: boolean;
+  pdfPageTransition?: 'slide' | 'fade' | 'none';
+  pdfShowPageControls?: boolean;
+  pdfFullScreenMode?: boolean;
   mobileDeviceName?: string;
 }

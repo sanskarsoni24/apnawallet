@@ -25,4 +25,20 @@ declare interface Document {
   isPasswordProtected?: boolean;
   pdfLastPage?: number;
   pdfPassword?: string;
+  pdfAnnotations?: Array<{
+    id: string;
+    page: number;
+    type: "highlight" | "note" | "underline" | "strikethrough" | "drawing";
+    content?: string;
+    color?: string;
+    position?: { x: number; y: number; width: number; height: number };
+    createdAt: string;
+  }>;
+  pdfBookmarks?: Array<{
+    id: string;
+    page: number;
+    title: string;
+    createdAt: string;
+  }>;
+  pdfRotation?: 0 | 90 | 180 | 270;
 }

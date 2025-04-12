@@ -10,8 +10,8 @@ import { Document as PDFDocument } from "@/contexts/DocumentContext";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "@/hooks/use-toast";
 import { 
-  FilePdf, ZoomIn, ZoomOut, RotateCw, Lock, Unlock, Bookmark, 
-  PenTool, FileText, Edit3, Download, ChevronLeft, ChevronRight, 
+  FileText, ZoomIn, ZoomOut, RotateCw, Lock, Unlock, Bookmark, 
+  PenTool, Edit3, Download, ChevronLeft, ChevronRight, 
   Maximize, Sun, Moon, Palette, Save, Eye, ArrowLeft, ArrowRight
 } from "lucide-react";
 
@@ -151,7 +151,7 @@ const PdfViewer = ({ document, onUpdateDocument }: PdfViewerProps) => {
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <FilePdf className="h-5 w-5 text-red-500" />
+            <FileText className="h-5 w-5 text-red-500" />
             Password Protected PDF
           </CardTitle>
         </CardHeader>
@@ -182,7 +182,7 @@ const PdfViewer = ({ document, onUpdateDocument }: PdfViewerProps) => {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FilePdf className="h-5 w-5 text-red-500" />
+            <FileText className="h-5 w-5 text-red-500" />
             {document.title || "PDF Document"}
           </div>
           <div className="flex items-center gap-2">

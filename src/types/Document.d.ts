@@ -21,10 +21,12 @@ declare interface Document {
   inSecureVault?: boolean;
   status?: "active" | "expired" | "pending" | "completed" | "deleted";
   importance?: "low" | "medium" | "high" | "critical";
+  // PDF-specific properties
   pdfPageCount?: number;
   isPasswordProtected?: boolean;
   pdfLastPage?: number;
   pdfPassword?: string;
+  pdfRotation?: 0 | 90 | 180 | 270;
   pdfAnnotations?: Array<{
     id: string;
     page: number;
@@ -40,5 +42,4 @@ declare interface Document {
     title: string;
     createdAt: string;
   }>;
-  pdfRotation?: 0 | 90 | 180 | 270;
 }

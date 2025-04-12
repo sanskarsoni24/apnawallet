@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FileText, Filter, Search, SlidersHorizontal, ArrowDown, ArrowUp, FilePdf } from "lucide-react";
+import { FileText, Filter, Search, SlidersHorizontal, ArrowDown, ArrowUp, FileIcon } from "lucide-react";
 import Container from "@/components/layout/Container";
 import BlurContainer from "@/components/ui/BlurContainer";
 import DocumentCard from "@/components/documents/DocumentCard";
@@ -72,6 +72,11 @@ const Documents = () => {
       filtered = documents.filter(doc => 
         doc.daysRemaining >= 0 && doc.daysRemaining <= 7
       );
+    } else if (activeFilter === "pdf") {
+      // Filter for PDF documents
+      filtered = documents.filter(doc => 
+        doc.fileType === "application/pdf" || (doc.fileName && doc.fileName.endsWith(".pdf"))
+      );
     } else {
       // Use the regular filter by document type
       filtered = filterDocumentsByType(activeFilter);
@@ -108,7 +113,7 @@ const Documents = () => {
 
   // Function to open the PDF viewer for a document
   const openPdfViewer = (doc) => {
-    if (doc.fileType === "application/pdf" || doc.fileName?.endsWith(".pdf")) {
+    if (doc.fileType === "application/pdf" || (doc.fileName && doc.fileName.endsWith(".pdf"))) {
       setSelectedPdfDoc(doc);
       setIsPdfViewerOpen(true);
     } else {
@@ -168,7 +173,7 @@ const Documents = () => {
                   }`}
                   onClick={() => handleFilterChange("pdf")}
                 >
-                  <FilePdf className="h-4 w-4 inline mr-1" />
+                  <FileIcon className="h-4 w-4 inline mr-1" />
                   PDFs
                 </button>
               </div>
@@ -253,7 +258,7 @@ const Documents = () => {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                 {displayedDocuments.map((doc) => (
                   <div key={doc.id} onClick={() => {
-                    if (doc.fileType === "application/pdf" || doc.fileName?.endsWith(".pdf")) {
+                    if (doc.fileType === "application/pdf" || (doc.fileName && doc.fileName.endsWith(".pdf"))) {
                       openPdfViewer(doc);
                     }
                   }}>
@@ -307,13 +312,13 @@ const Documents = () => {
                 >
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
-                      <FilePdf className="h-4 w-4 text-red-500" />
+                      <FileIcon className="h-4 w-4 text-red-500" />
                     </div>
                     <span className="text-sm">PDF Documents</span>
                   </div>
                   <Badge variant="outline">
                     {documents.filter(doc => 
-                      doc.fileType === "application/pdf" || doc.fileName?.endsWith(".pdf")
+                      doc.fileType === "application/pdf" || (doc.fileName && doc.fileName.endsWith(".pdf"))
                     ).length}
                   </Badge>
                 </div>

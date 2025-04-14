@@ -40,26 +40,33 @@ declare interface UserSettings {
   compactView?: boolean;
   documentSortOrder?: 'name' | 'date' | 'type' | 'importance';
   documentGrouping?: 'none' | 'category' | 'type' | 'importance';
+  
+  // Properties for biometric authentication
   biometricAuth?: {
     enabled: boolean;
     faceIdEnabled?: boolean;
     fingerprintEnabled?: boolean;
     lastVerified?: string;
   };
+  
   // Recent documents tracking
   recentDocuments?: string[];
   recentDocumentsMaxCount?: number;
   lastViewedDocument?: string;
+  
   // PDF viewer settings
   pdfDefaultZoom?: number;
   pdfRememberLastPage?: boolean;
   pdfShowThumbnails?: boolean;
   pdfShowPageControls?: boolean;
   pdfNightMode?: boolean;
+  
   // Added properties for Google integration
   googleEmail?: string;
   googleProfilePicture?: string;
   googleId?: string;
+  googleConnected?: boolean;
+  
   // Improved backup functionality
   backupEncrypted?: boolean;
   backupLocations?: ('local' | 'cloud' | 'external')[];
@@ -68,12 +75,15 @@ declare interface UserSettings {
   lastBackupStatus?: 'success' | 'failed' | 'pending';
   lastAutoBackupAttempt?: string;
   backupRetentionCount?: number;
+  
   // Recovery keys improvements
   recoveryKeys?: string[];
   recoveryKeyLastGenerated?: string;
   recoveryKeyUsageHistory?: {date: string, keyId: string}[];
+  
   // Mobile device integration
   mobileDeviceName?: string;
+  
   // Extension integration
   extensionConnected?: boolean;
   extensionLastSync?: string;

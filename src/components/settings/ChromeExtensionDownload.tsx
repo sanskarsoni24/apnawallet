@@ -15,7 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
 import JSZip from "jszip";
 import { detectExtension, isExtensionConnected, getLastExtensionSync, syncWithExtension } from "@/utils/extensionDetector";
-import { useUserSettings } from "@/contexts/UserSettingsContext";
+import { useUser } from "@/contexts/UserContext"; // Changed from UserSettingsContext to UserContext
 
 const ChromeExtensionDownload = () => {
   const [isInstalled, setIsInstalled] = useState(false);
@@ -24,7 +24,7 @@ const ChromeExtensionDownload = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
-  const { userSettings, updateUserSettings } = useUserSettings();
+  const { userSettings, updateUserSettings } = useUser(); // Using useUser hook directly
   
   useEffect(() => {
     // Check if the extension is installed by checking for global function

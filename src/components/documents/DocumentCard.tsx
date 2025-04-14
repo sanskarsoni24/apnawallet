@@ -201,6 +201,23 @@ const DocumentCard = ({
     }
   };
 
+  const getStatusBadge = (status?: string) => {
+    switch (status) {
+      case "active":
+        return <Badge variant="default">Active</Badge>;
+      case "expired":
+        return <Badge variant="destructive">Expired</Badge>;
+      case "pending":
+        return <Badge variant="outline">Pending</Badge>;
+      case "completed":
+        return <Badge variant="secondary">Completed</Badge>; // Changed from "warning" to "secondary"
+      case "deleted":
+        return <Badge variant="destructive">Deleted</Badge>;
+      default:
+        return <Badge variant="outline">Undefined</Badge>;
+    }
+  };
+
   return (
     <>
       <BlurContainer 

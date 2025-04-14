@@ -9,6 +9,9 @@
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #333;
+      margin: 0;
+      padding: 0;
+      background-color: #f9fafb;
     }
     .slide {
       width: 100%;
@@ -23,7 +26,7 @@
       page-break-after: always;
     }
     .title-slide {
-      background-color: #f5f5f5;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
     }
     h1 {
       font-size: 3rem;
@@ -52,6 +55,8 @@
       max-width: 60%;
       height: auto;
       margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     table {
       width: 80%;
@@ -80,6 +85,86 @@
     }
     .secondary-color {
       color: #4b5563;
+    }
+    .video-container {
+      width: 80%;
+      max-width: 800px;
+      margin: 2rem auto;
+      position: relative;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .video-placeholder {
+      background-color: #e5e7eb;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 Aspect Ratio */
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .video-placeholder::after {
+      content: "Video Demo";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      color: #6b7280;
+    }
+    .demo-controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .demo-button {
+      padding: 0.5rem 1rem;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .demo-button:hover {
+      background-color: #1d4ed8;
+    }
+    .step-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    .step {
+      flex: 1;
+      min-width: 200px;
+      max-width: 300px;
+      padding: 1.5rem;
+      border-radius: 8px;
+      background-color: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .step-number {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      background-color: #2563eb;
+      color: white;
+      border-radius: 50%;
+      margin-bottom: 1rem;
+    }
+    .step h3 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+    .step p {
+      color: #6b7280;
+      font-size: 1rem;
+      margin: 0;
     }
   </style>
 </head>
@@ -117,14 +202,202 @@
     </ul>
   </div>
 
-  <!-- Add more slides based on the markdown structure -->
-  <!-- ... -->
+  <!-- Feature Demo Slide: Secure Document Storage -->
+  <div class="slide">
+    <h1>Secure Document Storage</h1>
+    <div class="video-container">
+      <div class="video-placeholder">
+        <!-- Replace with: <video controls src="demos/secure-storage-demo.mp4"></video> -->
+      </div>
+    </div>
+    <div class="demo-controls">
+      <button class="demo-button">Play Demo</button>
+      <button class="demo-button">See Features</button>
+    </div>
+    <p>End-to-end encryption protects your sensitive documents at all times</p>
+  </div>
+
+  <!-- Feature Demo Slide: Document Management -->
+  <div class="slide">
+    <h1>Smart Document Management</h1>
+    <div class="video-container">
+      <div class="video-placeholder">
+        <!-- Replace with: <video controls src="demos/document-management-demo.mp4"></video> -->
+      </div>
+    </div>
+    <div class="demo-controls">
+      <button class="demo-button">Play Demo</button>
+      <button class="demo-button">See Features</button>
+    </div>
+    <p>Easily organize and find documents with intelligent categorization</p>
+  </div>
+
+  <!-- Feature Demo Slide: Expiry Tracking -->
+  <div class="slide">
+    <h1>Never Miss Important Dates</h1>
+    <div class="video-container">
+      <div class="video-placeholder">
+        <!-- Replace with: <video controls src="demos/expiry-tracking-demo.mp4"></video> -->
+      </div>
+    </div>
+    <div class="demo-controls">
+      <button class="demo-button">Play Demo</button>
+      <button class="demo-button">See Features</button>
+    </div>
+    <p>Automatic reminders for document expiration dates</p>
+  </div>
+
+  <!-- Technical Architecture -->
+  <div class="slide">
+    <h1>Technical Architecture</h1>
+    <div class="step-container">
+      <div class="step">
+        <span class="step-number">1</span>
+        <h3>Frontend</h3>
+        <p>React with TypeScript, Tailwind CSS and Shadcn UI components for a responsive experience</p>
+      </div>
+      <div class="step">
+        <span class="step-number">2</span>
+        <h3>Security</h3>
+        <p>AES-256 encryption and zero-knowledge architecture for maximum data protection</p>
+      </div>
+      <div class="step">
+        <span class="step-number">3</span>
+        <h3>Integration</h3>
+        <p>Chrome Extension and responsive web design for access from any device</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Experience Demo -->
+  <div class="slide">
+    <h1>Intuitive User Experience</h1>
+    <div class="video-container">
+      <div class="video-placeholder">
+        <!-- Replace with: <video controls src="demos/user-experience-demo.mp4"></video> -->
+      </div>
+    </div>
+    <p>Clean interface with dark and light mode, responsive design for all devices</p>
+  </div>
+
+  <!-- Subscription Tiers -->
+  <div class="slide">
+    <h1>Subscription Tiers</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Free</th>
+          <th>Basic</th>
+          <th>Premium</th>
+          <th>Enterprise</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Document Limit</td>
+          <td>10</td>
+          <td>50</td>
+          <td>Unlimited</td>
+          <td>Unlimited</td>
+        </tr>
+        <tr>
+          <td>Document Size</td>
+          <td>5MB</td>
+          <td>15MB</td>
+          <td>25MB</td>
+          <td>100MB</td>
+        </tr>
+        <tr>
+          <td>Cloud Backup</td>
+          <td>❌</td>
+          <td>✅</td>
+          <td>✅</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td>Advanced Sharing</td>
+          <td>❌</td>
+          <td>❌</td>
+          <td>✅</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td>Team Management</td>
+          <td>❌</td>
+          <td>❌</td>
+          <td>❌</td>
+          <td>✅</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Roadmap Slide -->
+  <div class="slide">
+    <h1>Roadmap and Future Enhancements</h1>
+    <ul>
+      <li>Mobile app development (iOS & Android)</li>
+      <li>Advanced document scanning with OCR</li>
+      <li>Collaborative document sharing</li>
+      <li>Integration with cloud storage providers</li>
+      <li>Enhanced AI-powered document management</li>
+    </ul>
+    <img src="https://via.placeholder.com/800x400?text=Roadmap+Timeline" alt="Roadmap Timeline" class="feature-image">
+  </div>
+
+  <!-- Getting Started Demo -->
+  <div class="slide">
+    <h1>Getting Started in Under 2 Minutes</h1>
+    <div class="video-container">
+      <div class="video-placeholder">
+        <!-- Replace with: <video controls src="demos/getting-started-demo.mp4"></video> -->
+      </div>
+    </div>
+    <div class="step-container">
+      <div class="step">
+        <span class="step-number">1</span>
+        <h3>Create Account</h3>
+        <p>Sign up at apnawallet.com</p>
+      </div>
+      <div class="step">
+        <span class="step-number">2</span>
+        <h3>Upload Documents</h3>
+        <p>Add your first documents</p>
+      </div>
+      <div class="step">
+        <span class="step-number">3</span>
+        <h3>Set Preferences</h3>
+        <p>Configure notifications</p>
+      </div>
+    </div>
+  </div>
 
   <!-- Final Slide -->
   <div class="slide">
     <h1>Thank You!</h1>
     <img src="https://via.placeholder.com/300x300?text=QR+Code" alt="QR Code" class="feature-image">
+    <p class="contact">Experience ApnaWallet today at <strong>apnawallet.com</strong></p>
     <p class="contact">Contact: team@apnawallet.com</p>
   </div>
+
+  <script>
+    // Simple script to make demo buttons interactive
+    document.querySelectorAll('.demo-button').forEach(button => {
+      button.addEventListener('click', function() {
+        // In a real presentation, this would control video playback
+        alert('This would play or control the demo video in the actual presentation');
+      });
+    });
+
+    // For a real presentation, you might add keyboard navigation:
+    document.addEventListener('keydown', function(e) {
+      const slides = document.querySelectorAll('.slide');
+      // Find current slide (one that's visible)
+      let currentSlideIndex = 0;
+      
+      // In a real implementation, this would handle slide navigation
+    });
+  </script>
 </body>
 </html>

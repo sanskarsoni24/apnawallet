@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ApnaWallet MVP Presentation</title>
+  <title>ApnaWallet - Comprehensive Document Management Solution</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -166,90 +166,375 @@
       font-size: 1rem;
       margin: 0;
     }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      width: 90%;
+      max-width: 1200px;
+      margin: 2rem auto;
+    }
+    .feature-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: left;
+    }
+    .feature-card h3 {
+      color: #2563eb;
+      margin-top: 0;
+    }
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #2563eb;
+    }
+    .security-features {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      width: 80%;
+      margin: 0 auto;
+    }
+    .security-feature {
+      background: #f8fafc;
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid #2563eb;
+    }
+    .timeline {
+      width: 80%;
+      margin: 2rem auto;
+      position: relative;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 4px;
+      background: #e5e7eb;
+      transform: translateX(-50%);
+    }
+    .timeline-item {
+      padding: 1rem;
+      position: relative;
+      width: 45%;
+      margin-bottom: 2rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .timeline-item:nth-child(even) {
+      margin-left: auto;
+    }
+    .timeline-date {
+      font-weight: bold;
+      color: #2563eb;
+      margin-bottom: 0.5rem;
+    }
+    .highlight-box {
+      background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin: 2rem auto;
+      width: 80%;
+      border-left: 6px solid #2563eb;
+    }
+    .navigation {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      display: flex;
+      gap: 1rem;
+    }
+    .nav-button {
+      background: white;
+      color: #2563eb;
+      border: 1px solid #2563eb;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .nav-button:hover {
+      background: #2563eb;
+      color: white;
+    }
+    .progress-indicator {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.5rem;
+    }
+    .progress-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      cursor: pointer;
+    }
+    .progress-dot.active {
+      background: #2563eb;
+    }
   </style>
 </head>
 <body>
   <!-- Title Slide -->
-  <div class="slide title-slide">
+  <div class="slide title-slide" id="slide-1">
     <img src="https://via.placeholder.com/200x100?text=ApnaWallet" alt="ApnaWallet Logo" class="logo">
-    <h1>ApnaWallet MVP</h1>
-    <h2>Secure Document Management Platform</h2>
-    <h3>April 2024</h3>
+    <h1>ApnaWallet</h1>
+    <h2>Comprehensive Document Management Platform</h2>
+    <h3>Secure. Organized. Accessible.</h3>
+    <p>April 2024</p>
   </div>
 
   <!-- Problem Slide -->
-  <div class="slide">
-    <h1>The Problem</h1>
+  <div class="slide" id="slide-2">
+    <h1>The Challenge</h1>
+    <div class="highlight-box">
+      <h3>Document management is broken and fragmented</h3>
+    </div>
     <ul>
-      <li>Important documents are scattered across physical and digital locations</li>
-      <li>Critical document expiry dates often missed</li>
-      <li>Security concerns with sensitive document storage</li>
-      <li>No centralized system for document management</li>
-      <li>Time consuming to find and access documents when needed</li>
+      <li><strong>Scattered Documents:</strong> Important papers spread across physical folders, email attachments, and multiple cloud services</li>
+      <li><strong>Missed Deadlines:</strong> Critical expiry dates for licenses, passports, and insurance policies often forgotten</li>
+      <li><strong>Security Concerns:</strong> Sensitive information vulnerable to theft, loss, or unauthorized access</li>
+      <li><strong>Time Wasted:</strong> Average person spends 4 hours per month searching for documents</li>
+      <li><strong>No Version Control:</strong> Difficulty tracking document updates and maintaining document history</li>
     </ul>
   </div>
 
-  <!-- Solution Slide -->
-  <div class="slide">
+  <!-- Solution Overview -->
+  <div class="slide" id="slide-3">
     <h1>Introducing ApnaWallet</h1>
-    <p>ApnaWallet is a secure document management and personal information storage platform designed to help users:</p>
-    <ul>
-      <li><strong>Safely store</strong> critical documents</li>
-      <li><strong>Organize</strong> personal information</li>
-      <li><strong>Manage</strong> document lifecycles and expiry dates</li>
-      <li><strong>Access</strong> documents anytime, anywhere</li>
-      <li><strong>Share</strong> documents securely when needed</li>
-    </ul>
+    <div class="feature-image">
+      <img src="https://via.placeholder.com/800x450?text=ApnaWallet+Dashboard" alt="ApnaWallet Dashboard" style="width:100%; height:auto;">
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Military-Grade Security</h3>
+        <p>AES-256 encryption and zero-knowledge architecture</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📂</div>
+        <h3>Smart Organization</h3>
+        <p>Intelligent categorization and powerful search</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <h3>Expiry Tracking</h3>
+        <p>Never miss important document deadlines</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3>Anywhere Access</h3>
+        <p>Web, mobile, and Chrome extension</p>
+      </div>
+    </div>
   </div>
 
   <!-- Feature Demo Slide: Secure Document Storage -->
-  <div class="slide">
-    <h1>Secure Document Storage</h1>
+  <div class="slide" id="slide-4">
+    <h1>Military-Grade Security</h1>
     <div class="video-container">
       <div class="video-placeholder">
         <!-- Replace with: <video controls src="demos/secure-storage-demo.mp4"></video> -->
       </div>
     </div>
-    <div class="demo-controls">
-      <button class="demo-button">Play Demo</button>
-      <button class="demo-button">See Features</button>
+    <div class="security-features">
+      <div class="security-feature">
+        <h3>AES-256 Encryption</h3>
+        <p>Same standard used by financial institutions and governments</p>
+      </div>
+      <div class="security-feature">
+        <h3>Zero-Knowledge Architecture</h3>
+        <p>Even we can't access your documents</p>
+      </div>
+      <div class="security-feature">
+        <h3>Biometric Authentication</h3>
+        <p>Fingerprint and facial recognition support</p>
+      </div>
+      <div class="security-feature">
+        <h3>Two-Factor Authentication</h3>
+        <p>Extra layer of security for your account</p>
+      </div>
     </div>
-    <p>End-to-end encryption protects your sensitive documents at all times</p>
   </div>
 
   <!-- Feature Demo Slide: Document Management -->
-  <div class="slide">
+  <div class="slide" id="slide-5">
     <h1>Smart Document Management</h1>
     <div class="video-container">
       <div class="video-placeholder">
         <!-- Replace with: <video controls src="demos/document-management-demo.mp4"></video> -->
       </div>
     </div>
-    <div class="demo-controls">
-      <button class="demo-button">Play Demo</button>
-      <button class="demo-button">See Features</button>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h3>Custom Categories</h3>
+        <p>Create personalized organization system</p>
+      </div>
+      <div class="feature-card">
+        <h3>Intelligent Tagging</h3>
+        <p>Cross-category organization and filtering</p>
+      </div>
+      <div class="feature-card">
+        <h3>Advanced Search</h3>
+        <p>Find documents by name, content, tags, dates</p>
+      </div>
+      <div class="feature-card">
+        <h3>Multiple Views</h3>
+        <p>Grid, list, timeline, and calendar layouts</p>
+      </div>
+      <div class="feature-card">
+        <h3>Version Control</h3>
+        <p>Track document history and changes</p>
+      </div>
+      <div class="feature-card">
+        <h3>Document Metadata</h3>
+        <p>Store important dates, sources, and notes</p>
+      </div>
     </div>
-    <p>Easily organize and find documents with intelligent categorization</p>
   </div>
 
   <!-- Feature Demo Slide: Expiry Tracking -->
-  <div class="slide">
+  <div class="slide" id="slide-6">
     <h1>Never Miss Important Dates</h1>
     <div class="video-container">
       <div class="video-placeholder">
         <!-- Replace with: <video controls src="demos/expiry-tracking-demo.mp4"></video> -->
       </div>
     </div>
-    <div class="demo-controls">
-      <button class="demo-button">Play Demo</button>
-      <button class="demo-button">See Features</button>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h3>Visual Calendar</h3>
+        <p>Color-coded expiry dates at a glance</p>
+      </div>
+      <div class="feature-card">
+        <h3>Custom Reminders</h3>
+        <p>Configure notification frequency and channels</p>
+      </div>
+      <div class="feature-card">
+        <h3>Multiple Notification Channels</h3>
+        <p>Email, SMS, push notifications, voice alerts</p>
+      </div>
+      <div class="feature-card">
+        <h3>Renewal Workflows</h3>
+        <p>Step-by-step guidance for document renewal</p>
+      </div>
+      <div class="feature-card">
+        <h3>Delegate Notifications</h3>
+        <p>Share responsibility with family or colleagues</p>
+      </div>
+      <div class="feature-card">
+        <h3>Escalation System</h3>
+        <p>Increasing urgency as deadlines approach</p>
+      </div>
     </div>
-    <p>Automatic reminders for document expiration dates</p>
+  </div>
+
+  <!-- User Experience Demo -->
+  <div class="slide" id="slide-7">
+    <h1>Intuitive User Experience</h1>
+    <div class="video-container">
+      <div class="video-placeholder">
+        <!-- Replace with: <video controls src="demos/user-experience-demo.mp4"></video> -->
+      </div>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h3>Responsive Design</h3>
+        <p>Seamless experience across all devices</p>
+      </div>
+      <div class="feature-card">
+        <h3>Dark & Light Modes</h3>
+        <p>Comfortable viewing in any environment</p>
+      </div>
+      <div class="feature-card">
+        <h3>Accessibility Features</h3>
+        <p>Screen reader support and keyboard navigation</p>
+      </div>
+      <div class="feature-card">
+        <h3>Cross-Device Sync</h3>
+        <p>Your documents follow you everywhere</p>
+      </div>
+      <div class="feature-card">
+        <h3>Customizable Dashboard</h3>
+        <p>Personalize your document management experience</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chrome Extension -->
+  <div class="slide" id="slide-8">
+    <h1>Chrome Extension Integration</h1>
+    <div class="video-container">
+      <div class="video-placeholder">
+        <!-- Replace with: <video controls src="demos/chrome-extension-demo.mp4"></video> -->
+      </div>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h3>Quick Document Access</h3>
+        <p>Reach your documents with one click from any website</p>
+      </div>
+      <div class="feature-card">
+        <h3>Web Capture</h3>
+        <p>Save receipts, confirmations and important web content directly</p>
+      </div>
+      <div class="feature-card">
+        <h3>Secure Form Autofill</h3>
+        <p>Fill online forms with your stored document information</p>
+      </div>
+      <div class="feature-card">
+        <h3>Privacy Controls</h3>
+        <p>Full control over which sites can access your information</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Application -->
+  <div class="slide" id="slide-9">
+    <h1>Mobile Experience</h1>
+    <img src="https://via.placeholder.com/600x400?text=Mobile+App+Screenshots" alt="Mobile App Screenshots" class="feature-image">
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h3>Native Apps</h3>
+        <p>iOS and Android applications with offline access</p>
+      </div>
+      <div class="feature-card">
+        <h3>Document Scanner</h3>
+        <p>Transform physical documents to digital with your camera</p>
+      </div>
+      <div class="feature-card">
+        <h3>QR Code Sharing</h3>
+        <p>Instantly share documents with nearby devices</p>
+      </div>
+      <div class="feature-card">
+        <h3>Biometric Security</h3>
+        <p>FaceID and fingerprint authentication</p>
+      </div>
+      <div class="feature-card">
+        <h3>Widget Support</h3>
+        <p>Quick access to important documents from your home screen</p>
+      </div>
+    </div>
   </div>
 
   <!-- Technical Architecture -->
-  <div class="slide">
+  <div class="slide" id="slide-10">
     <h1>Technical Architecture</h1>
+    <img src="https://via.placeholder.com/800x400?text=Technical+Architecture+Diagram" alt="Technical Architecture" class="feature-image">
     <div class="step-container">
       <div class="step">
         <span class="step-number">1</span>
@@ -258,39 +543,38 @@
       </div>
       <div class="step">
         <span class="step-number">2</span>
-        <h3>Security</h3>
-        <p>AES-256 encryption and zero-knowledge architecture for maximum data protection</p>
+        <h3>Backend</h3>
+        <p>Encrypted microservices architecture with separate document and user services</p>
       </div>
       <div class="step">
         <span class="step-number">3</span>
+        <h3>Security</h3>
+        <p>AES-256 encryption, zero-knowledge architecture, and end-to-end encrypted transmission</p>
+      </div>
+      <div class="step">
+        <span class="step-number">4</span>
+        <h3>Storage</h3>
+        <p>Distributed encrypted document storage with blockchain verification</p>
+      </div>
+      <div class="step">
+        <span class="step-number">5</span>
         <h3>Integration</h3>
-        <p>Chrome Extension and responsive web design for access from any device</p>
+        <p>API-first design with extensive webhooks and third-party integration capabilities</p>
       </div>
     </div>
-  </div>
-
-  <!-- User Experience Demo -->
-  <div class="slide">
-    <h1>Intuitive User Experience</h1>
-    <div class="video-container">
-      <div class="video-placeholder">
-        <!-- Replace with: <video controls src="demos/user-experience-demo.mp4"></video> -->
-      </div>
-    </div>
-    <p>Clean interface with dark and light mode, responsive design for all devices</p>
   </div>
 
   <!-- Subscription Tiers -->
-  <div class="slide">
+  <div class="slide" id="slide-11">
     <h1>Subscription Tiers</h1>
     <table>
       <thead>
         <tr>
           <th>Feature</th>
           <th>Free</th>
-          <th>Basic</th>
-          <th>Premium</th>
-          <th>Enterprise</th>
+          <th>Basic<br>$5.99/mo</th>
+          <th>Premium<br>$12.99/mo</th>
+          <th>Enterprise<br>Custom</th>
         </tr>
       </thead>
       <tbody>
@@ -329,25 +613,141 @@
           <td>❌</td>
           <td>✅</td>
         </tr>
+        <tr>
+          <td>Biometric Security</td>
+          <td>Basic</td>
+          <td>Full</td>
+          <td>Full</td>
+          <td>Enterprise</td>
+        </tr>
+        <tr>
+          <td>Custom Branding</td>
+          <td>❌</td>
+          <td>❌</td>
+          <td>❌</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td>API Access</td>
+          <td>❌</td>
+          <td>❌</td>
+          <td>Limited</td>
+          <td>Full</td>
+        </tr>
+        <tr>
+          <td>Priority Support</td>
+          <td>❌</td>
+          <td>Email</td>
+          <td>Email + Chat</td>
+          <td>24/7 Dedicated</td>
+        </tr>
       </tbody>
     </table>
   </div>
 
   <!-- Roadmap Slide -->
-  <div class="slide">
-    <h1>Roadmap and Future Enhancements</h1>
-    <ul>
-      <li>Mobile app development (iOS & Android)</li>
-      <li>Advanced document scanning with OCR</li>
-      <li>Collaborative document sharing</li>
-      <li>Integration with cloud storage providers</li>
-      <li>Enhanced AI-powered document management</li>
-    </ul>
-    <img src="https://via.placeholder.com/800x400?text=Roadmap+Timeline" alt="Roadmap Timeline" class="feature-image">
+  <div class="slide" id="slide-12">
+    <h1>Product Roadmap</h1>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-date">Q2 2024</div>
+        <h3>Mobile App Launch</h3>
+        <p>iOS and Android applications with document scanning capabilities</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Q3 2024</div>
+        <h3>Advanced OCR Integration</h3>
+        <p>Automatic data extraction from scanned documents</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Q4 2024</div>
+        <h3>Collaborative Workspaces</h3>
+        <p>Secure document sharing and collaboration for teams</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Q1 2025</div>
+        <h3>AI Document Assistant</h3>
+        <p>Smart suggestions and automated document classification</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Q2 2025</div>
+        <h3>Enterprise Integration Platform</h3>
+        <p>Connect with CRMs, ERPs, and other enterprise systems</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Market Opportunity -->
+  <div class="slide" id="slide-13">
+    <h1>Market Opportunity</h1>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h3>$9.3 Billion</h3>
+        <p>Document management market size by 2026</p>
+      </div>
+      <div class="feature-card">
+        <h3>24% CAGR</h3>
+        <p>Industry growth rate through 2026</p>
+      </div>
+      <div class="feature-card">
+        <h3>78%</h3>
+        <p>Of businesses planning to invest in document management</p>
+      </div>
+      <div class="feature-card">
+        <h3>$20,000</h3>
+        <p>Average annual cost of document mismanagement per employee</p>
+      </div>
+    </div>
+    <div class="highlight-box">
+      <h3>ApnaWallet addresses a universal need across both consumer and business markets</h3>
+    </div>
+  </div>
+
+  <!-- Target Audience -->
+  <div class="slide" id="slide-14">
+    <h1>Target Audiences</h1>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h3>Individual Users</h3>
+        <ul>
+          <li>Professionals managing personal documents</li>
+          <li>Homeowners storing property records</li>
+          <li>Frequent travelers with multiple IDs</li>
+          <li>Individuals with medical records</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <h3>Families</h3>
+        <ul>
+          <li>Shared document management</li>
+          <li>Estate planning and inheritance</li>
+          <li>Educational records for children</li>
+          <li>Family medical history</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <h3>Small Businesses</h3>
+        <ul>
+          <li>License and certification management</li>
+          <li>Contract organization</li>
+          <li>Employee documentation</li>
+          <li>Financial record keeping</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <h3>Enterprise</h3>
+        <ul>
+          <li>Compliance documentation</li>
+          <li>Team collaboration</li>
+          <li>Global document access</li>
+          <li>Secure client document sharing</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
   <!-- Getting Started Demo -->
-  <div class="slide">
+  <div class="slide" id="slide-15">
     <h1>Getting Started in Under 2 Minutes</h1>
     <div class="video-container">
       <div class="video-placeholder">
@@ -358,45 +758,117 @@
       <div class="step">
         <span class="step-number">1</span>
         <h3>Create Account</h3>
-        <p>Sign up at apnawallet.com</p>
+        <p>Simple sign-up with email or social login</p>
       </div>
       <div class="step">
         <span class="step-number">2</span>
         <h3>Upload Documents</h3>
-        <p>Add your first documents</p>
+        <p>Drag and drop your first documents</p>
       </div>
       <div class="step">
         <span class="step-number">3</span>
         <h3>Set Preferences</h3>
-        <p>Configure notifications</p>
+        <p>Configure notifications and categories</p>
+      </div>
+      <div class="step">
+        <span class="step-number">4</span>
+        <h3>Access Anywhere</h3>
+        <p>Download mobile apps and browser extensions</p>
       </div>
     </div>
   </div>
 
   <!-- Final Slide -->
-  <div class="slide">
-    <h1>Thank You!</h1>
+  <div class="slide" id="slide-16">
+    <h1>Secure Your Documents Today</h1>
     <img src="https://via.placeholder.com/300x300?text=QR+Code" alt="QR Code" class="feature-image">
-    <p class="contact">Experience ApnaWallet today at <strong>apnawallet.com</strong></p>
+    <h2>ApnaWallet: Your Personal Document Vault</h2>
+    <p class="contact">Visit <strong>apnawallet.com</strong> to get started</p>
     <p class="contact">Contact: team@apnawallet.com</p>
+    <div class="highlight-box">
+      <h3>"The most comprehensive document management solution available today"</h3>
+      <p>- Tech Review Monthly</p>
+    </div>
+  </div>
+
+  <div class="navigation">
+    <button id="prev-slide" class="nav-button">←</button>
+    <button id="next-slide" class="nav-button">→</button>
+  </div>
+
+  <div class="progress-indicator" id="progress-indicator">
+    <!-- Will be populated by JavaScript -->
   </div>
 
   <script>
-    // Simple script to make demo buttons interactive
-    document.querySelectorAll('.demo-button').forEach(button => {
-      button.addEventListener('click', function() {
-        // In a real presentation, this would control video playback
-        alert('This would play or control the demo video in the actual presentation');
-      });
-    });
-
-    // For a real presentation, you might add keyboard navigation:
-    document.addEventListener('keydown', function(e) {
+    // Simple script for presentation navigation
+    document.addEventListener('DOMContentLoaded', function() {
       const slides = document.querySelectorAll('.slide');
-      // Find current slide (one that's visible)
       let currentSlideIndex = 0;
       
-      // In a real implementation, this would handle slide navigation
+      // Create progress indicator dots
+      const progressIndicator = document.getElementById('progress-indicator');
+      slides.forEach((_, index) => {
+        const dot = document.createElement('div');
+        dot.classList.add('progress-dot');
+        if (index === 0) dot.classList.add('active');
+        dot.addEventListener('click', () => goToSlide(index));
+        progressIndicator.appendChild(dot);
+      });
+      
+      function updateProgressIndicator() {
+        document.querySelectorAll('.progress-dot').forEach((dot, index) => {
+          if (index === currentSlideIndex) {
+            dot.classList.add('active');
+          } else {
+            dot.classList.remove('active');
+          }
+        });
+      }
+
+      function goToSlide(index) {
+        if (index >= 0 && index < slides.length) {
+          slides[currentSlideIndex].style.display = 'none';
+          currentSlideIndex = index;
+          slides[currentSlideIndex].style.display = 'flex';
+          updateProgressIndicator();
+        }
+      }
+      
+      function nextSlide() {
+        goToSlide(currentSlideIndex + 1);
+      }
+      
+      function prevSlide() {
+        goToSlide(currentSlideIndex - 1);
+      }
+      
+      // Initialize slides
+      slides.forEach((slide, index) => {
+        if (index !== 0) {
+          slide.style.display = 'none';
+        }
+      });
+      
+      // Set up navigation
+      document.getElementById('next-slide').addEventListener('click', nextSlide);
+      document.getElementById('prev-slide').addEventListener('click', prevSlide);
+      
+      // Keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+          nextSlide();
+        } else if (e.key === 'ArrowLeft' || e.key === 'Backspace' || e.key === 'PageUp') {
+          prevSlide();
+        }
+      });
+
+      // For demo buttons
+      document.querySelectorAll('.demo-button').forEach(button => {
+        button.addEventListener('click', function() {
+          alert('This would play or control the demo video in the actual presentation');
+        });
+      });
     });
   </script>
 </body>

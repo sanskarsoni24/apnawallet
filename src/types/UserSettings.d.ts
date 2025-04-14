@@ -1,92 +1,58 @@
 
-declare interface UserSettings {
+interface UserSettings {
   theme: 'light' | 'dark' | 'system';
-  notificationsEnabled: boolean;
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  reminderFrequency: 'daily' | 'weekly' | 'monthly' | 'never';
+  fontSize: 'small' | 'medium' | 'large';
   language: string;
-  timezone: string;
-  autoBackup: boolean;
-  backupFrequency: 'daily' | 'weekly' | 'monthly' | 'never';
+  notifications: {
+    email: boolean;
+    push: boolean;
+    sms: boolean;
+  };
+  emailFrequency: 'daily' | 'weekly' | 'immediately';
+  backupEnabled: boolean;
+  backupFrequency: 'daily' | 'weekly' | 'monthly';
+  lastKeyBackup?: string;
   lastBackup?: string;
-  twoFactorEnabled: boolean;
-  lastLoginMethod?: 'email' | 'google' | 'apple' | 'password';
-  accountRecoveryEmail?: string;
-  recoveryCodesGenerated?: boolean;
-  recoveryCodesUsed?: number;
-  lastLogin?: string;
-  loginCount?: number;
-  deviceHistory?: Array<any>;
-  emailVerified?: boolean;
-  phoneVerified?: boolean;
-  phoneNumber?: string;
-  appNotificationsChannel?: 'all' | 'important' | 'none';
-  documentReminders?: boolean;
-  customReminderDefaults?: {
-    days: number;
-    enabled: boolean;
-  };
-  useSpeechSynthesis?: boolean;
-  documentVoicePreview?: boolean;
-  defaultDocumentPrivacy?: 'private' | 'shared' | 'public';
-  defaultDocumentImportance?: 'low' | 'medium' | 'high' | 'critical';
-  showDocumentOnCalendar?: boolean;
-  dashboardView?: 'grid' | 'list' | 'timeline';
-  recentSearches?: string[];
-  favoriteCategories?: string[];
-  importantDatesCalendarSync?: boolean;
-  autoTagDocuments?: boolean;
-  compactView?: boolean;
-  documentSortOrder?: 'name' | 'date' | 'type' | 'importance';
-  documentGrouping?: 'none' | 'category' | 'type' | 'importance';
-  
-  // Properties for biometric authentication
-  biometricAuth?: {
-    enabled: boolean;
-    faceIdEnabled?: boolean;
-    fingerprintEnabled?: boolean;
-    lastVerified?: string;
-  };
-  
-  // Recent documents tracking
+  lastBackupStatus?: 'success' | 'failed' | 'in-progress';
+  backupSize?: number;
+  backupEncrypted?: boolean;
+  lastAutoBackupAttempt?: string;
+  documentCategoriesOrder: string[];
+  customCategories: {
+    id: string;
+    name: string;
+    color: string;
+    icon: string;
+  }[];
+  documentOrder: 'name' | 'date' | 'category' | 'custom';
+  showDocumentTags: boolean;
+  showDocumentDates: boolean;
+  adminNotifications: boolean;
+  securityLevel: 'standard' | 'enhanced' | 'maximum';
+  twoFactorAuth: boolean;
+  autoLogoutTime: number;
+  autoLockVault: boolean;
   recentDocuments?: string[];
   recentDocumentsMaxCount?: number;
-  lastViewedDocument?: string;
-  
-  // PDF viewer settings
-  pdfDefaultZoom?: number;
-  pdfRememberLastPage?: boolean;
-  pdfShowThumbnails?: boolean;
-  pdfShowPageControls?: boolean;
-  pdfNightMode?: boolean;
-  
-  // Added properties for Google integration
-  googleEmail?: string;
-  googleProfilePicture?: string;
-  googleId?: string;
-  googleConnected?: boolean;
-  
-  // Improved backup functionality
-  backupEncrypted?: boolean;
-  backupLocations?: ('local' | 'cloud' | 'external')[];
-  backupPassword?: string;
-  backupSize?: number;
-  lastBackupStatus?: 'success' | 'failed' | 'pending';
-  lastAutoBackupAttempt?: string;
-  backupRetentionCount?: number;
-  
-  // Recovery keys improvements
+  allowDocumentSharing: boolean;
+  defaultDocumentView: 'grid' | 'list' | 'calendar';
+  biometricAuth?: {
+    enabled: boolean;
+    type: string;
+    lastVerified?: string;
+    requiredForSensitive?: boolean;
+  };
   recoveryKeys?: string[];
-  recoveryKeyLastGenerated?: string;
-  recoveryKeyUsageHistory?: {date: string, keyId: string}[];
-  
-  // Mobile device integration
-  mobileDeviceName?: string;
-  
-  // Extension integration
+  recoveryKeyUsageHistory?: { key: string; date: string; success: boolean }[];
+  backupPassword?: string;
   extensionConnected?: boolean;
   extensionLastSync?: string;
-  extensionDeviceId?: string;
-  extensionSyncEnabled?: boolean;
+  autoTagging: boolean;
+  rememberSort: boolean;
+  calendarStartDay: 0 | 1 | 6;
+  reminders: {
+    enabled: boolean;
+    daysInAdvance: number[];
+  };
+  googleEmail?: string;
 }

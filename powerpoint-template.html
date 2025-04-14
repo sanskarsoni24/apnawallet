@@ -3,37 +3,68 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>ApnaWallet MVP Presentation</title>
+  <title>ApnaWallet MVP Presentation - Detailed</title>
   <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f5f7;
+    }
     .slide {
       width: 960px;
       height: 540px;
-      margin-bottom: 30px;
-      padding: 20px;
+      margin-bottom: 50px;
+      padding: 40px;
+      box-sizing: border-box;
       border: 1px solid #ccc;
       position: relative;
       background-color: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     .slide-title {
       text-align: center;
-      padding-top: 180px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
     }
     .slide-content {
-      padding: 20px;
+      height: 90%;
+      overflow: hidden;
     }
     h1 {
-      font-size: 32px;
+      font-size: 36px;
       color: #2563eb;
+      margin-bottom: 16px;
     }
     h2 {
+      font-size: 28px;
+      color: #4b5563;
+      margin-bottom: 20px;
+    }
+    h3 {
       font-size: 24px;
       color: #4b5563;
+      margin-bottom: 16px;
+    }
+    h4 {
+      font-size: 20px;
+      color: #4b5563;
+      margin-bottom: 12px;
     }
     ul {
       font-size: 18px;
+      line-height: 1.6;
     }
     li {
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+    }
+    p {
+      font-size: 18px;
+      line-height: 1.6;
     }
     .slide-number {
       position: absolute;
@@ -45,97 +76,1106 @@
     .two-column {
       display: flex;
       justify-content: space-between;
+      gap: 40px;
+      height: 100%;
     }
     .column {
       width: 48%;
     }
     .image-placeholder {
       background-color: #f0f0f0;
-      width: 400px;
-      height: 300px;
+      width: 100%;
+      height: 250px;
       margin: 0 auto;
       display: flex;
       justify-content: center;
       align-items: center;
       border: 1px dashed #888;
     }
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+      background-color: #e9effd;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: 20px;
+      flex-shrink: 0;
+    }
+    .feature-item {
+      display: flex;
+      margin-bottom: 20px;
+    }
+    .feature-text {
+      flex: 1;
+    }
+    .feature-text h4 {
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+    .feature-text p {
+      margin-top: 0;
+      font-size: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #f3f4f6;
+      font-weight: 600;
+    }
+    .bg-primary {
+      background-color: #2563eb;
+      color: white;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .text-primary {
+      color: #2563eb;
+    }
+    .text-success {
+      color: #10b981;
+    }
+    .text-warning {
+      color: #f59e0b;
+    }
+    .text-danger {
+      color: #ef4444;
+    }
+    .mb-0 {
+      margin-bottom: 0;
+    }
+    .mt-4 {
+      margin-top: 20px;
+    }
+    .mb-4 {
+      margin-bottom: 20px;
+    }
+    .demo-screenshot {
+      width: 100%;
+      height: 240px;
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .callout {
+      background-color: #f9fafb;
+      border-left: 4px solid #2563eb;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    .callout-warning {
+      border-color: #f59e0b;
+    }
+    .callout-success {
+      border-color: #10b981;
+    }
   </style>
 </head>
 <body>
   <!-- Slide 1: Title -->
   <div class="slide slide-title">
-    <h1>ApnaWallet MVP</h1>
-    <h2>Secure Document Management Platform</h2>
-    <p>April 2024</p>
+    <div>
+      <h1>ApnaWallet MVP</h1>
+      <h2>Comprehensive Document Management Platform</h2>
+      <p>Secure • Organized • Smart</p>
+      <p>April 2024</p>
+      <div class="image-placeholder">
+        [Logo: ApnaWallet]
+      </div>
+    </div>
     <div class="slide-number">1</div>
   </div>
 
-  <!-- Slide 2: Problem -->
+  <!-- Slide 2: Executive Summary -->
   <div class="slide">
     <div class="slide-content">
-      <h1>The Problem</h1>
-      <ul>
-        <li>Important documents are scattered across physical and digital locations</li>
-        <li>Critical document expiry dates often missed</li>
-        <li>Security concerns with sensitive document storage</li>
-        <li>No centralized system for document management</li>
-        <li>Time consuming to find and access documents when needed</li>
-      </ul>
+      <h1>Executive Summary</h1>
+      <div class="two-column">
+        <div class="column">
+          <h3>The Problem</h3>
+          <ul>
+            <li>Important documents scattered across physical and digital locations</li>
+            <li>Critical expiration dates often missed</li>
+            <li>Security concerns with sensitive document storage</li>
+            <li>Lack of centralized document management</li>
+          </ul>
+        </div>
+        <div class="column">
+          <h3>Our Solution</h3>
+          <p>ApnaWallet provides a comprehensive platform for:</p>
+          <ul>
+            <li><strong>Secure Storage:</strong> Military-grade encryption for documents</li>
+            <li><strong>Smart Organization:</strong> AI-powered categorization & search</li>
+            <li><strong>Expiry Tracking:</strong> Never miss important dates</li>
+            <li><strong>Intelligent Notifications:</strong> Timely reminders</li>
+            <li><strong>Cross-Platform Access:</strong> Available anywhere, anytime</li>
+          </ul>
+        </div>
+      </div>
     </div>
     <div class="slide-number">2</div>
   </div>
 
-  <!-- Slide 3: Solution -->
+  <!-- Slide 3: Market Analysis -->
   <div class="slide">
     <div class="slide-content">
-      <h1>Introducing ApnaWallet</h1>
-      <p>ApnaWallet is a secure document management and personal information storage platform designed to help users:</p>
-      <ul>
-        <li><strong>Safely store</strong> critical documents</li>
-        <li><strong>Organize</strong> personal information</li>
-        <li><strong>Manage</strong> document lifecycles and expiry dates</li>
-        <li><strong>Access</strong> documents anytime, anywhere</li>
-        <li><strong>Share</strong> documents securely when needed</li>
-      </ul>
+      <h1>Market Analysis</h1>
+      <div class="two-column">
+        <div class="column">
+          <h3>Target Market</h3>
+          <ul>
+            <li><strong>Primary:</strong> Working professionals (25-55)</li>
+            <li><strong>Secondary:</strong> Small businesses & freelancers</li>
+            <li><strong>Tertiary:</strong> Elderly users with document management needs</li>
+          </ul>
+          <h3>Market Size</h3>
+          <p>The document management market is projected to reach $11.3 billion by 2026, with a CAGR of 12.8%.</p>
+        </div>
+        <div class="column">
+          <h3>Competitive Landscape</h3>
+          <table>
+            <tr>
+              <th>Competitor</th>
+              <th>Strengths</th>
+              <th>Weaknesses</th>
+            </tr>
+            <tr>
+              <td>DocuSafe</td>
+              <td>Strong security</td>
+              <td>Poor UX, limited features</td>
+            </tr>
+            <tr>
+              <td>FileVault</td>
+              <td>Good organization</td>
+              <td>Weak security, no reminders</td>
+            </tr>
+            <tr>
+              <td>SecureDocs</td>
+              <td>Enterprise focus</td>
+              <td>Complex, expensive</td>
+            </tr>
+          </table>
+        </div>
+      </div>
     </div>
     <div class="slide-number">3</div>
   </div>
 
-  <!-- Slide 4: Key Feature - Secure Document Storage -->
+  <!-- Slide 4: Core Feature - Secure Document Storage -->
   <div class="slide">
-    <div class="slide-content two-column">
-      <div class="column">
-        <h1>Secure Document Storage</h1>
-        <ul>
-          <li>End-to-end encryption for all stored documents</li>
-          <li>Support for multiple document types:
+    <div class="slide-content">
+      <h1>Feature: Secure Document Storage</h1>
+      <div class="two-column">
+        <div class="column">
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>End-to-End Encryption</h4>
+              <p>AES-256 military-grade encryption for all documents and metadata</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Zero-Knowledge Architecture</h4>
+              <p>Even we can't access your documents - only you hold the encryption keys</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Secure Vault</h4>
+              <p>Additional protection layer for highly sensitive documents with biometric verification</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Multi-Factor Authentication</h4>
+              <p>Optional 2FA with authenticator apps or SMS verification</p>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="demo-screenshot">
+            [Screenshot: Security Vault Interface]
+          </div>
+          <div class="callout">
+            <h4 class="mb-0">Security Certifications</h4>
+            <p>Our platform undergoes regular security audits and is compliant with:</p>
             <ul>
-              <li>ID cards, passports, licenses, certificates, etc.</li>
+              <li>ISO 27001</li>
+              <li>GDPR</li>
+              <li>SOC 2 Type II</li>
             </ul>
-          </li>
-          <li>Secure vault with biometric authentication</li>
-        </ul>
-      </div>
-      <div class="column">
-        <div class="image-placeholder">
-          [IMAGE: Secure Document Storage]
+          </div>
         </div>
       </div>
     </div>
     <div class="slide-number">4</div>
   </div>
 
-  <!-- Additional slides would continue following the same pattern -->
-  <!-- ... -->
+  <!-- Slide 5: Core Feature - Document Management -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Feature: Smart Document Management</h1>
+      <div class="two-column">
+        <div class="column">
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Intelligent Categorization</h4>
+              <p>AI-powered sorting of documents into predefined and custom categories</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Document Tagging</h4>
+              <p>Custom tags for easy sorting and filtering across categories</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Advanced Search</h4>
+              <p>Full-text search capabilities across all document metadata and content</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Multiple Views</h4>
+              <p>Grid, list, timeline, and calendar views to match your workflow</p>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="demo-screenshot">
+            [Screenshot: Document Organization Interface]
+          </div>
+          <div class="callout">
+            <h4 class="mb-0">Supported Document Types</h4>
+            <ul>
+              <li>Official ID documents (passports, licenses, etc.)</li>
+              <li>Financial documents (tax returns, bank statements)</li>
+              <li>Property documents (deeds, insurance policies)</li>
+              <li>Health records (prescriptions, lab reports)</li>
+              <li>Educational documents (certificates, diplomas)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">5</div>
+  </div>
 
-  <!-- Final Slide: Thank You -->
-  <div class="slide slide-title">
-    <h1>Thank You!</h1>
-    <p>Contact: team@apnawallet.com</p>
-    <div class="image-placeholder" style="width: 200px; height: 200px;">
-      [QR Code]
+  <!-- Slide 6: Core Feature - Expiry Tracking -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Feature: Intelligent Expiry Tracking</h1>
+      <div class="two-column">
+        <div class="column">
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Visual Calendar</h4>
+              <p>Color-coded calendar interface showing upcoming expiration dates</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Custom Reminder Schedules</h4>
+              <p>Set personalized reminder schedules for each document</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Priority Levels</h4>
+              <p>Assign importance levels to documents for prioritized notifications</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Renewal Workflows</h4>
+              <p>Guided workflows for document renewal with checklists</p>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="demo-screenshot">
+            [Screenshot: Calendar View with Expiry Dates]
+          </div>
+          <table>
+            <tr>
+              <th>Urgency Level</th>
+              <th>Color Code</th>
+              <th>Default Notification</th>
+            </tr>
+            <tr>
+              <td>Critical (1-7 days)</td>
+              <td class="text-danger">Red</td>
+              <td>Daily</td>
+            </tr>
+            <tr>
+              <td>High (8-30 days)</td>
+              <td class="text-warning">Orange</td>
+              <td>Weekly</td>
+            </tr>
+            <tr>
+              <td>Medium (31-90 days)</td>
+              <td class="text-primary">Blue</td>
+              <td>Monthly</td>
+            </tr>
+            <tr>
+              <td>Low (90+ days)</td>
+              <td class="text-success">Green</td>
+              <td>Quarterly</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">6</div>
+  </div>
+
+  <!-- Slide 7: Core Feature - Notification System -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Feature: Smart Notification System</h1>
+      <div class="two-column">
+        <div class="column">
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Multi-Channel Alerts</h4>
+              <p>Receive notifications via email, SMS, push notifications, and in-app alerts</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Voice Reminders</h4>
+              <p>Optional voice notifications for accessibility and convenience</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Smart Frequency</h4>
+              <p>Intelligent escalation of notification frequency as deadlines approach</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Delegate Access</h4>
+              <p>Safely delegate notifications to family members or colleagues</p>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="demo-screenshot">
+            [Screenshot: Notification Settings Interface]
+          </div>
+          <div class="callout">
+            <h4 class="mb-0">Notification Settings</h4>
+            <p>Users can customize:</p>
+            <ul>
+              <li>Preferred notification channels</li>
+              <li>Quiet hours and time zones</li>
+              <li>Notification grouping preferences</li>
+              <li>Priority thresholds for alerts</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">7</div>
+  </div>
+
+  <!-- Slide 8: Core Feature - User Experience -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Feature: Superior User Experience</h1>
+      <div class="two-column">
+        <div class="column">
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Responsive Design</h4>
+              <p>Seamless experience across desktop, tablet, and mobile devices</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Light & Dark Modes</h4>
+              <p>Visually comfortable interfaces for any environment</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Intuitive Dashboard</h4>
+              <p>At-a-glance view of document status, deadlines, and recent activity</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Accessibility Features</h4>
+              <p>WCAG 2.1 AA compliant with screen reader support and keyboard navigation</p>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="demo-screenshot">
+            [Screenshot: Dashboard in Light and Dark Modes]
+          </div>
+          <div class="callout">
+            <h4 class="mb-0">Localization</h4>
+            <p>MVP will support:</p>
+            <ul>
+              <li>English (US/UK)</li>
+              <li>Hindi</li>
+              <li>Date formats based on region</li>
+              <li>RTL language support planned for future releases</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">8</div>
+  </div>
+
+  <!-- Slide 9: Chrome Extension -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Feature: Chrome Extension</h1>
+      <div class="two-column">
+        <div class="column">
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Quick Access</h4>
+              <p>Instantly access documents without opening the full web app</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>One-Click Save</h4>
+              <p>Save documents and receipts directly from any webpage</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Form Auto-Fill</h4>
+              <p>Automatically fill online forms using stored document data</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">[Icon]</div>
+            <div class="feature-text">
+              <h4>Screenshot Capture</h4>
+              <p>Capture, annotate, and save important information as you browse</p>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="demo-screenshot">
+            [Screenshot: Chrome Extension Interface]
+          </div>
+          <div class="callout">
+            <h4 class="mb-0">Security First</h4>
+            <p>Our Chrome extension maintains the same security standards:</p>
+            <ul>
+              <li>Local encryption before any data transmission</li>
+              <li>Zero tracking or data collection from browsing</li>
+              <li>Strict permission model with minimal access requirements</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">9</div>
+  </div>
+
+  <!-- Slide 10: Technical Architecture -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Technical Architecture</h1>
+      <div class="two-column">
+        <div class="column">
+          <h3>Frontend Technology</h3>
+          <ul>
+            <li><strong>React with TypeScript:</strong> For robust, type-safe UI development</li>
+            <li><strong>Tailwind CSS:</strong> For responsive, utility-first styling</li>
+            <li><strong>Shadcn UI:</strong> For consistent, accessible component library</li>
+            <li><strong>Progressive Web App:</strong> For cross-platform compatibility</li>
+          </ul>
+          <h3>Security Framework</h3>
+          <ul>
+            <li><strong>AES-256 Encryption:</strong> Military-grade protection</li>
+            <li><strong>Zero-Knowledge Architecture:</strong> User-controlled keys</li>
+            <li><strong>Certificate Pinning:</strong> Prevents MITM attacks</li>
+            <li><strong>Regular Security Audits:</strong> By third-party firms</li>
+          </ul>
+        </div>
+        <div class="column">
+          <div class="demo-screenshot">
+            [Diagram: Technical Architecture Overview]
+          </div>
+          <div class="callout callout-warning">
+            <h4 class="mb-0">Security Commitment</h4>
+            <p>We prioritize security through:</p>
+            <ul>
+              <li>Client-side encryption before data transmission</li>
+              <li>Secure key management with option for user-held keys</li>
+              <li>Automated security testing in CI/CD pipeline</li>
+              <li>Bug bounty program for security researchers</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">10</div>
+  </div>
+
+  <!-- Slide 11: Subscription Tiers -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Subscription Tiers</h1>
+      <table>
+        <tr>
+          <th>Feature</th>
+          <th>Free</th>
+          <th>Basic</th>
+          <th>Premium</th>
+          <th>Enterprise</th>
+        </tr>
+        <tr>
+          <td>Document Limit</td>
+          <td>10</td>
+          <td>50</td>
+          <td>Unlimited</td>
+          <td>Unlimited</td>
+        </tr>
+        <tr>
+          <td>Document Size</td>
+          <td>5MB</td>
+          <td>15MB</td>
+          <td>25MB</td>
+          <td>100MB</td>
+        </tr>
+        <tr>
+          <td>Secure Storage</td>
+          <td>✓</td>
+          <td>✓</td>
+          <td>✓</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>Expiry Tracking</td>
+          <td>✓</td>
+          <td>✓</td>
+          <td>✓</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>Cloud Backup</td>
+          <td>✗</td>
+          <td>✓</td>
+          <td>✓</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>Multi-Channel Notifications</td>
+          <td>Email Only</td>
+          <td>Email + Push</td>
+          <td>All Channels</td>
+          <td>All Channels</td>
+        </tr>
+        <tr>
+          <td>Advanced Sharing</td>
+          <td>✗</td>
+          <td>✗</td>
+          <td>✓</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>Chrome Extension</td>
+          <td>Basic</td>
+          <td>Full</td>
+          <td>Full</td>
+          <td>Full</td>
+        </tr>
+        <tr>
+          <td>Team Management</td>
+          <td>✗</td>
+          <td>✗</td>
+          <td>✗</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>Admin Console</td>
+          <td>✗</td>
+          <td>✗</td>
+          <td>✗</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>Price (Monthly)</td>
+          <td>Free</td>
+          <td>$4.99</td>
+          <td>$9.99</td>
+          <td>Custom</td>
+        </tr>
+      </table>
+      <div class="callout callout-success mt-4">
+        <h4 class="mb-0">Freemium Strategy</h4>
+        <p>Our free tier provides genuine value while encouraging upgrades through natural usage limits and premium features.</p>
+      </div>
+    </div>
+    <div class="slide-number">11</div>
+  </div>
+
+  <!-- Slide 12: Roadmap -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Product Roadmap</h1>
+      <div class="two-column">
+        <div class="column">
+          <h3>Q2 2024 - MVP Launch</h3>
+          <ul>
+            <li>Core document storage & management</li>
+            <li>Basic expiry tracking</li>
+            <li>Email notifications</li>
+            <li>Web app & Chrome extension</li>
+          </ul>
+          <h3>Q3 2024 - First Major Update</h3>
+          <ul>
+            <li>Mobile apps (iOS & Android)</li>
+            <li>Advanced OCR for document scanning</li>
+            <li>Multi-channel notifications</li>
+            <li>Enhanced security features</li>
+          </ul>
+        </div>
+        <div class="column">
+          <h3>Q4 2024 - Expansion</h3>
+          <ul>
+            <li>Collaborative document sharing</li>
+            <li>Integration with cloud storage providers</li>
+            <li>AI-powered document suggestions</li>
+            <li>Advanced analytics dashboard</li>
+          </ul>
+          <h3>2025 - Enterprise Features</h3>
+          <ul>
+            <li>Team management & permissions</li>
+            <li>Workflow automation</li>
+            <li>Enterprise SSO integration</li>
+            <li>API for third-party integrations</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout mt-4">
+        <h4 class="mb-0">Feedback-Driven Development</h4>
+        <p>Our roadmap will evolve based on user feedback and usage patterns, with quarterly re-evaluation of priorities.</p>
+      </div>
+    </div>
+    <div class="slide-number">12</div>
+  </div>
+
+  <!-- Slide 13: Getting Started -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Getting Started</h1>
+      <div class="two-column">
+        <div class="column">
+          <h3>Simple Onboarding Process</h3>
+          <ol>
+            <li><strong>Create Account:</strong> Sign up at apnawallet.com</li>
+            <li><strong>Set Security:</strong> Configure your security preferences</li>
+            <li><strong>Upload Documents:</strong> Add your first documents</li>
+            <li><strong>Set Preferences:</strong> Customize notifications and categories</li>
+          </ol>
+          <div class="callout">
+            <h4 class="mb-0">Support Resources</h4>
+            <p>Users will have access to:</p>
+            <ul>
+              <li>Comprehensive documentation</li>
+              <li>Interactive guided tours</li>
+              <li>Video tutorials</li>
+              <li>24/7 chat support</li>
+            </ul>
+          </div>
+        </div>
+        <div class="column">
+          <div class="demo-screenshot">
+            [Screenshot: Onboarding Screens]
+          </div>
+          <h3>Key Metrics for Success</h3>
+          <ul>
+            <li><strong>Activation Rate:</strong> 60%+ of signed-up users upload at least 3 documents</li>
+            <li><strong>Retention Rate:</strong> 30-day retention rate of 70%+</li>
+            <li><strong>Engagement:</strong> Average of 5+ visits per month per active user</li>
+            <li><strong>Conversion:</strong> 5%+ of free users convert to paid within 3 months</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">13</div>
+  </div>
+
+  <!-- Slide 14: Impact & Benefits -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Customer Impact & Benefits</h1>
+      <div class="two-column">
+        <div class="column">
+          <h3>Primary Benefits</h3>
+          <ul>
+            <li><strong>Time Savings:</strong> Average 15+ hours saved annually on document management</li>
+            <li><strong>Cost Reduction:</strong> Eliminate late fees and penalties from missed deadlines</li>
+            <li><strong>Peace of Mind:</strong> Security and organization of critical documents</li>
+            <li><strong>Accessibility:</strong> Documents available anytime, anywhere</li>
+          </ul>
+          <h3>Customer Scenarios</h3>
+          <ul>
+            <li><strong>Family Management:</strong> Store birth certificates, medical records, school documents</li>
+            <li><strong>Financial Organization:</strong> Tax documents, insurance policies, investments</li>
+            <li><strong>Property Management:</strong> Home ownership, rental agreements, maintenance records</li>
+            <li><strong>Professional Credentials:</strong> Licenses, certifications, educational documents</li>
+          </ul>
+        </div>
+        <div class="column">
+          <div class="demo-screenshot">
+            [Image: Customer Journey Illustration]
+          </div>
+          <div class="callout">
+            <h4 class="mb-0">Customer Testimonials (Beta Users)</h4>
+            <p><em>"I was always forgetting when my car insurance needed renewal. ApnaWallet saved me from a lapse in coverage with timely reminders."</em> — Rahul S.</p>
+            <p><em>"As someone who travels frequently, having all my travel documents securely accessible on my phone has been a game-changer."</em> — Priya M.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">14</div>
+  </div>
+
+  <!-- Slide 15: Privacy & Security Commitment -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Privacy & Security Commitment</h1>
+      <div class="two-column">
+        <div class="column">
+          <h3>No Compromise Security</h3>
+          <ul>
+            <li><strong>End-to-End Encryption:</strong> Data encrypted before leaving your device</li>
+            <li><strong>Zero-Knowledge Architecture:</strong> We cannot access your documents</li>
+            <li><strong>Regular Security Audits:</strong> Conducted by third-party security firms</li>
+            <li><strong>Transparent Privacy Policy:</strong> Written in plain language</li>
+          </ul>
+          <h3>Data Protection Principles</h3>
+          <ul>
+            <li><strong>Data Minimization:</strong> We only collect what's necessary</li>
+            <li><strong>Purpose Limitation:</strong> Data used only for stated purposes</li>
+            <li><strong>Storage Limitation:</strong> Data deleted when no longer needed</li>
+            <li><strong>User Control:</strong> Export or delete your data at any time</li>
+          </ul>
+        </div>
+        <div class="column">
+          <div class="demo-screenshot">
+            [Image: Security Architecture Diagram]
+          </div>
+          <div class="callout callout-warning">
+            <h4 class="mb-0">Compliance & Certifications</h4>
+            <p>Our platform adheres to global standards:</p>
+            <ul>
+              <li>GDPR Compliant</li>
+              <li>CCPA Compliant</li>
+              <li>ISO 27001 Certified</li>
+              <li>SOC 2 Type II Audited</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="slide-number">15</div>
+  </div>
+
+  <!-- Slide 16: Implementation Timeline -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Implementation Timeline</h1>
+      <table>
+        <tr>
+          <th>Phase</th>
+          <th>Timeframe</th>
+          <th>Key Deliverables</th>
+          <th>Status</th>
+        </tr>
+        <tr>
+          <td>Research & Planning</td>
+          <td>Q4 2023</td>
+          <td>Market research, competitor analysis, user interviews</td>
+          <td>Completed</td>
+        </tr>
+        <tr>
+          <td>Design & Architecture</td>
+          <td>Q1 2024</td>
+          <td>UI/UX design, technical architecture, security framework</td>
+          <td>Completed</td>
+        </tr>
+        <tr>
+          <td>MVP Development</td>
+          <td>Q1-Q2 2024</td>
+          <td>Core features implementation, testing, security audits</td>
+          <td>Completed</td>
+        </tr>
+        <tr>
+          <td>Beta Testing</td>
+          <td>March 2024</td>
+          <td>Closed beta with 100+ users, feedback collection</td>
+          <td>Completed</td>
+        </tr>
+        <tr>
+          <td>Launch Preparation</td>
+          <td>April 2024</td>
+          <td>Marketing materials, documentation, support training</td>
+          <td>In Progress</td>
+        </tr>
+        <tr>
+          <td>Public Launch</td>
+          <td>May 2024</td>
+          <td>Market release, PR campaign, user acquisition</td>
+          <td>Planned</td>
+        </tr>
+        <tr>
+          <td>Post-Launch Iteration</td>
+          <td>Q2-Q3 2024</td>
+          <td>Feature refinement based on user feedback</td>
+          <td>Planned</td>
+        </tr>
+      </table>
+      <div class="callout mt-4">
+        <h4 class="mb-0">Agile Development Approach</h4>
+        <p>We follow a two-week sprint cycle with continuous integration and weekly internal releases.</p>
+      </div>
+    </div>
+    <div class="slide-number">16</div>
+  </div>
+
+  <!-- Slide 17: Team & Resources -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Team & Resources</h1>
+      <div class="two-column">
+        <div class="column">
+          <h3>Core Team</h3>
+          <ul>
+            <li><strong>Product Management:</strong> 2 dedicated PMs</li>
+            <li><strong>Engineering:</strong> 5 full-stack developers, 1 security specialist</li>
+            <li><strong>Design:</strong> 2 UX/UI designers</li>
+            <li><strong>QA:</strong> 2 QA engineers</li>
+            <li><strong>Marketing:</strong> 1 growth marketer</li>
+            <li><strong>Customer Support:</strong> 2 support specialists</li>
+          </ul>
+          <h3>Development Resources</h3>
+          <ul>
+            <li><strong>Infrastructure:</strong> Cloud-based with multi-region redundancy</li>
+            <li><strong>Development Tools:</strong> Modern CI/CD pipeline</li>
+            <li><strong>Testing:</strong> Automated testing framework with 85%+ coverage</li>
+          </ul>
+        </div>
+        <div class="column">
+          <h3>Advisory Board</h3>
+          <ul>
+            <li><strong>Security Advisor:</strong> Former CISO of major financial institution</li>
+            <li><strong>UX Advisor:</strong> Expert in accessibility and inclusive design</li>
+            <li><strong>Legal Advisor:</strong> Specialist in data privacy regulations</li>
+            <li><strong>Finance Advisor:</strong> Experienced in SaaS business models</li>
+          </ul>
+          <h3>Budget Allocation</h3>
+          <div class="demo-screenshot">
+            [Chart: Budget Allocation by Department]
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">17</div>
+  </div>
+
+  <!-- Slide 18: Go-to-Market Strategy -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Go-to-Market Strategy</h1>
+      <div class="two-column">
+        <div class="column">
+          <h3>Launch Strategy</h3>
+          <ul>
+            <li><strong>Phased Rollout:</strong> Limited regional release followed by global expansion</li>
+            <li><strong>Freemium Model:</strong> Free tier with compelling value and natural upgrade path</li>
+            <li><strong>Content Marketing:</strong> Educational content on document security and organization</li>
+            <li><strong>Referral Program:</strong> In-app incentives for user referrals</li>
+          </ul>
+          <h3>Marketing Channels</h3>
+          <ul>
+            <li><strong>Organic:</strong> SEO, content marketing, social media</li>
+            <li><strong>Paid:</strong> Targeted SEM, social ads, display network</li>
+            <li><strong>Partnerships:</strong> Integration with complementary services</li>
+            <li><strong>PR:</strong> Media outreach focusing on security and organization</li>
+          </ul>
+        </div>
+        <div class="column">
+          <h3>Customer Acquisition Strategy</h3>
+          <div class="demo-screenshot">
+            [Chart: Customer Acquisition Funnel]
+          </div>
+          <div class="callout">
+            <h4 class="mb-0">Key Performance Indicators</h4>
+            <ul>
+              <li><strong>CAC:</strong> Target $25 for free users, $75 for premium conversions</li>
+              <li><strong>LTV:</strong> Target $200+ for premium users</li>
+              <li><strong>Conversion Rate:</strong> Target 5-7% free-to-paid conversion</li>
+              <li><strong>Churn Rate:</strong> Target <3% monthly for paid users</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">18</div>
+  </div>
+
+  <!-- Slide 19: Risk Analysis -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Risk Analysis & Mitigation</h1>
+      <table>
+        <tr>
+          <th>Risk Category</th>
+          <th>Potential Risks</th>
+          <th>Impact</th>
+          <th>Mitigation Strategy</th>
+        </tr>
+        <tr>
+          <td>Security</td>
+          <td>Data breach, encryption vulnerabilities</td>
+          <td>High</td>
+          <td>Regular security audits, penetration testing, bug bounty program</td>
+        </tr>
+        <tr>
+          <td>Market Adoption</td>
+          <td>Slow user growth, low conversion rates</td>
+          <td>Medium</td>
+          <td>Targeted marketing, enhanced free tier value, user education</td>
+        </tr>
+        <tr>
+          <td>Competition</td>
+          <td>New entrants, feature parity from competitors</td>
+          <td>Medium</td>
+          <td>Rapid innovation cycle, focus on unique value propositions</td>
+        </tr>
+        <tr>
+          <td>Technical</td>
+          <td>Scalability issues, performance bottlenecks</td>
+          <td>Medium</td>
+          <td>Load testing, infrastructure redundancy, performance monitoring</td>
+        </tr>
+        <tr>
+          <td>Regulatory</td>
+          <td>Changing privacy laws, compliance issues</td>
+          <td>High</td>
+          <td>Legal advisory board, regular compliance reviews, flexible architecture</td>
+        </tr>
+        <tr>
+          <td>Financial</td>
+          <td>Cashflow issues, unexpected costs</td>
+          <td>Medium</td>
+          <td>Conservative financial modeling, phased development approach</td>
+        </tr>
+      </table>
+      <div class="callout callout-warning mt-4">
+        <h4 class="mb-0">Continuous Risk Assessment</h4>
+        <p>We conduct quarterly risk reviews and maintain an updated risk register with assigned ownership and mitigation strategies.</p>
+      </div>
+    </div>
+    <div class="slide-number">19</div>
+  </div>
+
+  <!-- Slide 20: Conclusion & Next Steps -->
+  <div class="slide">
+    <div class="slide-content">
+      <h1>Conclusion & Next Steps</h1>
+      <div class="two-column">
+        <div class="column">
+          <h3>Key Takeaways</h3>
+          <ul>
+            <li>ApnaWallet addresses a universal need for secure document management</li>
+            <li>Our solution combines security, organization, and intelligent notifications</li>
+            <li>Freemium model provides clear path to monetization</li>
+            <li>Comprehensive roadmap for continued innovation</li>
+          </ul>
+          <h3>Success Criteria</h3>
+          <ul>
+            <li><strong>First 3 Months:</strong> 10,000+ active users, 500+ paid conversions</li>
+            <li><strong>First 6 Months:</strong> 25,000+ active users, 2,000+ paid conversions</li>
+            <li><strong>First Year:</strong> 100,000+ active users, 7,000+ paid conversions</li>
+          </ul>
+        </div>
+        <div class="column">
+          <h3>Immediate Next Steps</h3>
+          <ol>
+            <li>Complete final security audit (April 24, 2024)</li>
+            <li>Finalize marketing materials and launch plan (April 28, 2024)</li>
+            <li>Conduct pre-launch webinar for early adopters (May 5, 2024)</li>
+            <li>Official product launch (May 15, 2024)</li>
+            <li>First post-launch assessment (June 15, 2024)</li>
+          </ol>
+          <div class="callout callout-success">
+            <h4 class="mb-0">Get Involved</h4>
+            <p>Experience ApnaWallet today:</p>
+            <ul>
+              <li>Visit <strong>apnawallet.com</strong> to join our waitlist</li>
+              <li>Follow us on social media for updates</li>
+              <li>Contact <strong>team@apnawallet.com</strong> for partnership inquiries</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">20</div>
+  </div>
+
+  <!-- Slide 21: Thank You -->
+  <div class="slide slide-title">
+    <div>
+      <h1>Thank You!</h1>
+      <p>For questions or more information, please contact:</p>
+      <p><strong>Email:</strong> team@apnawallet.com</p>
+      <p><strong>Website:</strong> apnawallet.com</p>
+      <div class="image-placeholder" style="width: 200px; height: 200px; margin-top: 20px;">
+        [QR Code for Website]
+      </div>
+    </div>
+    <div class="slide-number">21</div>
   </div>
 </body>
 </html>

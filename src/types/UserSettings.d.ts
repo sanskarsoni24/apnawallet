@@ -74,4 +74,9 @@ declare interface UserSettings {
   recoveryKeyUsageHistory?: {date: string, keyId: string}[];
   // Mobile device integration
   mobileDeviceName?: string;
+  // Extension integration
+  extensionConnected?: boolean;
+  extensionLastSync?: string;
+  extensionDeviceId?: string;
+  extensionSyncEnabled?: boolean;
 }

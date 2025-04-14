@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -15,13 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
 import JSZip from "jszip";
-
-// Declare the global variable to avoid TypeScript errors
-declare global {
-  interface Window {
-    __DOCU_NINJA_EXTENSION__?: any;
-  }
-}
+import { detectExtension, isExtensionConnected, getLastExtensionSync, syncWithExtension } from "@/utils/extensionDetector";
+import { useUserSettings } from "@/contexts/UserSettingsContext";
 
 const ChromeExtensionDownload = () => {
   const [isInstalled, setIsInstalled] = useState(false);
@@ -30,20 +24,22 @@ const ChromeExtensionDownload = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
+  const { userSettings, updateUserSettings } = useUserSettings();
   
   useEffect(() => {
-    // Check if the extension is installed by checking for a global function
-    if (typeof window.__DOCU_NINJA_EXTENSION__ !== 'undefined') {
-      setIsInstalled(true);
+    // Check if the extension is installed by checking for global function
+    const installed = detectExtension();
+    setIsInstalled(installed);
+    
+    if (installed) {
       setExtensionStatus("installed");
     } else {
-      setIsInstalled(false);
       setExtensionStatus("not_installed");
     }
     
     // Check if the extension is connected by checking local storage
-    const extensionConnected = localStorage.getItem("extensionConnected") === "true";
-    if (extensionConnected) {
+    const connected = isExtensionConnected();
+    if (connected) {
       setExtensionStatus("connected");
     }
     
@@ -69,6 +65,13 @@ const ChromeExtensionDownload = () => {
   const handleExtensionConnected = () => {
     setExtensionStatus("connected");
     localStorage.setItem("extensionConnected", "true");
+    
+    // Update user settings to reflect extension connected status
+    updateUserSettings({
+      extensionConnected: true,
+      extensionLastSync: new Date().toISOString()
+    });
+    
     toast({
       title: "Extension connected",
       description: "SurakshitLocker Chrome extension is now connected to your account.",
@@ -195,9 +198,7 @@ const ChromeExtensionDownload = () => {
           authToken: localStorage.getItem("authToken") || "",
         });
         
-        // Extension will trigger the connected event if successful
-        
-        // Set a timeout for fallback
+        // Set timeout for fallback
         setTimeout(() => {
           if (extensionStatus !== "connected") {
             setIsConnecting(false);
@@ -226,6 +227,12 @@ const ChromeExtensionDownload = () => {
         setIsConnecting(false);
         setExtensionStatus("connected");
         localStorage.setItem("extensionConnected", "true");
+        
+        // Update user settings
+        updateUserSettings({
+          extensionConnected: true,
+          extensionLastSync: new Date().toISOString()
+        });
         
         // Share user data with the extension
         const userData = {
@@ -263,10 +270,37 @@ const ChromeExtensionDownload = () => {
     localStorage.removeItem("extensionConnected");
     localStorage.removeItem("extensionSyncData");
     
+    // Update user settings
+    updateUserSettings({
+      extensionConnected: false
+    });
+    
     toast({
       title: "Extension disconnected",
       description: "The SurakshitLocker Chrome extension has been disconnected from your account.",
     });
+  };
+
+  const handleSyncNow = () => {
+    const result = syncWithExtension();
+    
+    if (result.success) {
+      // Update user settings with new sync time
+      updateUserSettings({
+        extensionLastSync: new Date().toISOString()
+      });
+      
+      toast({
+        title: "Data synced",
+        description: "Your data has been synced with the Chrome extension.",
+      });
+    } else {
+      toast({
+        title: "Sync failed",
+        description: result.error || "Failed to sync with the extension. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -374,9 +408,9 @@ const ChromeExtensionDownload = () => {
                 <CardDescription>
                   The SurakshitLocker Chrome extension is connected to your account
                   
-                  {localStorage.getItem("extensionSyncData") && (
+                  {userSettings.extensionLastSync && (
                     <p className="text-xs mt-1">
-                      Last synced: {new Date(JSON.parse(localStorage.getItem("extensionSyncData") || "{}").lastSync || new Date()).toLocaleString()}
+                      Last synced: {new Date(userSettings.extensionLastSync).toLocaleString()}
                     </p>
                   )}
                 </CardDescription>
@@ -384,25 +418,7 @@ const ChromeExtensionDownload = () => {
               <CardContent>
                 <div className="flex flex-col gap-2">
                   <Button 
-                    onClick={() => {
-                      // Trigger manual sync
-                      const userData = {
-                        userId: localStorage.getItem("userId") || "demo-user",
-                        userEmail: localStorage.getItem("userEmail") || "demo@example.com",
-                        documents: JSON.parse(localStorage.getItem("documents") || "[]"),
-                        userSettings: JSON.parse(localStorage.getItem("userSettings") || "{}")
-                      };
-                      
-                      localStorage.setItem("extensionSyncData", JSON.stringify({
-                        lastSync: new Date().toISOString(),
-                        syncedData: userData
-                      }));
-                      
-                      toast({
-                        title: "Data synced",
-                        description: "Your data has been synced with the Chrome extension.",
-                      });
-                    }}
+                    onClick={handleSyncNow}
                     className="w-full"
                   >
                     Sync Now

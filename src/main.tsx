@@ -123,3 +123,34 @@ if (isReturningUser && window.location.pathname === "/") {
   // Mark as returning user after first visit
   localStorage.setItem("returning_user", "true");
 }
+
+// Initialize Chrome extension detection
+document.addEventListener('DOMContentLoaded', () => {
+  // Check if the extension is already installed
+  if (typeof window.__DOCU_NINJA_EXTENSION__ !== 'undefined') {
+    // Dispatch the extensionInstalled event
+    const extensionReadyEvent = new CustomEvent('extensionInstalled', {
+      detail: { version: window.__DOCU_NINJA_EXTENSION__.version || '1.0.0' }
+    });
+    document.dispatchEvent(extensionReadyEvent);
+    
+    // Check connection status
+    if (window.__DOCU_NINJA_EXTENSION__.isExtensionConnected && 
+        window.__DOCU_NINJA_EXTENSION__.isExtensionConnected()) {
+      const extensionConnectedEvent = new CustomEvent('extensionConnected', {
+        detail: { timestamp: new Date().toISOString() }
+      });
+      document.dispatchEvent(extensionConnectedEvent);
+    }
+  }
+  
+  // Listen for extension installation events
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'DOCU_NINJA_EXTENSION_READY') {
+      const extensionReadyEvent = new CustomEvent('extensionInstalled', {
+        detail: { version: event.data.version || '1.0.0' }
+      });
+      document.dispatchEvent(extensionReadyEvent);
+    }
+  });
+});

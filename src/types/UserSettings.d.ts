@@ -55,5 +55,19 @@ interface UserSettings {
     daysInAdvance: number[];
   };
   googleEmail?: string;
+  desktopAppInstalled?: boolean;
+  desktopAppVersion?: string;
+  desktopAppLastSync?: string;
+  desktopNotifications?: boolean;
+  desktopAutoStart?: boolean;
+  desktopMinimizeToTray?: boolean;
+  desktopKeepAwake?: boolean;
+  desktopSyncFrequency?: 'realtime' | 'hourly' | 'daily';
+  desktopDownloadPath?: string;
+  recoveryKeyLastGenerated?: string;
+  emailNotifications?: boolean;
+  pushNotifications?: boolean;
+  voiceReminders?: boolean;
+  reminderDays?: number;
+  voiceType?: string;
 }
-

@@ -19,6 +19,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import StripeCheckout from "./pages/StripeCheckout";
 import UserProfile from "./pages/UserProfile";
 import Help from "./pages/Help";
+import DesktopApp from "./pages/DesktopApp";
 import GuidedMessage, { GuideStep } from "./components/onboarding/GuidedMessage";
 import { getGuidesForPath, shouldShowGuide, markGuideAsCompleted } from "./services/OnboardingService";
 
@@ -205,6 +206,7 @@ const App = () => {
                 <Route path="/sign-in" element={<SignIn />} />
                 <Route path="/sign-up" element={<SignUp />} />
                 <Route path="/help" element={<Help />} />
+                <Route path="/desktop-app" element={<DesktopApp />} />
                 <Route 
                   path="/documents" 
                   element={

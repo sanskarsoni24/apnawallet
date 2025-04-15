@@ -7,7 +7,7 @@ import LandingPage from "@/components/landing/LandingPage";
 import { useUser } from "@/contexts/UserContext";
 import SurakshaLocker from "@/components/suraksha/SurakshaLocker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, LayoutDashboard, Calendar, Clock, ArrowRight, Upload } from "lucide-react";
+import { Shield, LayoutDashboard, Calendar, Clock, ArrowRight, Upload, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SurakshitLogo from "@/components/ui/SurakshitLogo";
 import BlurContainer from "@/components/ui/BlurContainer";
@@ -132,7 +132,7 @@ const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
       <FullScreenCalendar isOpen={showCalendar} onClose={handleCloseCalendar} />
       
       {/* Quick Access Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-12">
         <BlurContainer 
           className="p-6 hover:-translate-y-1 hover:shadow-lg transition-all duration-300" 
           variant="elevated"
@@ -192,6 +192,27 @@ const Index = ({ defaultTab = "dashboard" }: IndexProps) => {
             className="w-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 border-emerald-200 dark:border-emerald-800/30 text-emerald-700 dark:text-emerald-400 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-800/30"
           >
             Upload Documents
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        </BlurContainer>
+        
+        <BlurContainer 
+          className="p-6 hover:-translate-y-1 hover:shadow-lg transition-all duration-300" 
+          variant="elevated"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-12 w-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+              <Monitor className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <h3 className="font-semibold text-lg">Desktop App</h3>
+          </div>
+          <p className="text-muted-foreground mb-6">Get ApnaWallet desktop app for faster access and offline functionality.</p>
+          <Button 
+            onClick={() => navigate("/desktop-app")} 
+            variant="outline" 
+            className="w-full bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-800/30 text-purple-700 dark:text-purple-400 hover:from-purple-100 hover:to-purple-200 dark:hover:from-purple-900/30 dark:hover:to-purple-800/30"
+          >
+            Download App
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </BlurContainer>

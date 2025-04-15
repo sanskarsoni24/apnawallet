@@ -34,6 +34,7 @@ interface UserSettings {
   autoLockVault: boolean;
   recentDocuments?: string[];
   recentDocumentsMaxCount?: number;
+  lastViewedDocument?: string;
   allowDocumentSharing: boolean;
   defaultDocumentView: 'grid' | 'list' | 'calendar';
   biometricAuth?: {
@@ -44,6 +45,7 @@ interface UserSettings {
   };
   recoveryKeys?: string[];
   recoveryKeyUsageHistory?: { key: string; date: string; success: boolean }[];
+  recoveryKeyLastGenerated?: string;
   backupPassword?: string;
   extensionConnected?: boolean;
   extensionLastSync?: string;
@@ -64,10 +66,24 @@ interface UserSettings {
   desktopKeepAwake?: boolean;
   desktopSyncFrequency?: 'realtime' | 'hourly' | 'daily';
   desktopDownloadPath?: string;
-  recoveryKeyLastGenerated?: string;
   emailNotifications?: boolean;
   pushNotifications?: boolean;
   voiceReminders?: boolean;
   reminderDays?: number;
   voiceType?: string;
+  displayName?: string;
+  email?: string;
+  isLoggedIn?: boolean;
+  lastLogin?: string;
+  subscriptionPlan?: 'free' | 'basic' | 'premium' | 'enterprise';
+  documentLimit?: number;
+  documentSizeLimit?: number;
+  twoFactorEnabled?: boolean;
+  recoveryEmail?: string;
+  backupKeyCreated?: boolean;
+  backupKeyLocation?: string;
+  autoBackup?: boolean;
+  cloudExportProviders?: string[];
+  mobileDeviceName?: string;
+  googleConnected?: boolean;
 }

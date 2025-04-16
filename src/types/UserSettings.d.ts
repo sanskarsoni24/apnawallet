@@ -57,6 +57,8 @@ interface UserSettings {
     daysInAdvance: number[];
   };
   googleEmail?: string;
+  googleId?: string;
+  googleProfilePicture?: string;
   desktopAppInstalled?: boolean;
   desktopAppVersion?: string;
   desktopAppLastSync?: string;
@@ -86,4 +88,13 @@ interface UserSettings {
   cloudExportProviders?: string[];
   mobileDeviceName?: string;
   googleConnected?: boolean;
+  cloudStorage?: {
+    enabled: boolean;
+    provider: 'internal' | 'google' | 'dropbox' | 'onedrive';
+    usedSpace: number;
+    totalSpace: number;
+    lastSync?: string;
+    autoSync: boolean;
+    syncFrequency: 'realtime' | 'hourly' | 'daily';
+  };
 }

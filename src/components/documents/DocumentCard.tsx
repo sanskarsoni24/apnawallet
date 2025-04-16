@@ -201,6 +201,7 @@ const DocumentCard = ({
     }
   };
 
+  // Get status badge with fixed "secondary" variant
   const getStatusBadge = (status?: string) => {
     switch (status) {
       case "active":
@@ -210,7 +211,7 @@ const DocumentCard = ({
       case "pending":
         return <Badge variant="outline">Pending</Badge>;
       case "completed":
-        return <Badge variant="secondary">Completed</Badge>; // Changed from "warning" to "secondary"
+        return <Badge variant="secondary">Completed</Badge>; // Using "secondary" instead of "warning"
       case "deleted":
         return <Badge variant="destructive">Deleted</Badge>;
       default:

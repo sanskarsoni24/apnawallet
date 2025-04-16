@@ -32,6 +32,7 @@ export interface Document {
   fileSize?: number;
   fileType?: string;
   fileUrl?: string; // Include for backwards compatibility
+  summary?: string; // Add summary field
 }
 
 interface DocumentContextType {
@@ -200,24 +201,35 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Filter documents by type - IMPROVED to properly handle custom document types
   const filterDocumentsByType = (type: string): Document[] => {
     if (type === "All") {
-      return documents.filter(doc => doc.userId === email);
+      // Get all documents owned by the user but exclude those in secure vault
+      return documents.filter(doc => doc.userId === email && !doc.inSecureVault);
     } else if (type === "upcoming") {
+      // Filter for upcoming deadlines (docs with due date in next 7 days) excluding vault docs
       return documents.filter(
-        doc => doc.userId === email && doc.daysRemaining >= 0 && doc.daysRemaining <= 7
+        doc => doc.userId === email && !doc.inSecureVault && doc.daysRemaining >= 0 && doc.daysRemaining <= 7
       );
+    } else if (type === "completed") {
+      // Filter for completed documents excluding vault docs
+      return documents.filter(doc => doc.userId === email && !doc.inSecureVault && doc.status === 'completed');
+    } else if (type === "expired") {
+      // Filter for expired documents excluding vault docs
+      return documents.filter(doc => doc.userId === email && !doc.inSecureVault && doc.status === 'expired');
+    } else if (type === "pending") {
+      // Filter for pending documents excluding vault docs
+      return documents.filter(doc => doc.userId === email && !doc.inSecureVault && doc.status === 'pending');
     } else if (documentTypes.includes(type)) {
-      // Filter by document type
+      // Filter by document type excluding vault docs
       return documents.filter(
-        doc => doc.userId === email && doc.type === type
+        doc => doc.userId === email && !doc.inSecureVault && doc.type === type
       );
     } else if (categories.includes(type)) {
-      // Filter by custom category
+      // Filter by custom category excluding vault docs
       return documents.filter(
-        doc => doc.userId === email && doc.categories && doc.categories.includes(type)
+        doc => doc.userId === email && !doc.inSecureVault && doc.categories && doc.categories.includes(type)
       );
     } else {
-      // Fallback
-      return documents.filter(doc => doc.userId === email);
+      // Fallback excluding vault docs
+      return documents.filter(doc => doc.userId === email && !doc.inSecureVault);
     }
   };
   
@@ -519,7 +531,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   // Get all documents in the vault
   const getVaultDocuments = () => {
-    return documents.filter(doc => doc.inSecureVault === true);
+    return documents.filter(doc => doc.inSecureVault === true && doc.userId === email);
   };
   
   // Check for expired documents on load
@@ -528,7 +540,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       cleanupExpiredDocuments();
     }
   }, []);
-  
+
   return (
     <DocumentContext.Provider 
       value={{ 

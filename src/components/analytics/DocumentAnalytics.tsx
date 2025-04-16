@@ -47,6 +47,7 @@ const DocumentAnalytics: React.FC = () => {
       active: 0,
       expired: 0,
       pending: 0,
+      completed: 0,
       none: 0
     };
     
@@ -74,7 +75,7 @@ const DocumentAnalytics: React.FC = () => {
     };
     
     documents.forEach(doc => {
-      if (!doc.expiryDate) {
+      if (!doc.expiryDate && !doc.dueDate) {
         expiring.noExpiry += 1;
         return;
       }

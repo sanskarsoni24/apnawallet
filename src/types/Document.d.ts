@@ -7,6 +7,7 @@ declare interface Document {
   type: "id_card" | "passport" | "driving_license" | "insurance" | "certificate" | "invoice" | "contract" | "tax" | "other";
   issueDate?: string;
   dueDate?: string;
+  expiryDate?: string;
   fileName?: string;
   fileUrl?: string;
   fileURL?: string;
@@ -26,4 +27,5 @@ declare interface Document {
   pdfLastPage?: number;
   pdfPassword?: string;
   pdfRotation?: number;
+  dateAdded?: string;
 }

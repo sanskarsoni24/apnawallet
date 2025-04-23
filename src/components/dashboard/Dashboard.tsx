@@ -1,145 +1,236 @@
-
 import React from "react";
-import DocumentTimeline from "../documents/DocumentTimeline";
-import { useDocuments } from "@/contexts/DocumentContext";
+import { BarChart3, Calendar, FileText, Filter, ArrowRight, Shield, Clock } from "lucide-react";
 import BlurContainer from "../ui/BlurContainer";
-import RecentDocuments from "../documents/RecentDocuments";
-import { Clock, Upload, AlertTriangle, CheckCircle, FileText } from "lucide-react";
-import { Badge } from "../ui/badge";
+import DocumentCard from "../documents/DocumentCard";
+import DocumentUpload from "../documents/DocumentUpload";
+import DocumentTimeline from "../documents/DocumentTimeline";
+import DocumentCalendar from "./DocumentCalendar";
+import { useDocuments } from "@/contexts/DocumentContext";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
-import { useNavigate } from "react-router-dom";
-import CloudStorage from "../storage/CloudStorage";
+import SurakshitLogo from "../ui/SurakshitLogo";
+import { Card } from "../ui/card";
+import DocumentAnalytics from "../analytics/DocumentAnalytics";
+import AnalyticsInsights from "../analytics/AnalyticsInsights";
 
 const Dashboard = () => {
-  const { documents, filterDocumentsByType } = useDocuments();
+  const { documents } = useDocuments();
   const navigate = useNavigate();
   
-  // Filter out documents in the secure vault
-  const nonVaultDocuments = documents.filter(doc => !doc.inSecureVault);
+  // Calculate upcoming deadlines (docs with due date in next 7 days)
+  const upcomingDeadlines = documents.filter(doc => 
+    doc.daysRemaining >= 0 && doc.daysRemaining <= 7
+  ).length;
   
-  // Get counts for different document statuses
-  const overdueCount = nonVaultDocuments.filter(doc => doc.daysRemaining !== undefined && doc.daysRemaining < 0).length;
-  const dueSoonCount = nonVaultDocuments.filter(doc => doc.daysRemaining !== undefined && doc.daysRemaining >= 0 && doc.daysRemaining <= 7).length;
-  const completedCount = nonVaultDocuments.filter(doc => doc.status === "completed").length;
-  const totalDocuments = nonVaultDocuments.length;
+  // Calculate overdue documents
+  const overdueDocuments = documents.filter(doc =>
+    doc.daysRemaining < 0
+  ).length;
   
+  // Get recent documents (first 3)
+  const recentDocuments = [...documents]
+    .sort((a, b) => {
+      // Sort by most recently added first (assuming newer documents have higher IDs)
+      return Number(b.id) - Number(a.id);
+    })
+    .slice(0, 3);
+  
+  const handleTotalDocumentsClick = () => {
+    navigate('/documents?filter=All');
+  };
+
+  const handleUpcomingDeadlinesClick = () => {
+    navigate('/documents?filter=upcoming');
+  };
+
+  const handleOverdueClick = () => {
+    navigate('/documents?filter=overdue');
+  };
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Status summary cards */}
-        <BlurContainer className="p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <h3 className="text-base font-medium">Total Documents</h3>
-              <p className="text-2xl font-bold">{totalDocuments}</p>
-            </div>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => navigate("/documents")}>
-            View All Documents
-          </Button>
-        </BlurContainer>
-        
-        <BlurContainer className="p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="h-9 w-9 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-            </div>
-            <div>
-              <h3 className="text-base font-medium">Due Soon</h3>
-              <p className="text-2xl font-bold">{dueSoonCount}</p>
-            </div>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => navigate("/documents?filter=upcoming")}
-          >
-            View Due Soon
-          </Button>
-        </BlurContainer>
-        
-        <BlurContainer className="p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="h-9 w-9 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-              <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
-            </div>
-            <div>
-              <h3 className="text-base font-medium">Overdue</h3>
-              <div className="flex items-center gap-2">
-                <p className="text-2xl font-bold">{overdueCount}</p>
-                {overdueCount > 0 && (
-                  <Badge variant="destructive" className="ml-2">Action Required</Badge>
-                )}
-              </div>
-            </div>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => navigate("/documents?filter=expired")}
-          >
-            View Overdue
-          </Button>
-        </BlurContainer>
-        
-        <div className="md:col-span-3">
-          <DocumentTimeline />
-        </div>
-        
-        <div className="md:col-span-3">
-          <RecentDocuments />
+    <div className="grid gap-8">
+      <div className="flex items-center justify-between animate-fade-in">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Manage your documents and stay on top of your deadlines.
+          </p>
         </div>
       </div>
       
-      <div className="space-y-6">
-        <BlurContainer className="p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+      {/* Main stats cards */}
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+        <BlurContainer 
+          variant="elevated" 
+          className="p-6 cursor-pointer" 
+          hover 
+          onClick={handleTotalDocumentsClick}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Total Documents
+              </p>
+              <h2 className="text-3xl font-bold mt-1">{documents.length}</h2>
             </div>
-            <h3 className="text-lg font-medium">Completed</h3>
-          </div>
-          
-          <div className="mb-3">
-            <p className="text-3xl font-bold">{completedCount}</p>
-            <p className="text-sm text-muted-foreground">Documents completed</p>
-          </div>
-          
-          <Button 
-            variant="outline" 
-            className="w-full" 
-            size="sm"
-            onClick={() => navigate("/documents?filter=completed")}
-          >
-            View Completed
-          </Button>
-        </BlurContainer>
-        
-        <BlurContainer className="p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-10 w-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-              <Upload className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+            <div className="h-12 w-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+              <FileText className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <h3 className="text-lg font-medium">Add Document</h3>
           </div>
-          
-          <p className="text-sm text-muted-foreground mb-4">
-            Upload a new document to keep track of important deadlines.
+          <p className="text-xs text-muted-foreground mt-4">
+            {documents.length > 0 
+              ? `${documents.length} documents in your secure vault` 
+              : "No documents yet"}
           </p>
-          
-          <Button 
-            className="w-full" 
-            onClick={() => navigate("/documents")}
-          >
-            Upload Document
-          </Button>
+          <div className="mt-4 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" 
+              style={{ width: `${documents.length > 0 ? 100 : 0}%` }}
+            ></div>
+          </div>
         </BlurContainer>
         
-        {/* Add the new CloudStorage component */}
-        <CloudStorage />
+        <BlurContainer 
+          variant="elevated" 
+          className="p-6 cursor-pointer" 
+          hover 
+          onClick={handleUpcomingDeadlinesClick}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Upcoming Deadlines
+              </p>
+              <h2 className="text-3xl font-bold mt-1">{upcomingDeadlines}</h2>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+              <Calendar className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            </div>
+          </div>
+          <p className={`text-xs ${upcomingDeadlines > 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"} mt-4`}>
+            {upcomingDeadlines > 0 ? `${upcomingDeadlines} due this week` : "No upcoming deadlines"}
+          </p>
+          <div className="mt-4 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" 
+              style={{ width: `${upcomingDeadlines > 0 ? Math.min(upcomingDeadlines * 10, 100) : 0}%` }}
+            ></div>
+          </div>
+        </BlurContainer>
+        
+        <BlurContainer 
+          variant="elevated" 
+          className="p-6 cursor-pointer" 
+          hover 
+          onClick={handleOverdueClick}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Overdue Documents
+              </p>
+              <h2 className="text-3xl font-bold mt-1">{overdueDocuments}</h2>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+              <Clock className="h-6 w-6 text-red-600 dark:text-red-400" />
+            </div>
+          </div>
+          <p className={`text-xs ${overdueDocuments > 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"} mt-4`}>
+            {overdueDocuments > 0 ? `${overdueDocuments} past due date` : "No overdue documents"}
+          </p>
+          <div className="mt-4 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-red-500 to-rose-500 rounded-full" 
+              style={{ width: `${overdueDocuments > 0 ? Math.min(overdueDocuments * 20, 100) : 0}%` }}
+            ></div>
+          </div>
+        </BlurContainer>
+      </div>
+      
+      {/* Analytics Section */}
+      <div className="grid gap-6 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+        <DocumentAnalytics />
+        <AnalyticsInsights />
+      </div>
+      
+      <div className="grid gap-8 lg:grid-cols-3 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+        <div className="lg:col-span-2 space-y-6">
+          <BlurContainer variant="default" className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold">Recent Documents</h2>
+              <Link to="/documents" className="flex items-center gap-1 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors">
+                View All <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+            
+            {recentDocuments.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-3">
+                {recentDocuments.map((doc) => (
+                  <DocumentCard key={doc.id} {...doc} />
+                ))}
+              </div>
+            ) : (
+              <Card variant="glass" className="p-8 text-center">
+                <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">No documents yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  Upload your first document to get started
+                </p>
+                <Link to="/documents">
+                  <Button>Add Documents</Button>
+                </Link>
+              </Card>
+            )}
+          </BlurContainer>
+          
+          <BlurContainer variant="default" className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold">Document Timeline</h2>
+            </div>
+            <DocumentTimeline />
+          </BlurContainer>
+        </div>
+        
+        <div className="flex flex-col gap-6">
+          <DocumentUpload />
+          
+          <BlurContainer variant="default" className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Calendar</h2>
+              <Link to="/documents?view=calendar" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+                Full View
+              </Link>
+            </div>
+            <DocumentCalendar />
+          </BlurContainer>
+          
+          <BlurContainer 
+            variant="elevated"
+            className="p-6 relative overflow-hidden"
+            gradient
+          >
+            <div className="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-indigo-600/10 dark:bg-indigo-600/5"></div>
+            <div className="absolute -left-4 -top-4 w-16 h-16 rounded-full bg-purple-600/10 dark:bg-purple-600/5"></div>
+            
+            <div className="relative">
+              <div className="mb-4 flex items-center gap-3">
+                <SurakshitLogo size="md" />
+                <h3 className="font-semibold text-lg">Surakshit Vault</h3>
+              </div>
+              
+              <p className="text-sm text-muted-foreground mb-4">
+                Store sensitive information securely in your private vault with enterprise-grade encryption.
+              </p>
+              
+              <Button variant="outline" className="w-full justify-center border-indigo-200 dark:border-indigo-800">
+                <Shield className="h-4 w-4 mr-2" />
+                Open Secure Vault
+              </Button>
+            </div>
+          </BlurContainer>
+        </div>
       </div>
     </div>
   );

@@ -26,15 +26,4 @@ declare interface Document {
   pdfLastPage?: number;
   pdfPassword?: string;
   pdfRotation?: number;
-  // Mobile-specific properties
-  scanSource?: "camera" | "gallery" | "import" | "share" | "other";
-  scanDate?: string;
-  scanLocation?: {
-    latitude: number;
-    longitude: number;
-    address?: string;
-  };
-  ocrProcessed?: boolean;
-  ocrText?: string;
-  isAvailableOffline?: boolean;
 }

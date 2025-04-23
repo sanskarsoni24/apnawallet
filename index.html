@@ -3,19 +3,109 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#171717" />
-    <meta name="description" content="SurakshitLocker - Secure Document Management" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>ApnaWallet</title>
+    <meta name="description" content="Secure document management and password vault" />
+    <meta name="author" content="ApnaWallet" />
+    <meta name="theme-color" content="#5f5cff" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="SurakshitLocker" />
+    <meta name="apple-mobile-web-app-title" content="ApnaWallet" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="ApnaWallet" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
-    <title>SurakshitLocker</title>
+
+    <!-- Home screen icons for iOS -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon.png" />
+
+    <!-- Splash screens for iOS -->
+    <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" />
+
+    <meta property="og:title" content="ApnaWallet - Secure Document Manager" />
+    <meta property="og:description" content="Your secure vault for managing important documents" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@apnawallet" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    
+    <!-- Mobile-specific meta tags -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- APK download meta tags -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline'">
+    <meta http-equiv="Content-Type" content="application/vnd.android.package-archive">
+    
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png" />
+    
+    <!-- PWA installation helper script -->
+    <script>
+      // Check if running as installed PWA
+      if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+        console.log("Running in standalone mode (installed on home screen)");
+        localStorage.setItem('installed_as_pwa', 'true');
+      }
+      
+      // Handle installation prompt
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        // Store the event so it can be triggered later
+        window.deferredPrompt = e;
+        // Show install button or notification if not shown before
+        const installPromptShown = localStorage.getItem('install_prompt_shown');
+        if (!installPromptShown) {
+          setTimeout(() => {
+            document.dispatchEvent(new CustomEvent('showInstallPrompt'));
+            localStorage.setItem('install_prompt_shown', 'true');
+          }, 3000);
+        }
+      });
+      
+      // Listen for app installed event
+      window.addEventListener('appinstalled', (e) => {
+        console.log('App installed successfully');
+        localStorage.setItem('installed_as_pwa', 'true');
+        // Clear the deferredPrompt variable
+        window.deferredPrompt = null;
+      });
+      
+      // Detect mobile devices and redirect to download page if needed
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+      
+      // Only redirect on first visit and only if not already installed
+      const isFirstVisit = !localStorage.getItem('visited_before');
+      const isInstalled = localStorage.getItem('installed_as_pwa') === 'true';
+      const isMobileBannerDismissed = localStorage.getItem('mobile_banner_dismissed') === 'true';
+      
+      if (isFirstVisit && isMobileDevice && !isInstalled && !isMobileBannerDismissed) {
+        localStorage.setItem('visited_before', 'true');
+        localStorage.setItem('mobile_banner_shown', 'true');
+        // Only redirect if we're on the home page
+        if (window.location.pathname === '/') {
+          // Add small delay before redirecting
+          setTimeout(() => {
+            window.location.href = '/mobile-app';
+          }, 1000);
+        }
+      }
+    </script>
   </head>
+
   <body>
     <div id="root"></div>
+    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

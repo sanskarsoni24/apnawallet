@@ -14,45 +14,18 @@ const config: CapacitorConfig = {
       launchShowDuration: 2000,
       backgroundColor: "#171717",
       showSpinner: true,
-      spinnerColor: "#5f5cff",
-      androidSpinnerStyle: "large",
-      iosSpinnerStyle: "small"
-    },
-    CapacitorUpdater: {
-      autoUpdate: true
-    },
-    PushNotifications: {
-      presentationOptions: ["badge", "sound", "alert"]
-    },
-    LocalNotifications: {
-      smallIcon: "ic_stat_document",
-      iconColor: "#5f5cff"
-    },
-    CapacitorHttp: {
-      enabled: true
-    },
-    App: {
-      appId: "app.surakshitlocker.secure",
-      appName: "SurakshitLocker",
-      webDir: "dist",
-      bundledWebRuntime: false,
-      backgroundColor: "#171717" 
+      spinnerColor: "#5f5cff"
     }
   },
   android: {
     buildOptions: {
       releaseType: "APK"
-    },
-    backgroundColor: "#171717",
-    allowMixedContent: true,
-    captureInput: true,
-    webContentsDebuggingEnabled: true
+    }
   },
   ios: {
     contentInset: "always",
     scheme: "SurakshitLocker",
-    backgroundColor: "#171717",
-    preferredContentMode: "mobile"
+    backgroundColor: "#ffffff"
   },
   // Add permissions configuration for Android
   androidPermissions: {
@@ -61,12 +34,7 @@ const config: CapacitorConfig = {
       "android.permission.READ_EXTERNAL_STORAGE",
       "android.permission.WRITE_EXTERNAL_STORAGE",
       "android.permission.REQUEST_INSTALL_PACKAGES",
-      "android.permission.DOWNLOAD_WITHOUT_NOTIFICATION",
-      "android.permission.CAMERA",
-      "android.permission.RECORD_AUDIO",
-      "android.permission.MODIFY_AUDIO_SETTINGS",
-      "android.permission.VIBRATE",
-      "android.permission.RECEIVE_BOOT_COMPLETED"
+      "android.permission.DOWNLOAD_WITHOUT_NOTIFICATION"
     ]
   }
 };

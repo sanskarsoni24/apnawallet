@@ -86,4 +86,11 @@ interface UserSettings {
   cloudExportProviders?: string[];
   mobileDeviceName?: string;
   googleConnected?: boolean;
+  cloudStorage?: {
+    provider: string;
+    connected: boolean;
+    lastSync?: string;
+    folderPath?: string;
+    autoSync?: boolean;
+  };
 }

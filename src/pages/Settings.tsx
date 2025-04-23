@@ -1,203 +1,303 @@
-
-import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useState } from "react";
 import Container from "@/components/layout/Container";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Bell, Palette, Shield, CloudCog, ScanFace } from "lucide-react";
-import AccountSettings from "@/components/settings/AccountSettings";
-import NotificationSettings from "@/components/settings/NotificationSettings";
-import AppearanceSettings from "@/components/settings/AppearanceSettings";
-import ChromeExtensionDownload from "@/components/settings/ChromeExtensionDownload";
-import BackupSettings from "@/components/settings/BackupSettings";
-import BiometricSettings from "@/components/settings/BiometricSettings";
-import PremiumFeatures from "@/components/premium/PremiumFeatures";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/contexts/UserContext";
-import { toast } from "@/hooks/use-toast";
+import { useUserSettings } from "@/contexts/UserSettingsContext";
+import { useNavigate } from "react-router-dom";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle, Copy, Key, Lock, Mail, ShieldAlert, User, Moon, Sun, Laptop, Smartphone } from "lucide-react";
+import MobileAppSettings from "@/components/settings/MobileAppSettings";
+import { useMobile } from "@/hooks/use-mobile";
 
 const Settings = () => {
-  const [searchParams] = useSearchParams();
-  const tabParam = searchParams.get("tab");
-  const [activeTab, setActiveTab] = useState(tabParam || "backup");
-  
-  const { userSettings, updateUserSettings, displayName, email, updateProfile } = useUser();
-  
-  // Account settings state
-  const [localDisplayName, setLocalDisplayName] = useState(displayName);
-  const [localEmail, setLocalEmail] = useState(email);
-  
-  // Update local state when user profile changes
-  useEffect(() => {
-    setLocalDisplayName(displayName);
-    setLocalEmail(email);
-  }, [displayName, email]);
-  
-  // Track tab changes from URL params
-  useEffect(() => {
-    if (tabParam && ["backup", "account", "notifications", "appearance", "extensions", "security"].includes(tabParam)) {
-      setActiveTab(tabParam);
-    }
-  }, [tabParam]);
-  
-  // Check if user has premium subscription
-  const isPremiumUser = userSettings?.subscriptionPlan === 'premium' || userSettings?.subscriptionPlan === 'enterprise';
-  
-  // Save account settings
-  const saveAccountSettings = () => {
-    updateProfile(localDisplayName, localEmail);
-    toast({
-      title: "Settings saved",
-      description: "Your account settings have been updated successfully.",
-    });
-  };
-  
-  // Save notification settings
-  const saveSettings = (newSettings: any) => {
-    updateUserSettings(newSettings);
-    toast({
-      title: "Settings saved",
-      description: "Your notification settings have been updated successfully.",
-    });
-  };
-  
-  // Save theme
-  const saveTheme = (theme: string) => {
-    updateUserSettings({ theme });
-    toast({
-      title: "Theme updated",
-      description: `Your theme has been set to ${theme}.`,
-    });
-  };
-
-  // Handle premium upgrade
-  const handleUpgrade = () => {
-    updateUserSettings({ subscriptionPlan: 'premium' });
-    toast({
-      title: "Welcome to Premium!",
-      description: "You've successfully upgraded to the Premium plan.",
-    });
-  };
-  
-  // Default notification settings for new users
-  const defaultNotificationSettings = {
-    emailNotifications: true,
-    pushNotifications: false,
-    voiceReminders: false,
-    reminderDays: 3,
-    voiceType: 'default'
-  };
-  
-  // Create notification settings object based on userSettings or defaults
-  const notificationSettings = {
-    emailNotifications: userSettings?.emailNotifications ?? defaultNotificationSettings.emailNotifications,
-    pushNotifications: userSettings?.pushNotifications ?? defaultNotificationSettings.pushNotifications,
-    voiceReminders: userSettings?.voiceReminders ?? defaultNotificationSettings.voiceReminders,
-    reminderDays: userSettings?.reminderDays ?? defaultNotificationSettings.reminderDays,
-    voiceType: userSettings?.voiceType ?? defaultNotificationSettings.voiceType
-  };
-  
-  return (
-    <Container>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-            <p className="text-muted-foreground">
-              Manage your account settings and preferences
-            </p>
-          </div>
-          {!isPremiumUser && (
-            <button 
-              onClick={handleUpgrade}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-md hover:from-indigo-700 hover:to-purple-700 transition-all"
-            >
-              Upgrade to Premium
-            </button>
-          )}
-          {isPremiumUser && (
-            <div className="bg-gradient-to-r from-amber-200 to-amber-400 dark:from-amber-700 dark:to-amber-500 text-amber-900 dark:text-amber-100 px-4 py-2 rounded-md">
-              Premium Account
-            </div>
-          )}
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="flex flex-wrap h-auto gap-2 p-1 sm:p-0 sm:gap-0 sm:h-10">
-            <TabsTrigger value="backup" className="text-xs sm:text-sm flex items-center gap-1">
-              <CloudCog className="h-4 w-4" />
-              <span className="hidden sm:inline">Backup & Export</span>
-              <span className="inline sm:hidden">Backup</span>
-            </TabsTrigger>
-            <TabsTrigger value="account" className="text-xs sm:text-sm flex items-center gap-1">
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Account</span>
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="text-xs sm:text-sm flex items-center gap-1">
-              <Bell className="h-4 w-4" />
-              <span className="hidden sm:inline">Notifications</span>
-              <span className="inline sm:hidden">Alerts</span>
-            </TabsTrigger>
-            <TabsTrigger value="appearance" className="text-xs sm:text-sm flex items-center gap-1">
-              <Palette className="h-4 w-4" />
-              <span className="hidden sm:inline">Appearance</span>
-            </TabsTrigger>
-            <TabsTrigger value="security" className="text-xs sm:text-sm flex items-center gap-1">
-              <ScanFace className="h-4 w-4" />
-              <span className="hidden sm:inline">Biometric Security</span>
-              <span className="inline sm:hidden">Security</span>
-            </TabsTrigger>
-            <TabsTrigger value="extensions" className="text-xs sm:text-sm flex items-center gap-1">
-              <Shield className="h-4 w-4" />
-              <span className="hidden sm:inline">Extensions</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="account" className="space-y-6">
-            <AccountSettings 
-              localDisplayName={localDisplayName}
-              setLocalDisplayName={setLocalDisplayName}
-              localEmail={localEmail}
-              setLocalEmail={setLocalEmail}
-              saveAccountSettings={saveAccountSettings}
-            />
-          </TabsContent>
-
-          <TabsContent value="notifications" className="space-y-6">
-            <NotificationSettings 
-              settings={notificationSettings}
-              saveSettings={saveSettings}
-            />
-          </TabsContent>
-          
-          <TabsContent value="backup" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-5">
-              <div className="md:col-span-3">
-                <BackupSettings isPremium={isPremiumUser} />
-              </div>
-              
-              <div className="md:col-span-2">
-                <PremiumFeatures showTitle={true} isPremium={isPremiumUser} />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="appearance" className="space-y-6">
-            <AppearanceSettings 
-              theme={userSettings?.theme || 'system'} 
-              saveTheme={saveTheme} 
-            />
-          </TabsContent>
-
-          <TabsContent value="security" className="space-y-6">
-            <BiometricSettings />
-          </TabsContent>
-
-          <TabsContent value="extensions" className="space-y-6">
-            <ChromeExtensionDownload />
-          </TabsContent>
-        </Tabs>
-      </div>
-    </Container>
-  );
-};
-
-export default Settings;
+  const [activeTab, setActiveTab] = useState("account");
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [theme, setTheme] = useState("system");
+  const [fontSize, setFontSize] = useState("medium");
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const [backupEnabled, setBackupEnabled] = useState(false);
+  const [backupFrequency, setBackupFrequency] = useState("daily");
+  const [securityLevel, setSecurityLevel] = useState("standard");
+  const [autoLogoutTime, setAutoLogoutTime] = useState(30);
+  const [twoFactorAuth, setTwoFactorAuth] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [backupPassword, setBackupPassword] = useState("");
+  const [autoBackup, setAutoBackup] = useState(true);
+  const [cloudExportProviders, setCloudExportProviders] = useState(["google_drive", "dropbox"]);
+  const [isBackupPasswordVisible, setIsBackupPasswordVisible] = useState(false);
+  const [isRecoveryKeyVisible, setIsRecoveryKeyVisible] = useState(false);
+  const [isBackupKeyCreated, setIsBackupKeyCreated] = useState(false);
+  const [isBackupKeyLocation, setIsBackupKeyLocation] = useState("");
+  const [isAutoBackupEnabled, setIsAutoBackupEnabled] = useState(false);
+  const [isCloudExportEnabled, setIsCloudExportEnabled] = useState(false);
+  const [isTwoFactorAuthEnabled, setIsTwoFactorAuthEnabled] = useState(false);
+  const [isAutoLogoutEnabled, setIsAutoLogoutEnabled] = useState(false);
+  const [isDisplayNameUpdated, setIsDisplayNameUpdated] = useState(false);
+  const [isEmailUpdated, setIsEmailUpdated] = useState(false);
+  const [isPasswordUpdated, setIsPasswordUpdated] = useState(false);
+  const [isRecoveryEmailUpdated, setIsRecoveryEmailUpdated] = useState(false);
+  const [isBackupPasswordUpdated, setIsBackupPasswordUpdated] = useState(false);
+  const [isAutoBackupSettingsUpdated, setIsAutoBackupSettingsUpdated] = useState(false);
+  const [isCloudExportSettingsUpdated, setIsCloudExportSettingsUpdated] = useState(false);
+  const [isTwoFactorAuthSettingsUpdated, setIsTwoFactorAuthSettingsUpdated] = useState(false);
+  const [isAutoLogoutSettingsUpdated, setIsAutoLogoutSettingsUpdated] = useState(false);
+  const [isThemeUpdated, setIsThemeUpdated] = useState(false);
+  const [isFontSizeUpdated, setIsFontSizeUpdated] = useState(false);
+  const [isEmailNotificationsUpdated, setIsEmailNotificationsUpdated] = useState(false);
+  const [isPushNotificationsUpdated, setIsPushNotificationsUpdated] = useState(false);
+  const [isBackupEnabledUpdated, setIsBackupEnabledUpdated] = useState(false);
+  const [isBackupFrequencyUpdated, setIsBackupFrequencyUpdated] = useState(false);
+  const [isSecurityLevelUpdated, setIsSecurityLevelUpdated] = useState(false);
+  const [isTwoFactorAuthUpdated, setIsTwoFactorAuthUpdated] = useState(false);
+  const [isAutoLogoutTimeUpdated, setIsAutoLogoutTimeUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdated, setIsRecoveryEmailUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdated, setIsBackupPasswordUpdatedUpdated] = useState(false);
+  const [isAutoBackupUpdated, setIsAutoBackupUpdated] = useState(false);
+  const [isCloudExportProvidersUpdated, setIsCloudExportProvidersUpdated] = useState(false);
+  const [isBackupKeyCreatedUpdated, setIsBackupKeyCreatedUpdated] = useState(false);
+  const [isBackupKeyLocationUpdated, setIsBackupKeyLocationUpdated] = useState(false);
+  const [isAutoBackupEnabledUpdated, setIsAutoBackupEnabledUpdated] = useState(false);
+  const [isCloudExportEnabledUpdated, setIsCloudExportEnabledUpdated] = useState(false);
+  const [isTwoFactorAuthEnabledUpdated, setIsTwoFactorAuthEnabledUpdated] = useState(false);
+  const [isAutoLogoutEnabledUpdated, setIsAutoLogoutEnabledUpdated] = useState(false);
+  const [isDisplayNameUpdatedUpdated, setIsDisplayNameUpdatedUpdated] = useState(false);
+  const [isEmailUpdatedUpdated, setIsEmailUpdatedUpdated] = useState(false);
+  const [isPasswordUpdatedUpdated, setIsPasswordUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupSettingsUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdated] = useState(false);
+  const [isCloudExportSettingsUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthSettingsUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdated] = useState(false);
+  const [isAutoLogoutSettingsUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdated] = useState(false);
+  const [isThemeUpdatedUpdated, setIsThemeUpdatedUpdated] = useState(false);
+  const [isFontSizeUpdatedUpdated, setIsFontSizeUpdatedUpdated] = useState(false);
+  const [isEmailNotificationsUpdatedUpdated, setIsEmailNotificationsUpdatedUpdated] = useState(false);
+  const [isPushNotificationsUpdatedUpdated, setIsPushNotificationsUpdatedUpdated] = useState(false);
+  const [isBackupEnabledUpdatedUpdated, setIsBackupEnabledUpdatedUpdated] = useState(false);
+  const [isBackupFrequencyUpdatedUpdated, setIsBackupFrequencyUpdatedUpdated] = useState(false);
+  const [isSecurityLevelUpdatedUpdated, setIsSecurityLevelUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdated] = useState(false);
+  const [isAutoLogoutTimeUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupUpdatedUpdated, setIsAutoBackupUpdatedUpdated] = useState(false);
+  const [isCloudExportProvidersUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdated] = useState(false);
+  const [isBackupKeyCreatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdated] = useState(false);
+  const [isBackupKeyLocationUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdated] = useState(false);
+  const [isAutoBackupEnabledUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdated] = useState(false);
+  const [isCloudExportEnabledUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthEnabledUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdated] = useState(false);
+  const [isAutoLogoutEnabledUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdated] = useState(false);
+  const [isDisplayNameUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdated] = useState(false);
+  const [isPasswordUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupSettingsUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportSettingsUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutSettingsUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdated] = useState(false);
+  const [isThemeUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdated] = useState(false);
+  const [isFontSizeUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailNotificationsUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdated] = useState(false);
+  const [isPushNotificationsUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupEnabledUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupFrequencyUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdated] = useState(false);
+  const [isSecurityLevelUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutTimeUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupUpdatedUpdatedUpdated, setIsAutoBackupUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportProvidersUpdatedUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupKeyCreatedUpdatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupKeyLocationUpdatedUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupEnabledUpdatedUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportEnabledUpdatedUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthEnabledUpdatedUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutEnabledUpdatedUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdatedUpdated] = useState(false);
+  const [isDisplayNameUpdatedUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailUpdatedUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isPasswordUpdatedUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isThemeUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isFontSizeUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isPushNotificationsUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupEnabledUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isSecurityLevelUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutTimeUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupUpdatedUpdatedUpdatedUpdated, setIsAutoBackupUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportProvidersUpdatedUpdatedUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupKeyCreatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupKeyLocationUpdatedUpdatedUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupEnabledUpdatedUpdatedUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportEnabledUpdatedUpdatedUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutEnabledUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isDisplayNameUpdatedUpdatedUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isPasswordUpdatedUpdatedUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isThemeUpdatedUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isFontSizeUpdatedUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
+  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdated

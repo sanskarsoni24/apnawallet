@@ -1,48 +1,33 @@
 
-import * as React from "react"
+import { useState, useEffect } from "react";
 
-const MOBILE_BREAKPOINT = 768
+export function useMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [isMobileApp, setIsMobileApp] = useState(false);
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  useEffect(() => {
+    const updateDeviceType = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+      setIsDesktop(width >= 1024);
+    };
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
+    // Check if running as a Capacitor app
+    const checkIfMobileApp = () => {
+      const isCapacitor = window.location.href.includes('capacitor://') || 
+                          window.location.href.includes('localhost:8080');
+      setIsMobileApp(isCapacitor);
+    };
 
-  return !!isMobile
+    updateDeviceType();
+    checkIfMobileApp();
+
+    window.addEventListener("resize", updateDeviceType);
+    return () => window.removeEventListener("resize", updateDeviceType);
+  }, []);
+
+  return { isMobile, isTablet, isDesktop, isMobileApp };
 }
-
-// Function to check if a media query matches
-export function useMediaQuery(query: string) {
-  const [matches, setMatches] = React.useState<boolean>(false)
-
-  React.useEffect(() => {
-    const media = window.matchMedia(query)
-    
-    // Set initial state
-    setMatches(media.matches)
-    
-    // Define callback for media query change events
-    const listener = (e: MediaQueryListEvent) => {
-      setMatches(e.matches)
-    }
-    
-    // Add event listener
-    media.addEventListener("change", listener)
-    
-    // Cleanup
-    return () => media.removeEventListener("change", listener)
-  }, [query])
-
-  return matches
-}
-
-// Add an alias export to prevent future imports from breaking
-export const useMobile = useIsMobile;

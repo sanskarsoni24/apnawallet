@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import Container from "@/components/layout/Container";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,263 +42,358 @@ const Settings = () => {
   const [isRecoveryKeyVisible, setIsRecoveryKeyVisible] = useState(false);
   const [isBackupKeyCreated, setIsBackupKeyCreated] = useState(false);
   const [isBackupKeyLocation, setIsBackupKeyLocation] = useState("");
-  const [isAutoBackupEnabled, setIsAutoBackupEnabled] = useState(false);
-  const [isCloudExportEnabled, setIsCloudExportEnabled] = useState(false);
-  const [isTwoFactorAuthEnabled, setIsTwoFactorAuthEnabled] = useState(false);
-  const [isAutoLogoutEnabled, setIsAutoLogoutEnabled] = useState(false);
-  const [isDisplayNameUpdated, setIsDisplayNameUpdated] = useState(false);
-  const [isEmailUpdated, setIsEmailUpdated] = useState(false);
-  const [isPasswordUpdated, setIsPasswordUpdated] = useState(false);
-  const [isRecoveryEmailUpdated, setIsRecoveryEmailUpdated] = useState(false);
-  const [isBackupPasswordUpdated, setIsBackupPasswordUpdated] = useState(false);
-  const [isAutoBackupSettingsUpdated, setIsAutoBackupSettingsUpdated] = useState(false);
-  const [isCloudExportSettingsUpdated, setIsCloudExportSettingsUpdated] = useState(false);
-  const [isTwoFactorAuthSettingsUpdated, setIsTwoFactorAuthSettingsUpdated] = useState(false);
-  const [isAutoLogoutSettingsUpdated, setIsAutoLogoutSettingsUpdated] = useState(false);
-  const [isThemeUpdated, setIsThemeUpdated] = useState(false);
-  const [isFontSizeUpdated, setIsFontSizeUpdated] = useState(false);
-  const [isEmailNotificationsUpdated, setIsEmailNotificationsUpdated] = useState(false);
-  const [isPushNotificationsUpdated, setIsPushNotificationsUpdated] = useState(false);
-  const [isBackupEnabledUpdated, setIsBackupEnabledUpdated] = useState(false);
-  const [isBackupFrequencyUpdated, setIsBackupFrequencyUpdated] = useState(false);
-  const [isSecurityLevelUpdated, setIsSecurityLevelUpdated] = useState(false);
-  const [isTwoFactorAuthUpdated, setIsTwoFactorAuthUpdated] = useState(false);
-  const [isAutoLogoutTimeUpdated, setIsAutoLogoutTimeUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdated, setIsRecoveryEmailUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdated, setIsBackupPasswordUpdatedUpdated] = useState(false);
-  const [isAutoBackupUpdated, setIsAutoBackupUpdated] = useState(false);
-  const [isCloudExportProvidersUpdated, setIsCloudExportProvidersUpdated] = useState(false);
-  const [isBackupKeyCreatedUpdated, setIsBackupKeyCreatedUpdated] = useState(false);
-  const [isBackupKeyLocationUpdated, setIsBackupKeyLocationUpdated] = useState(false);
-  const [isAutoBackupEnabledUpdated, setIsAutoBackupEnabledUpdated] = useState(false);
-  const [isCloudExportEnabledUpdated, setIsCloudExportEnabledUpdated] = useState(false);
-  const [isTwoFactorAuthEnabledUpdated, setIsTwoFactorAuthEnabledUpdated] = useState(false);
-  const [isAutoLogoutEnabledUpdated, setIsAutoLogoutEnabledUpdated] = useState(false);
-  const [isDisplayNameUpdatedUpdated, setIsDisplayNameUpdatedUpdated] = useState(false);
-  const [isEmailUpdatedUpdated, setIsEmailUpdatedUpdated] = useState(false);
-  const [isPasswordUpdatedUpdated, setIsPasswordUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupSettingsUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdated] = useState(false);
-  const [isCloudExportSettingsUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthSettingsUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdated] = useState(false);
-  const [isAutoLogoutSettingsUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdated] = useState(false);
-  const [isThemeUpdatedUpdated, setIsThemeUpdatedUpdated] = useState(false);
-  const [isFontSizeUpdatedUpdated, setIsFontSizeUpdatedUpdated] = useState(false);
-  const [isEmailNotificationsUpdatedUpdated, setIsEmailNotificationsUpdatedUpdated] = useState(false);
-  const [isPushNotificationsUpdatedUpdated, setIsPushNotificationsUpdatedUpdated] = useState(false);
-  const [isBackupEnabledUpdatedUpdated, setIsBackupEnabledUpdatedUpdated] = useState(false);
-  const [isBackupFrequencyUpdatedUpdated, setIsBackupFrequencyUpdatedUpdated] = useState(false);
-  const [isSecurityLevelUpdatedUpdated, setIsSecurityLevelUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdated] = useState(false);
-  const [isAutoLogoutTimeUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupUpdatedUpdated, setIsAutoBackupUpdatedUpdated] = useState(false);
-  const [isCloudExportProvidersUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdated] = useState(false);
-  const [isBackupKeyCreatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdated] = useState(false);
-  const [isBackupKeyLocationUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdated] = useState(false);
-  const [isAutoBackupEnabledUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdated] = useState(false);
-  const [isCloudExportEnabledUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthEnabledUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdated] = useState(false);
-  const [isAutoLogoutEnabledUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdated] = useState(false);
-  const [isDisplayNameUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdated] = useState(false);
-  const [isPasswordUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupSettingsUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportSettingsUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutSettingsUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdated] = useState(false);
-  const [isThemeUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdated] = useState(false);
-  const [isFontSizeUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailNotificationsUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdated] = useState(false);
-  const [isPushNotificationsUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupEnabledUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupFrequencyUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdated] = useState(false);
-  const [isSecurityLevelUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutTimeUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupUpdatedUpdatedUpdated, setIsAutoBackupUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportProvidersUpdatedUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupKeyCreatedUpdatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupKeyLocationUpdatedUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupEnabledUpdatedUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportEnabledUpdatedUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthEnabledUpdatedUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutEnabledUpdatedUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdatedUpdated] = useState(false);
-  const [isDisplayNameUpdatedUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailUpdatedUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isPasswordUpdatedUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isThemeUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isFontSizeUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isPushNotificationsUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupEnabledUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isSecurityLevelUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutTimeUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupUpdatedUpdatedUpdatedUpdated, setIsAutoBackupUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportProvidersUpdatedUpdatedUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupKeyCreatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupKeyLocationUpdatedUpdatedUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupEnabledUpdatedUpdatedUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportEnabledUpdatedUpdatedUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutEnabledUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isDisplayNameUpdatedUpdatedUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isPasswordUpdatedUpdatedUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isThemeUpdatedUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isFontSizeUpdatedUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportProvidersUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyCreatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupKeyLocationUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsDisplayNameUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutTimeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsRecoveryEmailUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupPasswordUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoBackupSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsCloudExportSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsAutoLogoutSettingsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsThemeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsFontSizeUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsEmailNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsPushNotificationsUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupEnabledUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsBackupFrequencyUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsSecurityLevelUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated] = useState(false);
-  const [isTwoFactorAuthUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdatedUpdated, setIsTwoFactorAuthUpdatedUpdatedUpdatedUpdated
+  
+  // Instead of having hundreds of state variables, we will have just these few
+  // and refactor the component into smaller components if needed
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useUser();
+  const { userSettings, updateUserSettings } = useUserSettings();
+  const { isMobile } = useMobile();
+
+  const handleUpdateSettings = (settings: Partial<UserSettings>) => {
+    updateUserSettings(settings);
+    toast({
+      title: "Settings updated",
+      description: "Your settings have been saved successfully.",
+    });
+  };
+
+  const handleThemeChange = (value: string) => {
+    setTheme(value);
+    handleUpdateSettings({ theme: value as "light" | "dark" | "system" });
+  };
+
+  const handleFontSizeChange = (value: string) => {
+    setFontSize(value);
+    handleUpdateSettings({ fontSize: value as "small" | "medium" | "large" });
+  };
+
+  const handleSecurityLevelChange = (value: string) => {
+    setSecurityLevel(value);
+    handleUpdateSettings({ securityLevel: value as "standard" | "enhanced" | "maximum" });
+  };
+
+  const handleBackupFrequencyChange = (value: string) => {
+    setBackupFrequency(value);
+    handleUpdateSettings({ backupFrequency: value as "daily" | "weekly" | "monthly" });
+  };
+
+  const handleTwoFactorAuthChange = (checked: boolean) => {
+    setTwoFactorAuth(checked);
+    handleUpdateSettings({ twoFactorAuth: checked });
+  };
+
+  const handleAutoLogoutTimeChange = (value: number[]) => {
+    const minutes = value[0];
+    setAutoLogoutTime(minutes);
+    handleUpdateSettings({ autoLogoutTime: minutes });
+  };
+
+  const handleEmailNotificationsChange = (checked: boolean) => {
+    setEmailNotifications(checked);
+    handleUpdateSettings({ emailNotifications: checked });
+  };
+
+  const handlePushNotificationsChange = (checked: boolean) => {
+    setPushNotifications(checked);
+    handleUpdateSettings({ pushNotifications: checked });
+  };
+
+  const handleBackupEnabledChange = (checked: boolean) => {
+    setBackupEnabled(checked);
+    handleUpdateSettings({ backupEnabled: checked });
+  };
+
+  return (
+    <Container>
+      <div className="space-y-6 pb-16">
+        <div>
+          <h1 className="text-3xl font-bold">Settings</h1>
+          <p className="text-muted-foreground">
+            Manage your account settings and preferences.
+          </p>
+        </div>
+
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="account" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Account
+            </TabsTrigger>
+            <TabsTrigger value="appearance" className="flex items-center gap-2">
+              <Sun className="h-4 w-4" />
+              Appearance
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              Notifications
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Lock className="h-4 w-4" />
+              Security
+            </TabsTrigger>
+            {isMobile && (
+              <TabsTrigger value="mobile" className="flex items-center gap-2">
+                <Smartphone className="h-4 w-4" />
+                Mobile
+              </TabsTrigger>
+            )}
+          </TabsList>
+          
+          <TabsContent value="account" className="space-y-4">
+            {/* Account settings content */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Information</CardTitle>
+                <CardDescription>
+                  Update your account information and email address.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName">Display Name</Label>
+                    <Input
+                      id="displayName"
+                      value={displayName || userSettings?.displayName || user?.displayName || ""}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email || userSettings?.email || user?.email || ""}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <Button onClick={() => {
+                  handleUpdateSettings({
+                    displayName: displayName || userSettings?.displayName || user?.displayName || "",
+                    email: email || userSettings?.email || user?.email || "",
+                  });
+                }}>
+                  Save Account Information
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="appearance" className="space-y-4">
+            {/* Appearance settings content */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Appearance</CardTitle>
+                <CardDescription>
+                  Customize the appearance of the application.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Theme</Label>
+                  <div className="flex items-center space-x-4">
+                    <div
+                      className={`flex flex-col items-center justify-center rounded-md border-2 p-2 cursor-pointer ${
+                        theme === "light" ? "border-primary" : "border-muted"
+                      }`}
+                      onClick={() => handleThemeChange("light")}
+                    >
+                      <Sun className="h-6 w-6 mb-1" />
+                      <span className="text-sm">Light</span>
+                    </div>
+                    <div
+                      className={`flex flex-col items-center justify-center rounded-md border-2 p-2 cursor-pointer ${
+                        theme === "dark" ? "border-primary" : "border-muted"
+                      }`}
+                      onClick={() => handleThemeChange("dark")}
+                    >
+                      <Moon className="h-6 w-6 mb-1" />
+                      <span className="text-sm">Dark</span>
+                    </div>
+                    <div
+                      className={`flex flex-col items-center justify-center rounded-md border-2 p-2 cursor-pointer ${
+                        theme === "system" ? "border-primary" : "border-muted"
+                      }`}
+                      onClick={() => handleThemeChange("system")}
+                    >
+                      <Laptop className="h-6 w-6 mb-1" />
+                      <span className="text-sm">System</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Font Size</Label>
+                  <Select
+                    value={fontSize}
+                    onValueChange={handleFontSizeChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a font size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Small</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="large">Large</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="notifications" className="space-y-4">
+            {/* Notifications settings content */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Notification Preferences</CardTitle>
+                <CardDescription>
+                  Configure how you receive notifications.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Email Notifications</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive notifications via email
+                    </p>
+                  </div>
+                  <Switch
+                    checked={emailNotifications}
+                    onCheckedChange={handleEmailNotificationsChange}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Push Notifications</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive push notifications on your device
+                    </p>
+                  </div>
+                  <Switch
+                    checked={pushNotifications}
+                    onCheckedChange={handlePushNotificationsChange}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="security" className="space-y-4">
+            {/* Security settings content */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Security Level</CardTitle>
+                <CardDescription>
+                  Configure the security level for your account.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Select
+                  value={securityLevel}
+                  onValueChange={handleSecurityLevelChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a security level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="enhanced">Enhanced</SelectItem>
+                    <SelectItem value="maximum">Maximum</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="p-4 border rounded-md bg-muted/50">
+                  {securityLevel === "standard" && (
+                    <div className="space-y-2">
+                      <p className="font-medium">Standard Security</p>
+                      <p className="text-sm text-muted-foreground">
+                        Basic account protection with password-based login.
+                      </p>
+                    </div>
+                  )}
+                  {securityLevel === "enhanced" && (
+                    <div className="space-y-2">
+                      <p className="font-medium">Enhanced Security</p>
+                      <p className="text-sm text-muted-foreground">
+                        Additional protection with two-factor authentication and session monitoring.
+                      </p>
+                    </div>
+                  )}
+                  {securityLevel === "maximum" && (
+                    <div className="space-y-2">
+                      <p className="font-medium">Maximum Security</p>
+                      <p className="text-sm text-muted-foreground">
+                        Full protection with biometric verification, encrypted storage, and advanced threat detection.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Two-Factor Authentication</CardTitle>
+                <CardDescription>
+                  Enable two-factor authentication to add an extra layer of security.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Enable Two-Factor Authentication</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Require a verification code in addition to your password
+                    </p>
+                  </div>
+                  <Switch
+                    checked={twoFactorAuth}
+                    onCheckedChange={handleTwoFactorAuthChange}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Auto-Logout</CardTitle>
+                <CardDescription>
+                  Set the time period of inactivity before automatic logout.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label>Logout after inactivity</Label>
+                    <span className="text-sm font-medium">
+                      {autoLogoutTime} minutes
+                    </span>
+                  </div>
+                  <Slider
+                    defaultValue={[autoLogoutTime]}
+                    max={120}
+                    min={5}
+                    step={5}
+                    onValueChange={handleAutoLogoutTimeChange}
+                    className="w-full"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {isMobile && (
+            <TabsContent value="mobile" className="space-y-4">
+              <MobileAppSettings />
+            </TabsContent>
+          )}
+        </Tabs>
+      </div>
+    </Container>
+  );
+};
+
+export default Settings;

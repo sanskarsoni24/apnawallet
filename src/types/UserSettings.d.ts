@@ -1,3 +1,4 @@
+
 interface UserSettings {
   theme: 'light' | 'dark' | 'system';
   fontSize: 'small' | 'medium' | 'large';
@@ -11,11 +12,6 @@ interface UserSettings {
   backupEnabled: boolean;
   backupFrequency: 'daily' | 'weekly' | 'monthly';
   lastKeyBackup?: string;
-  lastBackup?: string;
-  lastBackupStatus?: 'success' | 'failed' | 'in-progress';
-  backupSize?: number;
-  backupEncrypted?: boolean;
-  lastAutoBackupAttempt?: string;
   documentCategoriesOrder: string[];
   customCategories: {
     id: string;
@@ -67,8 +63,6 @@ interface UserSettings {
   recoveryKeys?: string[];
   recoveryKeyUsageHistory?: { key: string; date: string; success: boolean }[];
   recoveryKeyLastGenerated?: string;
-  extensionConnected?: boolean;
-  extensionLastSync?: string;
   autoTagging: boolean;
   rememberSort: boolean;
   calendarStartDay: 0 | 1 | 6;
@@ -76,7 +70,6 @@ interface UserSettings {
     enabled: boolean;
     daysInAdvance: number[];
   };
-  googleEmail?: string;
   desktopAppInstalled?: boolean;
   desktopAppVersion?: string;
   desktopAppLastSync?: string;
@@ -104,6 +97,5 @@ interface UserSettings {
   backupKeyLocation?: string;
   autoBackup?: boolean;
   cloudExportProviders?: string[];
-  mobileDeviceName?: string;
-  googleConnected?: boolean;
+  summary?: string;
 }

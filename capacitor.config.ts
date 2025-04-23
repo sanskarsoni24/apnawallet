@@ -15,6 +15,22 @@ const config: CapacitorConfig = {
       backgroundColor: "#171717",
       showSpinner: true,
       spinnerColor: "#5f5cff"
+    },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"]
+    },
+    CapacitorHttp: {
+      enabled: true
+    },
+    CapacitorCookies: {
+      enabled: true
+    },
+    BiometricAuth: {
+      allowDeviceCredentials: true
+    },
+    LocalNotifications: {
+      smallIcon: "ic_notification",
+      iconColor: "#5f5cff"
     }
   },
   android: {
@@ -35,7 +51,11 @@ const config: CapacitorConfig = {
       "android.permission.WRITE_EXTERNAL_STORAGE",
       "android.permission.REQUEST_INSTALL_PACKAGES",
       "android.permission.DOWNLOAD_WITHOUT_NOTIFICATION",
-      "android.permission.CAMERA"
+      "android.permission.CAMERA",
+      "android.permission.USE_BIOMETRIC",
+      "android.permission.USE_FINGERPRINT",
+      "android.permission.VIBRATE",
+      "android.permission.RECEIVE_BOOT_COMPLETED"
     ]
   }
 };

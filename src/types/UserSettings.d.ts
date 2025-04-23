@@ -42,6 +42,8 @@ interface UserSettings {
     type: string;
     lastVerified?: string;
     requiredForSensitive?: boolean;
+    faceIdEnabled?: boolean;
+    fingerprintEnabled?: boolean;
   };
   recoveryKeys?: string[];
   recoveryKeyUsageHistory?: { key: string; date: string; success: boolean }[];
@@ -87,3 +89,4 @@ interface UserSettings {
   mobileDeviceName?: string;
   googleConnected?: boolean;
 }
+

@@ -26,4 +26,9 @@ declare interface Document {
   pdfLastPage?: number;
   pdfPassword?: string;
   pdfRotation?: number;
+  scanSource?: "camera" | "file" | "import";
+  scanDate?: string;
+  ocrProcessed?: boolean;
+  isAvailableOffline?: boolean;
 }
+

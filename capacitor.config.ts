@@ -34,9 +34,11 @@ const config: CapacitorConfig = {
       "android.permission.READ_EXTERNAL_STORAGE",
       "android.permission.WRITE_EXTERNAL_STORAGE",
       "android.permission.REQUEST_INSTALL_PACKAGES",
-      "android.permission.DOWNLOAD_WITHOUT_NOTIFICATION"
+      "android.permission.DOWNLOAD_WITHOUT_NOTIFICATION",
+      "android.permission.CAMERA"
     ]
   }
 };
 
 export default config;
+

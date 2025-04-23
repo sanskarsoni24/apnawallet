@@ -1,4 +1,3 @@
-
 interface UserSettings {
   theme: 'light' | 'dark' | 'system';
   fontSize: 'small' | 'medium' | 'large';
@@ -32,9 +31,29 @@ interface UserSettings {
   twoFactorAuth: boolean;
   autoLogoutTime: number;
   autoLockVault: boolean;
+  
+  // Recent documents
   recentDocuments?: string[];
   recentDocumentsMaxCount?: number;
   lastViewedDocument?: string;
+
+  // Backup settings
+  lastBackup?: string;
+  lastBackupStatus?: 'success' | 'failed' | 'in-progress';
+  backupSize?: number;
+  backupEncrypted?: boolean;
+  lastAutoBackupAttempt?: string;
+  backupPassword?: string;
+  
+  // Extension settings
+  extensionConnected?: boolean;
+  extensionLastSync?: string;
+  
+  // Mobile settings
+  mobileDeviceName?: string;
+  googleEmail?: string;
+  googleConnected?: boolean;
+
   allowDocumentSharing: boolean;
   defaultDocumentView: 'grid' | 'list' | 'calendar';
   biometricAuth?: {
@@ -48,7 +67,6 @@ interface UserSettings {
   recoveryKeys?: string[];
   recoveryKeyUsageHistory?: { key: string; date: string; success: boolean }[];
   recoveryKeyLastGenerated?: string;
-  backupPassword?: string;
   extensionConnected?: boolean;
   extensionLastSync?: string;
   autoTagging: boolean;
@@ -89,4 +107,3 @@ interface UserSettings {
   mobileDeviceName?: string;
   googleConnected?: boolean;
 }
-

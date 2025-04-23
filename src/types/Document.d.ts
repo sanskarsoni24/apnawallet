@@ -1,4 +1,3 @@
-
 declare interface Document {
   id: string;
   userId: string;
@@ -31,4 +30,3 @@ declare interface Document {
   ocrProcessed?: boolean;
   isAvailableOffline?: boolean;
 }
-

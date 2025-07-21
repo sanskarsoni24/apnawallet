@@ -2,31 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 
-interface UserSettings {
-  displayName?: string;
-  email?: string;
-  isLoggedIn?: boolean;
-  emailNotifications?: boolean;
-  pushNotifications?: boolean;
-  voiceReminders?: boolean;
-  reminderDays?: number;
-  theme?: string;
-  lastLogin?: string;
-  voiceType?: string;
-  subscriptionPlan?: 'free' | 'basic' | 'premium' | 'enterprise';
-  documentLimit?: number;
-  documentSizeLimit?: number;
-  twoFactorEnabled?: boolean;
-  recoveryEmail?: string;
-  backupKeyCreated?: boolean;
-  backupKeyLocation?: string;
-  lastKeyBackup?: string;
-  autoBackup?: boolean;
-  backupFrequency?: string;
-  cloudExportProviders?: string[];
-  mobileDeviceName?: string;
-  googleConnected?: boolean;
-}
+// UserSettings interface is now defined in src/types/UserSettings.d.ts
 
 interface UserContextType {
   isLoggedIn: boolean;
@@ -57,7 +33,7 @@ const defaultContextValue: UserContextType = {
   isLoggedIn: false,
   displayName: "",
   email: "",
-  userSettings: {},
+  userSettings: {} as UserSettings,
   login: () => {},
   logout: () => {},
   updateProfile: () => {},
@@ -346,7 +322,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setEmail(userEmail);
     setDisplayName(name);
     
-    const updatedSettings: UserSettings = {
+    const updatedSettings: Partial<UserSettings> = {
       email: userEmail,
       displayName: name,
       isLoggedIn: true,
@@ -371,7 +347,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Save to localStorage
     localStorage.setItem("isLoggedIn", "true");
     localStorage.setItem("userSettings", JSON.stringify(updatedSettings));
-    setUserSettings(updatedSettings);
+    setUserSettings(updatedSettings as UserSettings);
     
     toast({
       title: "Account created successfully",
@@ -411,7 +387,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsGoogleConnected(true);
     }
     
-    const updatedSettings: UserSettings = {
+    const updatedSettings: Partial<UserSettings> = {
       ...userSettings,
       email: userEmail,
       displayName: userName,
@@ -429,7 +405,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Save to localStorage
     localStorage.setItem("isLoggedIn", "true");
     localStorage.setItem("userSettings", JSON.stringify(updatedSettings));
-    setUserSettings(updatedSettings);
+    setUserSettings(updatedSettings as UserSettings);
     
     toast({
       title: "Signed in successfully",
@@ -441,7 +417,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setIsLoggedIn(false);
     
-    const updatedSettings: UserSettings = {
+    const updatedSettings: Partial<UserSettings> = {
       ...userSettings,
       isLoggedIn: false,
     };
@@ -449,7 +425,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Update localStorage
     localStorage.setItem("isLoggedIn", "false");
     localStorage.setItem("userSettings", JSON.stringify(updatedSettings));
-    setUserSettings(updatedSettings);
+    setUserSettings(updatedSettings as UserSettings);
     
     toast({
       title: "Signed out",
@@ -462,7 +438,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setDisplayName(name);
     setEmail(userEmail);
     
-    const updatedSettings: UserSettings = {
+    const updatedSettings: Partial<UserSettings> = {
       ...userSettings,
       displayName: name,
       email: userEmail,
@@ -470,7 +446,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Save to localStorage
     localStorage.setItem("userSettings", JSON.stringify(updatedSettings));
-    setUserSettings(updatedSettings);
+    setUserSettings(updatedSettings as UserSettings);
   };
   
   // Update user settings
@@ -508,14 +484,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     
-    const updatedSettings: UserSettings = {
+    const updatedSettings: Partial<UserSettings> = {
       ...userSettings,
       ...settings,
       ...updatedLimits
     };
     
     localStorage.setItem("userSettings", JSON.stringify(updatedSettings));
-    setUserSettings(updatedSettings);
+    setUserSettings(updatedSettings as UserSettings);
     
     // Update display name and email if they were changed
     if (settings.displayName) {

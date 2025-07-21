@@ -248,7 +248,7 @@ const DocumentCard = ({
                 <Badge variant={
                   status === "completed" ? "default" : 
                   status === "expired" ? "destructive" : 
-                  status === "pending" ? "warning" : 
+                  status === "pending" ? "secondary" : 
                   "outline"
                 } className={status === "completed" ? "bg-green-500 text-white" : ""}>
                   <span className="flex items-center gap-1">

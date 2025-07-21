@@ -61,7 +61,7 @@ const Settings = () => {
   
   // Save theme
   const saveTheme = (theme: string) => {
-    updateUserSettings({ theme });
+    updateUserSettings({ theme: theme as 'light' | 'dark' | 'system' });
     toast({
       title: "Theme updated",
       description: `Your theme has been set to ${theme}.`,

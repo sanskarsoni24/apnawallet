@@ -51,7 +51,7 @@ const BackupSettings: React.FC<BackupSettingsProps> = ({ isPremium }) => {
   // Change backup frequency
   const handleBackupFrequencyChange = (value: string) => {
     updateUserSettings({
-      backupFrequency: value,
+      backupFrequency: value as 'daily' | 'weekly' | 'monthly' | 'never',
     });
     
     toast({

@@ -16,7 +16,7 @@ import Settings from "@/pages/Settings";
 import UserProfile from "@/pages/UserProfile";
 import { DocumentProvider } from "@/contexts/DocumentContext";
 import { Toaster } from "@/components/ui/sonner";
-import { MobileBanner } from "@/components/ui/MobileBanner";
+import MobileBanner from "@/components/ui/MobileBanner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import MobileApp from "./pages/MobileApp";
 import DownloadApp from "./pages/DownloadApp";
@@ -83,7 +83,7 @@ function App() {
                 <Route path="/checkout/:plan" element={<StripeCheckout />} />
                 
                 {/* Protected routes */}
-                <Route element={<ProtectedRoute />}>
+                <Route element={<ProtectedRoute><div /></ProtectedRoute>}>
                   <Route path="/documents" element={<Documents />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/profile" element={<UserProfile />} />

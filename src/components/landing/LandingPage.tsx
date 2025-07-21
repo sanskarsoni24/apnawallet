@@ -64,7 +64,7 @@ const LandingPage = () => {
                 <span className="animate-ping absolute h-2 w-2 rounded-full bg-indigo-400 opacity-75"></span>
                 <span className="relative rounded-full h-2 w-2 bg-indigo-500"></span>
               </span>
-              Introducing SurakshitLocker Premium
+              Introducing Mark-25 Personal Assistant
             </motion.div>
             
             <motion.h1 
@@ -73,7 +73,7 @@ const LandingPage = () => {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="font-extrabold text-5xl sm:text-6xl md:text-7xl tracking-tight"
             >
-              Your Digital <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600">Fortress</span> for Sensitive Data
+              Your AI <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600">Personal Assistant</span> for Everything
             </motion.h1>
             
             <motion.p 
@@ -82,7 +82,7 @@ const LandingPage = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl"
             >
-              Store, manage, and securely access your important documents and passwords with military-grade encryption and intelligent organization.
+              Be like Tony Stark with Mark-25 - your intelligent assistant that manages your schedule, documents, reminders, and keeps you one step ahead with smart alerts and proactive insights.
             </motion.p>
             
             <motion.div 
@@ -108,7 +108,7 @@ const LandingPage = () => {
               transition={{ duration: 0.6, delay: 0.6 }}
               className="flex flex-wrap justify-center gap-3 max-w-3xl"
             >
-              {["End-to-End Encryption", "Zero-Knowledge Architecture", "Biometric Authentication", "Cross-Platform"].map((feature, i) => (
+              {["Smart Voice Assistant", "Proactive Scheduling", "Intelligent Reminders", "Cross-Platform Sync"].map((feature, i) => (
                 <div key={i} className="flex items-center gap-1.5 px-3 py-1 bg-white/80 dark:bg-slate-900/80 rounded-full text-sm backdrop-blur-sm border border-slate-200 dark:border-slate-800">
                   <CheckCircle className="h-3.5 w-3.5 text-indigo-600" />
                   <span>{feature}</span>

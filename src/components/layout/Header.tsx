@@ -92,7 +92,7 @@ const Header = () => {
             <Link to="/" className="flex items-center gap-2">
               <SurakshitLogo size="sm" />
               <span className="font-semibold text-xl hidden sm:inline-block">
-                ApnaWallet
+                Mark-25
               </span>
             </Link>
 

@@ -146,7 +146,7 @@ const EnhancedBackupSettings = () => {
       const now = new Date().toISOString();
       
       updateUserSettings({
-        recoveryKeyUsageHistory: [...usageHistory, {date: now, keyId: recoveryKeyInput.substring(0, 8)}]
+        recoveryKeyUsageHistory: [...usageHistory, {key: recoveryKeyInput.substring(0, 8), date: now, success: true, keyId: recoveryKeyInput.substring(0, 8)}]
       });
       
       setShowRestoreDialog(false);

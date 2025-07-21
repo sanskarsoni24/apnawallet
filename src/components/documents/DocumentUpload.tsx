@@ -282,7 +282,7 @@ const DocumentUpload = () => {
       fileURL: fileURL,
       description: data.description,
       customReminderDays: customReminderDays,
-      summary: documentSummary
+      // summary: documentSummary // Temporarily commented out
     };
     
     addDocument(newDocument);

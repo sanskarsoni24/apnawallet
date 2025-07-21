@@ -1,4 +1,3 @@
-
 declare interface Document {
   id: string;
   userId: string;
